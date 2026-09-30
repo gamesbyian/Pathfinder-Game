@@ -24,3 +24,17 @@ Gain ids + loss id: `data/stress/bc1-prune-ab-001-gain-loss-ids.txt`. Solutions 
 
 ## Next gate
 Level-blind targeted sweep (control vs `enable_flags=STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE`) at production budget on the 21 gain/loss ids; then a solved-control regression set.
+
+## Production-ladder result (GHA, level-blind targeted sweep, 50M default budget, same commit 1d8eb451)
+
+21 gain/loss ids, control (runs/36688413338) vs `enable_flags=STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE` (runs/36688416642):
+
+| | control | treatment |
+|---|---:|---:|
+| solved | 20/21 | **21/21** |
+| total `workSpent` | 1,345,288,939 | 1,131,275,702 (-15.9%) |
+| nodes | 531,027,610 | 370,523,567 (-30.2%) |
+
+The single control-unsolved level (`R00180`, node-limited after exhausting the retry ladder) is solved by treatment: **1 new production cold solve**. The other 19 shared solves were already production-solved (the raw-beam "gains" are mostly already recovered by the wider ladder), but treatment reaches them with less work (earlier solves skip later retry tiers: goal-attraction-disabled-retry 21->9 attempts; coarse-near-tie / connectivity-axis / must-cross / guidance retries 13 attempts each -> 0). `R01210` (the raw-beam loss) is solved in both arms at production.
+
+Caveat: population is outcome-nominated (levels where raw beam flipped), so the work reduction is a benefit-enriched, not representative, figure; regression safety and representative work need the solved-control set and a representative sample (solved-control treatment run 36688582123 pending at time of writing).
