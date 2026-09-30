@@ -8,7 +8,7 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { prepLevel } from './prep.js';
 import { createState, applyMove } from './search-state.js';
-import { __setReachGenerationForTests, connectivityResearchSnapshot, isConnected, isConnectedForFalseGoalTriggerSearch } from './topology.js';
+import { __setReachGenerationForTests, computeBc1ShadowConflicts, connectivityResearchSnapshot, isConnected, isConnectedForFalseGoalTriggerSearch } from './topology.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import type { PruneDiagnostics } from './hard-prune-pipeline.js';
 
@@ -63,6 +63,32 @@ test('connectivity research snapshot exposes a reachable one-interface obligatio
         && new Set([edge.a, edge.b]).has(K(3, 2))
         && new Set([edge.a, edge.b]).has(K(4, 2))),
     'the one-cell corridor must be represented as a distinct cardinal transition resource');
+});
+
+test('computeBc1ShadowConflicts reuses an already-fresh connectivity result at zero extra cost', () => {
+    const bridgePocket = makeLevel({
+        grid: { w: 5, h: 3 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 1, y: 3 },
+        blocks: [{ x: 3, y: 1 }, { x: 3, y: 3 }],
+        mustPass: [{ x: 4, y: 2 }],
+        reqLen: 6,
+    });
+    const prep = prepLevel(bridgePocket);
+    const state = stateAt(bridgePocket, prep, [K(1, 1)]);
+
+    const workBefore = prep._workMeter.units;
+    const fresh = computeBc1ShadowConflicts(K(1, 1), state, bridgePocket, prep, false);
+    assert.equal(prep._workMeter.units, workBefore, 'the shadow must never leak its own cost into the canonical work meter');
+    assert.ok(fresh.conflicts.length > 0, 'the bridge-pocket novelty witness must flag a conflict');
+    assert.equal(fresh.constructionWorkUnits, 12, 'a fresh recompute pays exactly one connectivity flood');
+
+    // Simulate the ordinary gauntlet having just computed connectivity for this exact (pos, state)
+    // moments earlier, the way evaluatePrunedMove does when runConnectivity is true.
+    isConnected(K(1, 1), state, bridgePocket, prep);
+    const reused = computeBc1ShadowConflicts(K(1, 1), state, bridgePocket, prep, true);
+    assert.equal(reused.constructionWorkUnits, 0, 'reusing an already-fresh flood must cost nothing extra');
+    assert.deepEqual(reused.conflicts, fresh.conflicts, 'reuse must not change the result');
 });
 
 test('connectivity research snapshot preserves parallel cardinal and portal resources', () => {

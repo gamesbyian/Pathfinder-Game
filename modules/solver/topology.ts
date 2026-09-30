@@ -880,14 +880,21 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
  * multigraph. Cardinal and portal transitions remain distinct resources even when they share the
  * same endpoint pair. This function makes no bridge/cut judgment and is never called by production
  * search.
+ *
+ * `reachedIsFresh` lets a caller that already knows the ordinary gauntlet just ran `isConnected()`
+ * for this exact `(pos, state)` (and passed) skip paying for the flood fill a second time — the
+ * shared `_reached()` scratch buffer is fully overwritten by each `isConnected()` call, so it is
+ * only safe to trust when the caller can prove nothing else touched it since. `computeBc1ShadowConflicts`
+ * is the only caller that ever passes this.
  */
 export function connectivityResearchSnapshot(
     pos: number,
     state: SolverSearchState,
     level: NormalizedLevel,
     prep: PrepLevel,
+    reachedIsFresh = false,
 ) {
-    const connected = isConnected(pos, state, level, prep);
+    const connected = reachedIsFresh || isConnected(pos, state, level, prep);
     const { w, h } = level.grid;
     const nodes: number[] = [];
     const nodeSet = new Set<number>();
@@ -1090,16 +1097,26 @@ export function findBridgeExcursionConflicts(snapshot: {
  * check, so both are snapshotted and restored immediately after, and the delta is reported
  * separately as `constructionWorkUnits` instead — the shadow's own cost must never leak into the
  * canonical work meter this function's caller budgets/scores against.
+ *
+ * `connectivityAlreadyFresh` (2026-09-26, seam-audit-nominated cost reduction — see
+ * `reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md`'s "next gate"): the
+ * pilot found the shadow's own recomputation dominates its aggregate cost, much of it redundant
+ * with connectivity the ordinary gauntlet already computed for this exact candidate this phase.
+ * The caller passes `true` only when it can prove that: `runConnectivity` was true for this
+ * candidate AND `PRUNE_CONNECTIVITY` was enabled, so `evaluatePrunedMove` already called
+ * `isConnected()` for this exact `(pos, state)` moments earlier with nothing else touching the
+ * shared `_reached()` buffer since.
  */
 export function computeBc1ShadowConflicts(
     pos: number,
     state: SolverSearchState,
     level: NormalizedLevel,
     prep: PrepLevel,
+    connectivityAlreadyFresh = false,
 ): { conflicts: BridgeExcursionConflict[]; constructionWorkUnits: number } {
     const workBefore = prep._workMeter.units;
     const globalWorkBefore = workMeter.units;
-    const snapshot = connectivityResearchSnapshot(pos, state, level, prep);
+    const snapshot = connectivityResearchSnapshot(pos, state, level, prep, connectivityAlreadyFresh);
     const constructionWorkUnits = prep._workMeter.units - workBefore;
     prep._workMeter.units = workBefore;
     workMeter.units = globalWorkBefore;
