@@ -1,8 +1,11 @@
 # BC1 fresh-only pre-filter result
 
-> **Status:** concluded-positive (development; shadow only)
-> **Owner:** `WS2-CUT-BALANCE-PROJECTION`
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-30 — same 24 parents, fresh-only vs lineage-only shadow arms.
 > **Decision:** the pre-filter "evaluate BC1 only when ordinary connectivity was just computed for the candidate" removes all canonical flood cost (4,534,704 -> 0 units) and 83% of shadow wall time (226.5 s -> 38.5 s) while still covering 86% of dead-lineage candidates. Cheap features (pending count, remaining steps) had no discriminating power (flag rate flat 3-6%), so a schedule-based filter, not a feature filter, is the mechanism. Earns the smallest behavioral consumer at matched work.
+> **Remaining gate:** behavioral consumer A/B (see matched-budget A/B result).
+> **Evidence role:** development.
+> **Owner:** `WS2-CUT-BALANCE-PROJECTION`.
 
 Frozen Stage-B 24 parents, width 500, 3M nodes, lineage-aware; behaviorIdentical 24/24, safety alarms 0 in both arms.
 

@@ -1,8 +1,11 @@
 # BC1 lineage-aware (first-flag) cost result
 
-> **Status:** concluded-partial (development)
-> **Owner:** `WS2-CUT-BALANCE-PROJECTION`
+> **Status:** inconclusive
+> **Last evidence:** 2026-09-30 — frozen Stage-B 24-parent lineage-aware rerun (first-flag cost model).
 > **Decision:** the prior 1.55x "unconditional per-candidate" figure was inflated by lineage: the shadow prunes nothing, so it re-checked descendants of already-flagged (provably dead) nodes. Under a first-flag-pruning cost model, shadow cost is **4,534,704 units = 63.3% of campaign `workSpent` (7,160,719)**, down from 154.6%. Still not economical unconditionally; a pre-filter is still the gate, but the target is now clear-check cost, not flagged cost.
+> **Remaining gate:** pre-filter for clear checks, then behavioral consumer at matched work (see fresh-only result).
+> **Evidence role:** development.
+> **Owner:** `WS2-CUT-BALANCE-PROJECTION`.
 
 Same frozen Stage-B 24 parents (width 500, 3M nodes), `--lineage-aware=true`; behaviorIdentical 24/24, safety alarms 0.
 
