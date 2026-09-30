@@ -70,4 +70,15 @@ describe('BC1 shadow later-disposition observer', () => {
         expect(observer.checkSolutionSafety([9, 9, 9])).toEqual({ alarm: false, violatingPrefixes: [] });
         expect(observer.checkSolutionSafety([1, 2, 3, 4])).toEqual({ alarm: true, violatingPrefixes: [[1, 2]] });
     });
+    test('lineage counts and lineage-aware flag are reported', () => {
+        const observer = new Bc1ShadowDispositionObserver({ lineageAware: true });
+        observer.observeBc1ShadowCost(5, 'first-flag');
+        observer.observeBc1ShadowCost(0, 'inherited');
+        observer.observeBc1ShadowCost(3);
+        expect(observer.bc1LineageAware).toBe(true);
+        expect(new Bc1ShadowDispositionObserver().bc1LineageAware).toBe(false);
+        const summary = observer.summary();
+        expect(summary.lineageCounts).toEqual({ inherited: 1, 'first-flag': 1, clear: 1 });
+        expect(summary.shadowTotalCost).toBe(8);
+    });
 });

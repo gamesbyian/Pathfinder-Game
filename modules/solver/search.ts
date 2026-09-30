@@ -724,6 +724,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     const ws = resumeFrom ? resumeFrom.ws : createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     const research = prep._beamResearchObserver;
+    // BC1 lineage-aware research mode only (see BeamResearchObserver.bc1LineageAware): retained beam nodes proven dead.
+    const bc1DeadNodes = new WeakSet<BeamNode>();
     const flow = prep._beamFlowCounters;
     const countFlow = (stage: import('./types.js').BeamFlowStage, count: number): void => {
         if (flow && count > 0) flow[stage] = (flow[stage] ?? 0) + count;
@@ -1045,6 +1047,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             // Loop-invariant: pos is fixed for this whole candidate batch, same as curCtx above.
             const pAtPos = level.portalMap.get(pos);
             for (const next of neighbors) {
+                let bc1InheritedDead = false;
                 const isJump = !!(pAtPos && !ws.lastWasPortalJump && pAtPos.dest === next);
                 const undo = applyMove(next, ws, level, prep, isJump);
                 const realLen = getRealLengthFromState(ws);
@@ -1088,13 +1091,21 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                         // construction cost is snapshotted/restored rather than left in prep._workMeter,
                         // and for connectivityAlreadyFresh's cost-reduction rationale.
                         const connectivityAlreadyFresh = !!(runConnectivity && (!cfg || cfg.PRUNE_CONNECTIVITY));
+                        if (research.bc1LineageAware && bc1DeadNodes.has(node)) {
+                            // Parent already BC1-dead: child inherits it (theorem is about the parent's
+                            // whole completion set), so a first-flag-pruning consumer never sees it.
+                            bc1InheritedDead = true;
+                            research.observeBc1ShadowCost?.(0, 'inherited');
+                        } else {
                         const shadow = computeBc1ShadowConflicts(next, ws, level, prep, connectivityAlreadyFresh);
-                        research.observeBc1ShadowCost?.(shadow.constructionWorkUnits);
+                        research.observeBc1ShadowCost?.(shadow.constructionWorkUnits, shadow.conflicts.length > 0 ? 'first-flag' : 'clear');
+                        if (shadow.conflicts.length > 0) bc1InheritedDead = true;
                         if (shadow.conflicts.length > 0) research.observeBc1Candidate?.({
                             depth: node.depth + 1, workBefore: prep._workMeter.units, workSpent: prep._workMeter.units,
                             constructionWorkUnits: shadow.constructionWorkUnits, conflicts: shadow.conflicts,
                             path: [..._reconstructBeamPath(diagnosticNode, [])],
                         });
+                        }
                     }
                 }
                 if (ok) {
@@ -1140,11 +1151,13 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                         const _pairIdx = _portalPairIndexByCell.get(pos);
                         if (_pairIdx !== undefined) _usedPortalPairs |= (1 << _pairIdx);
                     }
-                    cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
+                    const _cand: BeamNode = { key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
                                  ints: ws.ints, mpVisitedMask: ws.mpVisitedMask, mustCrossMask: ws.mustCrossMask,
                                  flipperUsedMask: ws.flipperUsedMask, surroundMask: ws.surroundMask,
                                  mustTurnMask: ws.mustTurnMask, adjTurnMask: ws.adjTurnMask,
-                                 insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci, usedPortalPairs: _usedPortalPairs });
+                                 insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci, usedPortalPairs: _usedPortalPairs };
+                    cands.push(_cand);
+                    if (bc1InheritedDead) bc1DeadNodes.add(_cand);
                     if (_BEAM_DEBUG) { _dbgCandBuildNs += _hrtNow() - _tb; _dbgCandBuildCalls++; }
                 }
                 undoMove(undo, ws);

@@ -68,11 +68,19 @@ export class Bc1ShadowDispositionObserver implements BeamResearchObserver {
     private finalized = false;
     private shadowInvocations = 0;
     private shadowTotalCost = 0;
+    private readonly lineageCounts = { inherited: 0, 'first-flag': 0, clear: 0 };
+    /** Lineage-aware mode: descendants of a flagged node are not re-checked (see BeamResearchObserver.bc1LineageAware). */
+    readonly bc1LineageAware: boolean;
+
+    constructor(options: { lineageAware?: boolean } = {}) {
+        this.bc1LineageAware = options.lineageAware === true;
+    }
 
     /** Aggregate cost across every candidate the shadow evaluates, flagged or not -- see this
      *  file's own doc and the 2026-09-30 cost-reduction result on why `observeBc1Candidate` alone
      *  (flagged-only) cannot answer what an unconditional per-candidate deployment would cost. */
-    observeBc1ShadowCost(constructionWorkUnits: number): void {
+    observeBc1ShadowCost(constructionWorkUnits: number, lineage: 'inherited' | 'first-flag' | 'clear' = 'clear'): void {
+        this.lineageCounts[lineage]++;
         this.shadowInvocations++;
         this.shadowTotalCost += constructionWorkUnits;
     }
@@ -143,9 +151,9 @@ export class Bc1ShadowDispositionObserver implements BeamResearchObserver {
         return { alarm: violating.length > 0, violatingPrefixes: violating };
     }
 
-    summary(): { flaggedCount: number; resolved: Bc1DispositionRecord[]; shadowInvocations: number; shadowTotalCost: number } {
+    summary(): { flaggedCount: number; resolved: Bc1DispositionRecord[]; shadowInvocations: number; shadowTotalCost: number; lineageCounts: { inherited: number; 'first-flag': number; clear: number } } {
         this.finalize();
         return { flaggedCount: this.states.length, resolved: this.states.map(s => s.disposition!),
-            shadowInvocations: this.shadowInvocations, shadowTotalCost: this.shadowTotalCost };
+            shadowInvocations: this.shadowInvocations, shadowTotalCost: this.shadowTotalCost, lineageCounts: { ...this.lineageCounts } };
     }
 }
