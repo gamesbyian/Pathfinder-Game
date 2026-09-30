@@ -20,7 +20,7 @@ Gain ids + loss id: `data/stress/bc1-prune-ab-001-gain-loss-ids.txt`. Solutions 
 ## Caveats
 - Raw width-500 beam, not the production ladder: many of these levels may already be solved by wider/later attempts. Not yet a cold-solve claim.
 - The single loss (R01210) is a trajectory perturbation; BC1 is sound so it cannot be pruning the solution.
-- Wall cost: slow Map/Set BC1 path made treatment ~13.7x slower in wall time. A typed-array fast path (`bc1HasConflictFast`, differentially verified 0 mismatches over ~32k fresh-connectivity checks on 6 parents) is now used by the consumer.
+- Wall cost (fast path re-run of the 300-level A/B: identical solved sets and per-level `workSpent`; control 83.9 s vs treatment 97.4 s = 1.16x wall): the first run's slow Map/Set BC1 path made treatment ~13.7x slower. A typed-array fast path (`bc1HasConflictFast`, differentially verified 0 mismatches over ~32k fresh-connectivity checks on 6 parents) is now used by the consumer.
 
 ## Next gate
 Level-blind targeted sweep (control vs `enable_flags=STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE`) at production budget on the 21 gain/loss ids; then a solved-control regression set.
