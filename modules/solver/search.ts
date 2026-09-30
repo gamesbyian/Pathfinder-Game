@@ -1,5 +1,5 @@
 import { STATE_BUF_BEAM, STATE_BUF_DFS, applyMove, createState, getNeighbors, undoMove } from './search-state.js';
-import { KEY_SPACE } from './encoding.js';
+import { KEY_SPACE, popcount } from './encoding.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
@@ -1098,7 +1098,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                             research.observeBc1ShadowCost?.(0, 'inherited');
                         } else {
                         const shadow = computeBc1ShadowConflicts(next, ws, level, prep, connectivityAlreadyFresh);
-                        research.observeBc1ShadowCost?.(shadow.constructionWorkUnits, shadow.conflicts.length > 0 ? 'first-flag' : 'clear');
+                        research.observeBc1ShadowCost?.(shadow.constructionWorkUnits, shadow.conflicts.length > 0 ? 'first-flag' : 'clear',
+                            { pending: level.mustPassKeys.length - popcount(ws.mpVisitedMask) + popcount(ws.mustCrossMask), remainingSteps: rSteps, depth: node.depth + 1 });
                         if (shadow.conflicts.length > 0) bc1InheritedDead = true;
                         if (shadow.conflicts.length > 0) research.observeBc1Candidate?.({
                             depth: node.depth + 1, workBefore: prep._workMeter.units, workSpent: prep._workMeter.units,
