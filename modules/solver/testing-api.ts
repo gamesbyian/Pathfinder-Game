@@ -16,7 +16,8 @@ import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import { getRealLengthFromState } from './solution.js';
 import { mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
 import { structuralSolutionFamilySignature } from '../domain/path-features.js';
-import { connectivityResearchSnapshot } from './topology.js';
+import { connectivityResearchSnapshot, findBridgeExcursionConflicts, findMultigraphBridges } from './topology.js';
+import { Bc1ShadowDispositionObserver } from './bc1-shadow-disposition.js';
 
 /** The canonical solver analysis/debug surface (also a named Solver export). */
 export function createSolverTestingApi() {
@@ -70,6 +71,15 @@ export function createSolverTestingApi() {
         mustPassLowerBound,
         structuralSolutionFamilySignature,
         connectivityResearchSnapshot,
+        // WS2-CUT-BALANCE-PROJECTION (BC1) shadow — added for the beam later-disposition harvest
+        // collector (scripts/stress/collect-bc1-shadow-disposition.mjs). findBridgeExcursionConflicts/
+        // findMultigraphBridges are the canonical TS port of scripts/stress/cut-bridge-excursion-lib.mjs's
+        // theorem (that file's own Stage-A counterexample suite is retained separately for the offline
+        // frozen-frontier incidence tool; this copy exists so the live shadow at search.ts's hot-path
+        // seam runs inside the shipped solver module boundary).
+        findBridgeExcursionConflicts,
+        findMultigraphBridges,
+        Bc1ShadowDispositionObserver,
     });
 }
 

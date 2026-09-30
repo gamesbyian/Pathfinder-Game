@@ -1041,12 +1041,18 @@
         "docs/solver-small-exact-projections-program.md",
         "docs/solver-separator-dynamic-interface-contract-preflight.md",
         "reports/2026-09-20-lane-a-c2-global-accounting-result-001.md",
-        "reports/2026-09-21-cut-region-flow-stage0-audit-001.md"
+        "reports/2026-09-21-cut-region-flow-stage0-audit-001.md",
+        "reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md",
+        "reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md",
+        "reports/2026-09-30-bc1-shadow-construction-cost-reduction-result-001.md"
       ],
-      "result": "Stage-B incidence is positive (2026-09-21): BC1 conflicts occur on 22/24 eligible independent parents and 105/263 connectivity-passing sampled states. This earns the smallest production-inert safety/economics consumer; no hot-path prune or general k-cut/flow machinery is authorized.",
+      "result": "Stage-B incidence is positive (2026-09-21): BC1 conflicts occur on 22/24 eligible independent parents and 105/263 connectivity-passing sampled states. The production-inert beam later-disposition shadow (2026-09-26) confirmed this on a live, exhaustive 24-parent population: 100% parent recurrence, zero production-inertness or solution-safety alarms, full disposition closure, and excellent per-catch construction economics (12 canonical work units versus a median 2,800-17,600 units of later work). Full-population cost accounting (2026-09-30, after a verified but modest connectivity-reuse/pending-mandatory-early-exit optimization pair) settled the aggregate question negatively: pricing every evaluated candidate (not only flagged ones) shows an unconditional per-candidate shadow costs 1,083,213 checks / 11,067,084 canonical work units -- 1.55x the entire 24-parent campaign's own workSpent (7,160,719); only 38.3% of checks are ever flagged, and the two optimizations cut average per-check cost only 14.9%. 'Check every survivor' is closed as a consumer policy; BC1's soundness and per-catch value are untouched, and no hot-path prune or general k-cut/flow machinery is authorized.",
       "constrains": [
         "Do not reopen Lane A C0-C2 unchanged: recurring compact interface identity and per-state bridge conservation are different premises.",
-        "Do not build a hot-path prune or general min-cut/flow engine from incidence alone; the earned next gate is production-inert safety differential plus cost/work-saved measurement with later-disposition overlap.",
+        "Do not build a hot-path prune or general min-cut/flow engine from incidence alone.",
+        "'Check every hard-prune-surviving candidate' is closed negative on full-population cost (1.55x campaign work); do not re-test that exact policy. A cheaper pre-filter for which candidates to check is the open direction.",
+        "Do not treat summed per-candidate work-distance as an additive saved-work estimate: flagged candidates' proof-to-disposition windows overlap within shared beam phases; only the per-parent median is a defensible per-catch statistic.",
+        "Do not infer an optimization has no aggregate value from a flat flagged-only cost metric: an early exit that only ever applies to unflagged candidates is structurally invisible there -- full-population accounting is required to price an optimization honestly.",
         "Preserve transition-resource multiplicity: parallel cardinal and portal edges between the same cells are distinct multiedges.",
         "Other projection families remain candidates, not live experiments, until separately earned."
       ],

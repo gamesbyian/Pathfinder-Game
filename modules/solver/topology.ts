@@ -880,14 +880,21 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
  * multigraph. Cardinal and portal transitions remain distinct resources even when they share the
  * same endpoint pair. This function makes no bridge/cut judgment and is never called by production
  * search.
+ *
+ * `reachedIsFresh` lets a caller that already knows the ordinary gauntlet just ran `isConnected()`
+ * for this exact `(pos, state)` (and passed) skip paying for the flood fill a second time — the
+ * shared `_reached()` scratch buffer is fully overwritten by each `isConnected()` call, so it is
+ * only safe to trust when the caller can prove nothing else touched it since. `computeBc1ShadowConflicts`
+ * is the only caller that ever passes this.
  */
 export function connectivityResearchSnapshot(
     pos: number,
     state: SolverSearchState,
     level: NormalizedLevel,
     prep: PrepLevel,
+    reachedIsFresh = false,
 ) {
-    const connected = isConnected(pos, state, level, prep);
+    const connected = reachedIsFresh || isConnected(pos, state, level, prep);
     const { w, h } = level.grid;
     const nodes: number[] = [];
     const nodeSet = new Set<number>();
@@ -941,6 +948,188 @@ export function connectivityResearchSnapshot(
         edges,
         pendingMandatory: [...new Set(pendingMandatory)].sort((a, b) => a - b),
     };
+}
+
+export type ConnectivityResearchSnapshot = ReturnType<typeof connectivityResearchSnapshot>;
+export type BridgeExcursionEdge = ConnectivityResearchSnapshot['edges'][number];
+
+export interface BridgeExcursionConflict {
+    edgeId: string;
+    edgeKind: 'cardinal' | 'portal';
+    a: number;
+    b: number;
+    farPendingIds: number[];
+    currentSideSize: number;
+    farSideSize: number;
+}
+
+export interface BridgeExcursionResult {
+    eligible: boolean;
+    reason: 'ordinary-connectivity-fails' | null;
+    unreachableIds: number[];
+    bridges: { edgeId: string; edgeKind: 'cardinal' | 'portal'; a: number; b: number }[];
+    conflicts: BridgeExcursionConflict[];
+}
+
+interface BridgeAdjacencyEntry { edgeId: string; to: number; }
+
+function _buildBridgeAdjacency(nodes: readonly number[], edges: readonly BridgeExcursionEdge[]) {
+    const nodeSet = new Set(nodes);
+    const adjacency = new Map<number, BridgeAdjacencyEntry[]>();
+    for (const node of nodeSet) adjacency.set(node, []);
+    const edgeById = new Map<string, BridgeExcursionEdge>();
+    for (const edge of edges) {
+        if (edgeById.has(edge.id)) throw new Error(`duplicate bridge-excursion edge id: ${edge.id}`);
+        if (!nodeSet.has(edge.a) || !nodeSet.has(edge.b)) throw new Error(`bridge-excursion edge ${edge.id} references unknown node`);
+        edgeById.set(edge.id, edge);
+        adjacency.get(edge.a)!.push({ edgeId: edge.id, to: edge.b });
+        if (edge.a !== edge.b) adjacency.get(edge.b)!.push({ edgeId: edge.id, to: edge.a });
+    }
+    // Deterministic traversal order: bridge identity/order must not depend on input array order.
+    for (const list of adjacency.values()) list.sort((x, y) => x.to - y.to || (x.edgeId < y.edgeId ? -1 : x.edgeId > y.edgeId ? 1 : 0));
+    return { nodeSet, adjacency, edgeById };
+}
+
+function _bridgeReachableFrom(start: number, adjacency: Map<number, BridgeAdjacencyEntry[]>, excludedEdgeId: string | null = null): Set<number> {
+    const seen = new Set<number>([start]);
+    const queue: number[] = [start];
+    for (let head = 0; head < queue.length; head++) {
+        const node = queue[head];
+        for (const edge of adjacency.get(node) ?? []) {
+            if (edge.edgeId === excludedEdgeId || seen.has(edge.to)) continue;
+            seen.add(edge.to);
+            queue.push(edge.to);
+        }
+    }
+    return seen;
+}
+
+/**
+ * WS2-CUT-BALANCE-PROJECTION (BC1): Tarjan bridge-finding over the exact-transition-resource
+ * multigraph `connectivityResearchSnapshot` exposes. Ported 1:1 (same DFS low-link algorithm,
+ * same parallel-multiedge handling) from the offline theorem helper
+ * `scripts/stress/cut-bridge-excursion-lib.mjs`'s `findMultigraphBridges`, which keeps its own
+ * Stage-A counterexample suite; this copy exists so the shadow observer below can run inside the
+ * shipped solver module boundary without importing a scripts/-tree tool. See
+ * `docs/solver-small-exact-projections-program.md` for the theorem/proof.
+ */
+export function findMultigraphBridges(nodes: readonly number[], edges: readonly BridgeExcursionEdge[]): BridgeExcursionEdge[] {
+    const { adjacency, edgeById } = _buildBridgeAdjacency(nodes, edges);
+    const discovery = new Map<number, number>();
+    const low = new Map<number, number>();
+    const bridges = new Set<string>();
+    let time = 0;
+
+    const visit = (node: number, parentEdgeId: string | null): void => {
+        discovery.set(node, time);
+        low.set(node, time);
+        time++;
+        for (const edge of adjacency.get(node) ?? []) {
+            if (edge.edgeId === parentEdgeId) continue;
+            const seenAt = discovery.get(edge.to);
+            if (seenAt !== undefined) {
+                low.set(node, Math.min(low.get(node)!, seenAt));
+                continue;
+            }
+            visit(edge.to, edge.edgeId);
+            low.set(node, Math.min(low.get(node)!, low.get(edge.to)!));
+            if (low.get(edge.to)! > discovery.get(node)!) bridges.add(edge.edgeId);
+        }
+    };
+
+    for (const node of [...adjacency.keys()].sort((a, b) => a - b)) if (!discovery.has(node)) visit(node, null);
+
+    return [...bridges].map(id => edgeById.get(id)!).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+}
+
+/**
+ * BC1 theorem application: for every bridge edge whose removal strands the current position from
+ * at least one pending mandatory-visit cell while the goal stays on the current side, no valid
+ * completion exists (proof: reaching that cell and returning to the goal would traverse the same
+ * single-use transition resource twice). See `docs/solver-small-exact-projections-program.md`
+ * ("Theorem BC1") for the full proof and mechanic perturbation matrix.
+ */
+export function findBridgeExcursionConflicts(snapshot: {
+    nodes: readonly number[];
+    edges: readonly BridgeExcursionEdge[];
+    current: number;
+    goal: number;
+    pendingMandatory: readonly number[];
+}): BridgeExcursionResult {
+    const { nodes, edges, current, goal, pendingMandatory } = snapshot;
+    const { nodeSet, adjacency } = _buildBridgeAdjacency(nodes, edges);
+    if (!nodeSet.has(current)) throw new Error('bridge-excursion current position is not in graph');
+    if (!nodeSet.has(goal)) throw new Error('bridge-excursion goal is not in graph');
+    const pendingIds = [...new Set(pendingMandatory)].sort((a, b) => a - b);
+    for (const id of pendingIds) if (!nodeSet.has(id)) throw new Error(`bridge-excursion pending cell is not in graph: ${id}`);
+
+    const ordinaryReach = _bridgeReachableFrom(current, adjacency);
+    const unreachable = [goal, ...pendingIds].filter(id => !ordinaryReach.has(id));
+    if (unreachable.length) {
+        return { eligible: false, reason: 'ordinary-connectivity-fails', unreachableIds: [...new Set(unreachable)].sort((a, b) => a - b), bridges: [], conflicts: [] };
+    }
+
+    const bridges = findMultigraphBridges(nodes, edges);
+    const conflicts: BridgeExcursionConflict[] = [];
+    for (const bridge of bridges) {
+        const currentSide = _bridgeReachableFrom(current, adjacency, bridge.id);
+        if (!currentSide.has(goal)) continue;
+        const farPendingIds = pendingIds.filter(id => !currentSide.has(id));
+        if (!farPendingIds.length) continue;
+        conflicts.push({
+            edgeId: bridge.id, edgeKind: bridge.kind, a: bridge.a, b: bridge.b,
+            farPendingIds, currentSideSize: currentSide.size, farSideSize: nodeSet.size - currentSide.size,
+        });
+    }
+
+    return {
+        eligible: true, reason: null, unreachableIds: [],
+        bridges: bridges.map(edge => ({ edgeId: edge.id, edgeKind: edge.kind, a: edge.a, b: edge.b })),
+        conflicts,
+    };
+}
+
+/**
+ * Beam hot-path seam for the BC1 shadow (search.ts, only when `research.observeBc1Candidate` is
+ * set): recomputes connectivity via the same real `isConnected()` the ordinary gauntlet just used
+ * (or would have, on a phase that skipped it) to expose the exact-transition-resource multigraph.
+ * That recomputation pays real `_workMeter`/`workMeter` cost identical to a live connectivity
+ * check, so both are snapshotted and restored immediately after, and the delta is reported
+ * separately as `constructionWorkUnits` instead — the shadow's own cost must never leak into the
+ * canonical work meter this function's caller budgets/scores against.
+ *
+ * `connectivityAlreadyFresh` (2026-09-26, seam-audit-nominated cost reduction — see
+ * `reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md`'s "next gate"): the
+ * pilot found the shadow's own recomputation dominates its aggregate cost, much of it redundant
+ * with connectivity the ordinary gauntlet already computed for this exact candidate this phase.
+ * The caller passes `true` only when it can prove that: `runConnectivity` was true for this
+ * candidate AND `PRUNE_CONNECTIVITY` was enabled, so `evaluatePrunedMove` already called
+ * `isConnected()` for this exact `(pos, state)` moments earlier with nothing else touching the
+ * shared `_reached()` buffer since.
+ */
+export function computeBc1ShadowConflicts(
+    pos: number,
+    state: SolverSearchState,
+    level: NormalizedLevel,
+    prep: PrepLevel,
+    connectivityAlreadyFresh = false,
+): { conflicts: BridgeExcursionConflict[]; constructionWorkUnits: number } {
+    // BC1 can only ever reject when some mandatory cell is still outstanding (a bridge that strands
+    // nothing is not a conflict — see findBridgeExcursionConflicts's own farPendingIds gate), so
+    // skip the flood/graph work entirely once every must-pass/must-cross obligation is satisfied.
+    // This is a pure early exit: it can never change the result, only whether this function pays to
+    // compute it.
+    const hasPendingMandatory = state.mustCrossMask !== 0 || popcount(state.mpVisitedMask) < level.mustPassKeys.length;
+    if (!hasPendingMandatory) return { conflicts: [], constructionWorkUnits: 0 };
+    const workBefore = prep._workMeter.units;
+    const globalWorkBefore = workMeter.units;
+    const snapshot = connectivityResearchSnapshot(pos, state, level, prep, connectivityAlreadyFresh);
+    const constructionWorkUnits = prep._workMeter.units - workBefore;
+    prep._workMeter.units = workBefore;
+    workMeter.units = globalWorkBefore;
+    if (!snapshot.connected) return { conflicts: [], constructionWorkUnits };
+    const bc1 = findBridgeExcursionConflicts(snapshot);
+    return { conflicts: bc1.eligible ? bc1.conflicts : [], constructionWorkUnits };
 }
 
 export function isConnectedForFalseGoalTriggerSearch(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {

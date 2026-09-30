@@ -50,11 +50,11 @@ Evidence: [confirmation result](../reports/2026-09-26-ws1-late-continuation-sing
 
 **State:** SUPPORTING / bounded-compute.
 
-BC1 remains live only as a production-inert later-disposition safety/economics consumer after ordinary hard-prune survival. Record proof cost, work-at-proof, later reject/cull/descendant work, and valid/reference safety. No hot-path prune yet.
+The production-inert beam later-disposition shadow is built and piloted against a live 24-parent population: zero safety/inertness alarms, 100% parent recurrence, full disposition closure, excellent per-catch construction economics (12 work units to expose thousands of units of later work). Full-population cost accounting settled the aggregate question negatively: unconditional per-candidate checking would cost 1.55x total campaign work (2.55x if deployed), since only 38.3% of checks are ever flagged and two verified optimizations cut per-check cost only 14.9%. "Check every survivor" is closed as a consumer policy; BC1's soundness/per-catch value stand. Next gate: find a materially cheaper pre-filter for which candidates to check, then a behavioral consumer at matched work. No hot-path prune yet.
 
 Question: `WS2-CUT-BALANCE-PROJECTION`.
 
-Evidence: [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md).
+Evidence: [cost-reduction result](../reports/2026-09-30-bc1-shadow-construction-cost-reduction-result-001.md) · [pilot result](../reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md) · [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md).
 
 ### 5. WS6 repair reachability / speed
 
@@ -128,7 +128,7 @@ Detailed closeout evidence and reopen conditions are preserved in the [pre-compa
 | 2 | Repair-deadline allocation | `closed` | `reopen-only` | PROMOTED 2026-09-26: 7 gains/0 losses nomination + 180/180 zero-regression confirmation both positive; MS_CAP interaction resolved (interactive path never runs the probe regardless of its value) | none; reopen only for a materially different dose/premise | `WS2-REPAIR-DEADLINE-ALLOCATION` |
 | 2I | Capability invention | `closed` | `reopen-only` | PROMOTED 2026-09-26: both flags default-ON, 10 referee-valid solves (8 new), 0 regressions across every tested branch row | none; reopen only for a materially different exposure form | `WS2-CAPABILITY-INVENTION-DEMAND` |
 | 1 | Automatic action selection | `closed` | `reopen-only` | CONCLUDED-NEGATIVE: N=160 confirmation found 0/44 nominated validation levels, well below the well-powered expectation | reopen only with a materially different signal/model design | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
-| 2X | Small exact projections | `supporting` | `bounded-compute` | BC1 production-inert later-disposition economics/safety consumer | beam-hosted later-disposition shadow when immediate | `WS2-CUT-BALANCE-PROJECTION` |
+| 2X | Small exact projections | `supporting` | `bounded-compute` | BC1 beam later-disposition shadow built and piloted (24 parents): zero safety alarms, 100% recurrence; unconditional-per-candidate checking closed negative on full-population cost (1.55x campaign work) | find a materially cheaper pre-filter for which candidates to check, then behavioral consumer at matched work | `WS2-CUT-BALANCE-PROJECTION` |
 | 2F | Forced-work capture economics | `closed` | `reopen-only` | tested global-compression/post-recognition forms closed; broader question identity retained | reopen only for a materially different sound recognizer | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
 | 2R | Parity response signature | `on-demand` | `reopen-only` | static parity form closed; dormant conditional lane retained for materially different mechanism evidence | reopen only on materially different parity opportunity structure | `WS2-PARITY-RESPONSE-SIGNATURE` |
 | 6/7 | Repair reachability / speed | `supporting` | `bounded-compute` | independent-parent replication/speed support lane | replication/speed profiling when immediate | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
