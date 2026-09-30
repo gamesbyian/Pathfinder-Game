@@ -4,7 +4,7 @@ import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import type { PruneDiagnostics } from './hard-prune-pipeline.js';
-import { computeBc1ShadowConflicts } from './topology.js';
+import { computeBc1ShadowConflicts, bc1HasConflictFast } from './topology.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, UndoToken, ScoringProfile, StructuralOrderingBias, SolverSearchState } from './types.js';
 
@@ -1101,6 +1101,11 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                         } else {
                         const _bc1T0 = performance.now();
                         const shadow = computeBc1ShadowConflicts(next, ws, level, prep, connectivityAlreadyFresh);
+                        if (connectivityAlreadyFresh && research.verifyBc1Fast) {
+                            const _fast = bc1HasConflictFast(next, ws, level);
+                            if (_fast !== null && _fast !== (shadow.conflicts.length > 0)) research.verifyBc1Fast(false);
+                            else research.verifyBc1Fast(_fast !== null);
+                        }
                         research.observeBc1ShadowCost?.(shadow.constructionWorkUnits, shadow.conflicts.length > 0 ? 'first-flag' : 'clear',
                             { pending: level.mustPassKeys.length - popcount(ws.mpVisitedMask) + popcount(ws.mustCrossMask), remainingSteps: rSteps, depth: node.depth + 1, wallMs: performance.now() - _bc1T0 });
                         if (shadow.conflicts.length > 0) bc1InheritedDead = true;
@@ -1117,7 +1122,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // A pruned candidate is never retained, so deadness needs no lineage inheritance here.
                 let bc1Pruned = false;
                 if (ok && cfg && cfg.STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE === true && runConnectivity && cfg.PRUNE_CONNECTIVITY) {
-                    if (computeBc1ShadowConflicts(next, ws, level, prep, true).conflicts.length > 0) {
+                    const _bc1Fast = bc1HasConflictFast(next, ws, level);
+                    if (_bc1Fast ?? computeBc1ShadowConflicts(next, ws, level, prep, true).conflicts.length > 0) {
                         bc1Pruned = true;
                         countFlow('hard-pruned', 1);
                     }

@@ -76,6 +76,9 @@ export class Bc1ShadowDispositionObserver implements BeamResearchObserver {
     readonly bc1LineageAware: boolean;
     readonly bc1FreshOnly: boolean;
     private shadowWallMs = 0;
+    fastAgree = 0;
+    fastMismatch = 0;
+    verifyBc1Fast(agreed: boolean): void { if (agreed) this.fastAgree++; else this.fastMismatch++; }
 
     constructor(options: { lineageAware?: boolean; freshOnly?: boolean } = {}) {
         this.bc1FreshOnly = options.freshOnly === true;
@@ -168,9 +171,9 @@ export class Bc1ShadowDispositionObserver implements BeamResearchObserver {
         return { alarm: violating.length > 0, violatingPrefixes: violating };
     }
 
-    summary(): { flaggedCount: number; resolved: Bc1DispositionRecord[]; shadowInvocations: number; shadowTotalCost: number; lineageCounts: { inherited: number; 'first-flag': number; clear: number; skipped: number }; shadowWallMs: number; featureHist: Record<string, [number, number, number]> } {
+    summary(): { flaggedCount: number; resolved: Bc1DispositionRecord[]; shadowInvocations: number; shadowTotalCost: number; lineageCounts: { inherited: number; 'first-flag': number; clear: number; skipped: number }; shadowWallMs: number; fastAgree: number; fastMismatch: number; featureHist: Record<string, [number, number, number]> } {
         this.finalize();
         return { flaggedCount: this.states.length, resolved: this.states.map(s => s.disposition!),
-            shadowInvocations: this.shadowInvocations, shadowTotalCost: this.shadowTotalCost, lineageCounts: { ...this.lineageCounts }, shadowWallMs: this.shadowWallMs, featureHist: Object.fromEntries(this.featureHist) };
+            shadowInvocations: this.shadowInvocations, shadowTotalCost: this.shadowTotalCost, lineageCounts: { ...this.lineageCounts }, shadowWallMs: this.shadowWallMs, fastAgree: this.fastAgree, fastMismatch: this.fastMismatch, featureHist: Object.fromEntries(this.featureHist) };
     }
 }

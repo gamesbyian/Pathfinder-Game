@@ -92,7 +92,7 @@ for (const rawId of requestedLevelIds) {
         // deployment cost figure totalConstructionWorkUnits (flagged-only) cannot supply, per the
         // 2026-09-30 cost-reduction result.
         shadowInvocations: summary.shadowInvocations, shadowTotalCost: summary.shadowTotalCost,
-        lineageAware, freshOnly, shadowWallMs: summary.shadowWallMs, lineageCounts: summary.lineageCounts, featureHist: summary.featureHist,
+        lineageAware, freshOnly, shadowWallMs: summary.shadowWallMs, fastAgree: summary.fastAgree, fastMismatch: summary.fastMismatch, lineageCounts: summary.lineageCounts, featureHist: summary.featureHist,
         // Full per-candidate `resolved` (one entry per flagged prefix, each carrying its own path
         // array) is not retained: flagged counts run into the tens of thousands per level, and
         // JSON.stringify-ing every one across a multi-parent run can exceed V8's max string length.

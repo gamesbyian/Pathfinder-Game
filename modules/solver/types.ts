@@ -495,6 +495,8 @@ export interface BeamResearchObserver {
     bc1LineageAware?: boolean;
     /** Research pre-filter policy: evaluate BC1 only when ordinary connectivity was just computed for this candidate (flood free); other candidates are `skipped` (treated live). */
     bc1FreshOnly?: boolean;
+    /** Differential check of bc1HasConflictFast against the slow path: called with true on agreement (fast path used), false on mismatch. */
+    verifyBc1Fast?(agreed: boolean): void;
 }
 
 export interface RepairEliteResearchRecord {
