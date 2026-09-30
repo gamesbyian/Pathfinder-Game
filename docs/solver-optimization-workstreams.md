@@ -46,15 +46,15 @@ Question: `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` — closed. Reopen only wi
 
 Evidence: [confirmation result](../reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md) · [plan](../reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md) · [recovery](../reports/2026-09-25-ws1-precommitment-overlap-recovery-001.md) · [Stage A](../reports/2026-09-25-ws1-late-continuation-stage-a-opportunity-canary-result-001.md).
 
-### 4. BC1 later-disposition shadow
+### 4. BC1 later-disposition shadow / fresh-connectivity prune
 
-**State:** SUPPORTING / bounded-compute.
+**State:** ACTIVE — opt-in consumer `STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE` (default-OFF) under production-ladder confirmation.
 
-The production-inert beam later-disposition shadow is built and piloted against a live 24-parent population: zero safety/inertness alarms, 100% parent recurrence, full disposition closure, excellent per-catch construction economics (12 work units to expose thousands of units of later work). Full-population cost accounting settled the aggregate question negatively: unconditional per-candidate checking would cost 1.55x total campaign work (2.55x if deployed), since only 38.3% of checks are ever flagged and two verified optimizations cut per-check cost only 14.9%. "Check every survivor" is closed as a consumer policy; BC1's soundness/per-catch value stand. Lineage-aware follow-up: the 1.55x figure was lineage-inflated; a first-flag-pruning model costs 63.3% of campaign work (19,427 dead roots; 465k clear checks dominate) — [result](../reports/2026-09-30-bc1-lineage-aware-cost-result-001.md). Next gate: find a materially cheaper pre-filter for the clear checks for which candidates to check, then a behavioral consumer at matched work. No hot-path prune yet.
+Shadow economics closed the "check every survivor" form (lineage-inflated 1.55x; 63% under a first-flag model), and the fresh-only schedule (evaluate BC1 only where ordinary connectivity just ran) removed all canonical flood cost at 86% dead-lineage coverage. The behavioral consumer then produced, at matched raw-beam settings, 20 gains / 1 loss on a disjoint 300 levels; on the production ladder the 21 gain/loss ids went 21/21 vs 20/21 (-15.9% work, one new cold solve `R00180`), but the 150-level solved-control run lost `R02401` (trajectory perturbation of a single width-5000 retry beam; control solves it at its 39th attempt). Net so far +1/-1 on production. Next gate: representative 300-id production A/B (control vs flag, runs 36772811676 / 36772815197); promote only on a clearly positive net with bounded losses, otherwise keep opt-in and consider stage-restricted application.
 
 Question: `WS2-CUT-BALANCE-PROJECTION`.
 
-Evidence: [cost-reduction result](../reports/2026-09-30-bc1-shadow-construction-cost-reduction-result-001.md) · [pilot result](../reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md) · [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md).
+Evidence: [production/raw A/B](../reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md) · [fresh-only pre-filter](../reports/2026-09-30-bc1-fresh-only-prefilter-result-001.md) · [lineage cost](../reports/2026-09-30-bc1-lineage-aware-cost-result-001.md) · [cost-reduction result](../reports/2026-09-30-bc1-shadow-construction-cost-reduction-result-001.md) · [pilot result](../reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md) · [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md).
 
 ### 5. WS6 repair reachability / speed
 
