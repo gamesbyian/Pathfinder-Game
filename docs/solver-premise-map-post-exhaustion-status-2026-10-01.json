@@ -1,0 +1,1466 @@
+{
+  "schemaVersion": 1,
+  "overlayId": "solver-premise-map-post-exhaustion-status-2026-10-01",
+  "baseSnapshot": "solver-premise-map-v2-2026-09-17",
+  "basePropositionCount": 148,
+  "classificationCount": 148,
+  "boundary": "Retrospective evidence-state overlay only. It does not mutate the frozen v2 proposition inventory or claim independent preregistration. Unchanged entries mean no material post-v2 change was identified in the reviewed evidence, not that the premise is closed.",
+  "reviewedEvidenceWindow": "2026-09-18 through 2026-10-01, emphasizing decision-bearing solver-science results and queue closeouts",
+  "newPremiseIdsAdmitted": [],
+  "conclusion": "No genuinely new semantic parent premise was required by the reviewed post-v2 evidence. The principal changes are evidence-state updates and newly actionable retained-evidence opportunities on existing premises.",
+  "entries": [
+    {
+      "id": "P001",
+      "proposition": "Canonical validation accepts every solution that should count as a legitimate solve.",
+      "v2Status": "open / partially audited",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P002",
+      "proposition": "The current benchmark population is representative enough that solve-count deltas generalize to the residual of interest.",
+      "v2Status": "open / population-sensitive",
+      "postExhaustionClassification": "strengthened-population-sensitive",
+      "postV2Interpretation": "WS1 frozen legal-signal behavior failed to transfer from historical C2 regimes to 160 fresh independent parents; BC1 effects also concentrate by routing regime.",
+      "evidenceRefs": [
+        "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md",
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P003",
+      "proposition": "A zero unique-solve delta is sufficient evidence that a signal or capability is useless.",
+      "v2Status": "explicitly weakened",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P004",
+      "proposition": "Sparse solve count has enough resolution to discover mechanisms before they are production-ready.",
+      "v2Status": "open",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P005",
+      "proposition": "Historical negative evidence remains portable across architecture, production boundary, budgets, and residual populations.",
+      "v2Status": "explicitly conditional",
+      "postExhaustionClassification": "strengthened-explicitly-conditional",
+      "postV2Interpretation": "Fresh-population WS1 confirmation diverged sharply from retained historical behavior, reinforcing architecture/population-epoch conditioning of old results.",
+      "evidenceRefs": [
+        "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P006",
+      "proposition": "Independent validation/referee methods are themselves independent of the treatment and free of construction leakage.",
+      "v2Status": "open / guarded",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P010",
+      "proposition": "The normalized puzzle/input representation preserves every completion-relevant distinction.",
+      "v2Status": "open",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P011",
+      "proposition": "Residual-state equality is a sufficient proxy for future behavioral equivalence.",
+      "v2Status": "open / naive forms weakened",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P012",
+      "proposition": "Full path history contains completion-relevant topology not captured by ordinary decision vocabulary.",
+      "v2Status": "supported premise / open mechanism",
+      "postExhaustionClassification": "strengthened-supported",
+      "postV2Interpretation": "BC1 provides a sound current-input topology consequence with production value, confirming that path-conditioned graph structure can matter beyond ordinary scalar progress.",
+      "evidenceRefs": [
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P013",
+      "proposition": "Completion regimes/options should be represented explicitly before geometric commitment.",
+      "v2Status": "largely untested",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P014",
+      "proposition": "A sound compact region/interface contract can summarize separator-bounded subproblems.",
+      "v2Status": "active/prepared gate",
+      "postExhaustionClassification": "narrow-form-closed-parent-open",
+      "postV2Interpretation": "Lane A C2 became exact-outcome pure only by collapsing repeated signature support to 7.14%; the tested compact interface is representation-explosive, while the broader decomposition premise survives.",
+      "evidenceRefs": [
+        "reports/2026-09-20-lane-a-c2-global-accounting-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P015",
+      "proposition": "Current-input symmetries/canonical forms can collapse repeated equivalent work soundly.",
+      "v2Status": "deferred",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P016",
+      "proposition": "A graph/sequence representation richer than current scalar/local state would expose missing global relations.",
+      "v2Status": "deferred / broad form unearned",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P020",
+      "proposition": "All needed semantic/lexical candidates are present in the candidate graph supplied to search.",
+      "v2Status": "open",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P021",
+      "proposition": "Synonym/lexical expansion can add solutions missed by the base source.",
+      "v2Status": "historically explored / conditional",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P022",
+      "proposition": "External lexical resources can supply missing candidates or relations.",
+      "v2Status": "deferred",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P023",
+      "proposition": "Language-model proposal can generate or rerank candidates that symbolic sources miss.",
+      "v2Status": "deferred / unearned",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P024",
+      "proposition": "For each unsolved level, is an accepted solution absent from the candidate graph, present but unreachable, or reached and lost later?",
+      "v2Status": "major under-observed question",
+      "postExhaustionClassification": "evidence-now-richer-still-open",
+      "postV2Interpretation": "Failure-response, exact-label, routing and intervention evidence now provide more stages of the lineage, but no universal source-to-validation first-loss partition exists.",
+      "evidenceRefs": [
+        "reports/2026-09-21-response-guided-premise-nominations-001.md",
+        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P030",
+      "proposition": "Current turn gating/pruning may suppress unique valid solves.",
+      "v2Status": "historically central / specific forms tested",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P031",
+      "proposition": "Every production prune is sound over the complete game semantics it assumes.",
+      "v2Status": "must remain invariant",
+      "postExhaustionClassification": "strengthened-soundness-separate-from-value",
+      "postV2Interpretation": "BC1 and BC1-G were sound under large witness replays, yet consumer value differed radically by seam/incidence; soundness remains necessary but not sufficient for usefulness.",
+      "evidenceRefs": [
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
+        "reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P032",
+      "proposition": "Several individually feasible remaining obligations can be jointly unrealizable in a way current scalar bounds fail to detect.",
+      "v2Status": "high-value open",
+      "postExhaustionClassification": "narrowed-static-forms-negative-parent-open",
+      "postV2Interpretation": "Static parity phase-distance, checkerboard capacity and frozen compact event vocabularies have negligible incremental incidence, but shared-resource/joint-feasibility parent questions remain open.",
+      "evidenceRefs": [
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P033",
+      "proposition": "A small scalar future-feasibility descriptor can separate LIVE from DEAD states.",
+      "v2Status": "closed tested form",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P034",
+      "proposition": "A compact categorical event-feasibility vocabulary recurs across parents as a LIVE/DEAD discriminator.",
+      "v2Status": "closed tested form",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P035",
+      "proposition": "Small causal DEAD cores can be derived per instance and reused to avoid equivalent future failure.",
+      "v2Status": "deferred, population/contrast blocked",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P036",
+      "proposition": "Some soft heuristic relations have sound subdomains that can be promoted to exact bounds, forced moves, or mode switches.",
+      "v2Status": "deferred trigger",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P037",
+      "proposition": "Bounded exact reasoning can be purchased during a cold solve when uncertainty is expensive.",
+      "v2Status": "high-value open / deferred until tractability signal",
+      "postExhaustionClassification": "consumer-specific-negative-parent-open",
+      "postV2Interpretation": "A strong exact relational fact produced zero value at the tested D1 beam-retention seam; exact querying remains open only with a different predicate/seam and positive oracle ceiling.",
+      "evidenceRefs": [
+        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P040",
+      "proposition": "Move/exploration ordering can recover solves under unchanged legality.",
+      "v2Status": "strongly demonstrated but saturated",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P041",
+      "proposition": "Whole-puzzle context can improve local move ranking enough to recover unique solves.",
+      "v2Status": "mixed / many tested forms reduced",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P042",
+      "proposition": "Semantic embeddings/rescoring expose useful solution structure.",
+      "v2Status": "signal exists; many solve-count forms reduced",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P043",
+      "proposition": "Scalar score aggregation is an adequate decision object for strategically different future regimes.",
+      "v2Status": "under-questioned",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P044",
+      "proposition": "Disagreement/uncertainty among scoring views can identify states where exploration is more valuable than exploitation.",
+      "v2Status": "largely untested as explicit premise",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P045",
+      "proposition": "A temporarily worse-looking intermediate state may be necessary for a solvable completion, violating monotone-progress assumptions embedded in heuristics.",
+      "v2Status": "implicit / under-tested",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P050",
+      "proposition": "Preserving structurally diverse partial futures can prevent extinction of the only live basin.",
+      "v2Status": "partly supported; generic form insufficient",
+      "postExhaustionClassification": "strengthened-frontier-occupancy-sensitive",
+      "postV2Interpretation": "Sound BC1 pruning changed solves primarily by freeing beam slots and perturbing trajectory, directly confirming that retention occupancy can create or destroy finite-envelope capability.",
+      "evidenceRefs": [
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P051",
+      "proposition": "Coarse portal state merging can expose a large positive solve basin.",
+      "v2Status": "demonstrated capability; placement-sensitive",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P052",
+      "proposition": "Duplicate detection should optimize syntactic or low-dimensional similarity rather than future behavioral equivalence.",
+      "v2Status": "weakened",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P053",
+      "proposition": "Pareto or regime-aware retention can preserve strategically incomparable futures better than scalar top-k beam selection.",
+      "v2Status": "largely unasked explicit form",
+      "postExhaustionClassification": "narrow-consumer-negative-parent-open",
+      "postV2Interpretation": "Exact relational viability did not help the tested beam-retention decision, narrowing one regime-aware retention consumer without closing set/regime-aware retention generally.",
+      "evidenceRefs": [
+        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P060",
+      "proposition": "More generic budget can recover solves missed only because search stops too early.",
+      "v2Status": "known but broad forms closed/expensive",
+      "postExhaustionClassification": "scope-split-specific-dose-positive",
+      "postV2Interpretation": "Generic budget widening stays weak, but repair-family node-cap allocation produced 7 gains/0 losses and was promoted after regression confirmation; dose shortage is real when tied to demonstrated capability.",
+      "evidenceRefs": [
+        "reports/2026-09-26-ws2-repair-deadline-ms-cap-resolution-and-promotion-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P061",
+      "proposition": "Puzzle-specific routing among genuinely different search modes can increase unique solves.",
+      "v2Status": "partly implemented / conditional",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P062",
+      "proposition": "Routing should operate at frontier episode/state rather than only whole-puzzle or stage granularity.",
+      "v2Status": "underexplored",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P063",
+      "proposition": "Search should infer its current failure mode online and change strategy, rather than execute a mostly fixed pipeline.",
+      "v2Status": "underexplored",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P064",
+      "proposition": "A known capability may be valuable only in a dead-last additive placement that cannot displace ordinary winners.",
+      "v2Status": "strongly demonstrated",
+      "postExhaustionClassification": "strongly-confirmed",
+      "postV2Interpretation": "Portal dead-last allocation, CID exposure promotions, and repair-deadline allocation all show latent capability can depend critically on placement/exposure without implying a missing semantic operation.",
+      "evidenceRefs": [
+        "reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md",
+        "reports/2026-09-26-ws2-repair-deadline-ms-cap-resolution-and-promotion-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P065",
+      "proposition": "Expected new solves per marginal unit of work is a better allocation objective than raw per-stage success rate.",
+      "v2Status": "implicit / partly practiced",
+      "postExhaustionClassification": "strengthened-marginal-value",
+      "postV2Interpretation": "Forced-work and BC1 work accounting repeatedly show local incidence is insufficient; value depends on displaced or avoided canonical work and unique solves under a fixed envelope.",
+      "evidenceRefs": [
+        "reports/2026-09-25-forced-work-capture-economics-phase-census-result-001.md",
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P066",
+      "proposition": "Repair locality is governed by a small commitment interface rather than remaining path length.",
+      "v2Status": "closed tested form on Card-E",
+      "postExhaustionClassification": "closed-form-strengthened",
+      "postV2Interpretation": "Independent H3 transfer confirmed remaining-length ordering captures most achievable rescues cheaply, further weakening the tested small commitment-interface replacement for that repair population.",
+      "evidenceRefs": [
+        "reports/2026-09-20-h3-independent-transfer-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P067",
+      "proposition": "Repeated passes should share useful knowledge rather than restart epistemically from zero.",
+      "v2Status": "high-value open",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P070",
+      "proposition": "Forward valid-prefix construction is the right dominant search object.",
+      "v2Status": "strong incumbent, open premise",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P071",
+      "proposition": "Backward reasoning from completion requirements can expose constraints invisible to forward local traversal.",
+      "v2Status": "open / deferred cheap-gate",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P072",
+      "proposition": "Bidirectional or meet-in-the-middle search can exploit a compact interface without full path-history explosion.",
+      "v2Status": "deferred",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P073",
+      "proposition": "Relaxed complete-path candidates can be repaired by local structural surgery into accepted solutions.",
+      "v2Status": "deferred cheapest falsifier",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P074",
+      "proposition": "Region decomposition plus interface composition can solve globally hard instances from locally tractable pieces.",
+      "v2Status": "active/prepared premise gate",
+      "postExhaustionClassification": "narrow-form-closed-parent-open",
+      "postV2Interpretation": "The nested compact separator-interface contract failed compression at C2; decomposition remains open only under materially different interface representations.",
+      "evidenceRefs": [
+        "reports/2026-09-20-lane-a-c2-global-accounting-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P075",
+      "proposition": "Per-level search-plan compilation from cold structural facts can select/sequence reasoning primitives uniquely for each puzzle.",
+      "v2Status": "deferred",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P076",
+      "proposition": "Choice-bearing macro-actions can compress repeated route structure without hiding important alternatives.",
+      "v2Status": "deferred",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P077",
+      "proposition": "Human-inspired reasoning motifs can create qualitatively different search trajectories.",
+      "v2Status": "deferred broad idea",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P080",
+      "proposition": "Backtracking/restart is sufficient response to failure; explicit causal explanation is unnecessary.",
+      "v2Status": "strongly challenged",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P081",
+      "proposition": "Failure causes can be represented as compact constraints/cores that generalize within the same solve.",
+      "v2Status": "open / early evidence",
+      "postExhaustionClassification": "development-evidence-strengthened",
+      "postV2Interpretation": "WS6 one-parent causal-divergence microscope repeatedly changed bounded path-resource and relational-bound families while ordinary hard facts matched; reusable failure abstraction remains unconfirmed across parents.",
+      "evidenceRefs": [
+        "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P082",
+      "proposition": "Solver can identify which earlier commitment caused contradiction and revise only that commitment.",
+      "v2Status": "major open",
+      "postExhaustionClassification": "development-evidence-strengthened",
+      "postV2Interpretation": "WS6 found exact causal divergence points with bounded semantic deltas, supporting targeted-revision plausibility but not yet a repair consumer.",
+      "evidenceRefs": [
+        "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P083",
+      "proposition": "DFS, beam, repair, exact probes and other processes should exchange typed facts during one invocation.",
+      "v2Status": "major open / deferred",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P084",
+      "proposition": "A failed technique may be more valuable as an information probe than as a direct solver treatment.",
+      "v2Status": "underused explicit premise",
+      "postExhaustionClassification": "strengthened-methodologically",
+      "postV2Interpretation": "Response-guided and retained-evidence programs repeatedly extracted useful premises from treatments/observers without requiring direct solve promotion.",
+      "evidenceRefs": [
+        "reports/2026-09-21-response-guided-premise-nominations-001.md",
+        "reports/2026-09-21-retained-evidence-inference-harvest-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P090",
+      "proposition": "Mechanic obligations can be evaluated mostly independently plus a few narrow joint propagators.",
+      "v2Status": "challenged",
+      "postExhaustionClassification": "narrowed-static-forms-parent-open",
+      "postV2Interpretation": "Static parity/checkerboard and compact event forms closed on incremental incidence, while richer cross-obligation/resource competition remains unresolved.",
+      "evidenceRefs": [
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P091",
+      "proposition": "Obligation order/interface choices can be solved as a relational feasibility problem before detailed geometry.",
+      "v2Status": "open after H1 narrowing",
+      "postExhaustionClassification": "narrowed-consumers-parent-open",
+      "postV2Interpretation": "Relational feasibility is real in selected states, but D1 beam ranking had no decision value; future forms need a different production seam or repair/revision target.",
+      "evidenceRefs": [
+        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P092",
+      "proposition": "A hierarchy from abstract obligations to concrete path geometry can guide search more effectively than direct move ranking.",
+      "v2Status": "largely untested",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P093",
+      "proposition": "Path-conditioned separator-side commitments can produce sound accessibility consequences.",
+      "v2Status": "supported premise / open derivation",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P100",
+      "proposition": "Repair/reconstruction can reach solutions forward DFS/beam miss.",
+      "v2Status": "demonstrated",
+      "postExhaustionClassification": "strengthened-capability-and-dose",
+      "postV2Interpretation": "Repair-family capability was independently demonstrated and benefited from materially larger per-attempt budgets; repair remains complementary rather than merely fallback noise.",
+      "evidenceRefs": [
+        "reports/2026-09-26-ws2-repair-deadline-ms-cap-resolution-and-promotion-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P101",
+      "proposition": "Repair should reconstruct prefixes rather than preserve nearly-correct complete global structure.",
+      "v2Status": "open",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P102",
+      "proposition": "Near-miss signals can identify where additional repair work has positive marginal solve value.",
+      "v2Status": "historically conditional",
+      "postExhaustionClassification": "strengthened-length-conditioned-allocation",
+      "postV2Interpretation": "Independent H3 transfer showed ascending remaining length recovers 10/12 achievable rescues at 20% of full shared budget, providing a strong repair-allocation signal on that population.",
+      "evidenceRefs": [
+        "reports/2026-09-20-h3-independent-transfer-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P110",
+      "proposition": "A learned ranker/policy can capture interactions hand-written heuristics miss.",
+      "v2Status": "deferred until labeled evidence",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P111",
+      "proposition": "Cross-puzzle transfer/meta-learning can infer reusable priors without violating level-blindness.",
+      "v2Status": "deferred / provenance-sensitive",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P112",
+      "proposition": "Solved traces are a censored sample of search behavior and may not identify what distinguishes unsolved instances.",
+      "v2Status": "underasked",
+      "postExhaustionClassification": "strengthened-selection-generalization-warning",
+      "postV2Interpretation": "A historical legal-signal model with repeated retained-evidence capture produced zero nominations on a fresh independent population, demonstrating that solved/retained trace regularities need not transfer.",
+      "evidenceRefs": [
+        "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P113",
+      "proposition": "The residual corpus contains distinct latent regimes that should be modeled separately rather than as one unsolved population.",
+      "v2Status": "strongly suggested / ongoing",
+      "postExhaustionClassification": "strengthened-regime-heterogeneity",
+      "postV2Interpretation": "BC1 gains and all representative-sample losses concentrate in the intersection-heavy regime; multi-portal remains disproportionately unsolved and little helped by BC1.",
+      "evidenceRefs": [
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P114",
+      "proposition": "Generation methods cover the structurally relevant Pathfinder space rather than over-sampling familiar motifs.",
+      "v2Status": "open",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P120",
+      "proposition": "Observed solve deltas are deterministic mechanism effects rather than timing/parallel noise.",
+      "v2Status": "explicitly guarded",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P121",
+      "proposition": "Caches and memoization preserve semantic validity under state/config/version changes.",
+      "v2Status": "open audit surface",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P122",
+      "proposition": "Live frontier continuation across tranches/stages can preserve expensive useful search state.",
+      "v2Status": "research primitive exists; allocation conditional",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P123",
+      "proposition": "workSpent or nominal budget is comparable across mechanisms and stages.",
+      "v2Status": "requires explicit accounting",
+      "postExhaustionClassification": "strengthened-accounting-guardrail",
+      "postV2Interpretation": "Repair-deadline promotion, forced-work economics and BC1 consumer pricing all required mechanism-specific work accounting rather than nominal budget equivalence.",
+      "evidenceRefs": [
+        "reports/2026-09-26-ws2-repair-deadline-ms-cap-resolution-and-promotion-result-001.md",
+        "reports/2026-09-25-forced-work-capture-economics-phase-census-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P130",
+      "proposition": "Named algorithm families are a useful unit for generating new solver hypotheses.",
+      "v2Status": "explicitly demoted",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P131",
+      "proposition": "Current research vocabulary itself biases attention toward easily measurable ranking/order questions.",
+      "v2Status": "strongly suggested",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P132",
+      "proposition": "A mechanism should show immediate solve gain before deeper instrumentation is justified.",
+      "v2Status": "weakened",
+      "postExhaustionClassification": "strengthened-enabling-evidence-value",
+      "postV2Interpretation": "BC1 progressed through theorem/incidence/shadow economics before solve promotion, while BC1-G stopped after soundness+incidence without a production A/B; immediate solve gain is not the only useful maturity signal.",
+      "evidenceRefs": [
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
+        "reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P133",
+      "proposition": "Interactions among individually weak mechanisms can create capability unavailable to either alone.",
+      "v2Status": "underexplored systematically",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P134",
+      "proposition": "The cheapest useful experiment may be a premise falsifier rather than a miniature implementation.",
+      "v2Status": "current doctrine / still unevenly applied",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P135",
+      "proposition": "For each current miss, what is the first irreversible loss event relative to an exact accepted continuation?",
+      "v2Status": "major missing organizing question",
+      "postExhaustionClassification": "evidence-now-available-for-bounded-refresh",
+      "postV2Interpretation": "Recent exact relational contrasts, WS6 divergence pairs, sound BC1 gain/loss perturbations and failure-response capsules create substantially richer retained material for causal first-loss mining, though no universal lineage exists.",
+      "evidenceRefs": [
+        "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md",
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P136",
+      "proposition": "What search decisions have high epistemic value even when they are not immediately high-scoring for completion?",
+      "v2Status": "largely unasked",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P137",
+      "proposition": "A closed tested form closes its conceptual parent question.",
+      "v2Status": "explicitly rejected by current doctrine",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P140",
+      "proposition": "A valid solution may require deliberately preserving optionality rather than maximizing immediate progress.",
+      "v2Status": "underasked",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P141",
+      "proposition": "The solver should reason over sets of possible futures, not only individual prefixes.",
+      "v2Status": "largely unasked explicit form",
+      "postExhaustionClassification": "strengthened-set-level-sensitivity",
+      "postV2Interpretation": "BC1's sound candidate removals create both gains and losses through frontier trajectory changes, showing set composition itself is decision-bearing even when removed states are impossible.",
+      "evidenceRefs": [
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P142",
+      "proposition": "The best next action can be one that reduces uncertainty about feasibility rather than one that maximizes score.",
+      "v2Status": "largely unasked",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P143",
+      "proposition": "A relaxed or partially invalid state space may be a better planning substrate than restricting all intermediate states to valid prefixes.",
+      "v2Status": "largely unasked / complete-path LNS adjacent",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P144",
+      "proposition": "Which solved levels are only accidentally solved by the current pipeline and would become failures under small perturbation?",
+      "v2Status": "underasked",
+      "postExhaustionClassification": "evidence-now-rich",
+      "postV2Interpretation": "BC1 produced reproducible losses of previously solved levels despite sound pruning, yielding a concrete fragile-winner population for perturbation analysis rather than a hypothetical audit target.",
+      "evidenceRefs": [
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P145",
+      "proposition": "Which unsolved levels are near a phase transition where one local policy change creates a solve, versus structurally outside current capability?",
+      "v2Status": "underasked synthesis",
+      "postExhaustionClassification": "evidence-now-rich",
+      "postV2Interpretation": "Recent single-mechanism interventions convert many control-unsolved rows to solves (BC1, CID exposures, repair dose), providing a retained counterfactual basis for distinguishing near-boundary misses from deeper capability gaps.",
+      "evidenceRefs": [
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
+        "reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P146",
+      "proposition": "The solver can learn when not to trust its dominant heuristic on the current level/state.",
+      "v2Status": "underasked",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P147",
+      "proposition": "A contradiction can be mapped to an earlier causal decision rather than merely the terminal dead state.",
+      "v2Status": "major open",
+      "postExhaustionClassification": "development-evidence-strengthened",
+      "postV2Interpretation": "WS6 exact divergence analysis supports the existence of bounded decision-relevant interfaces at causal points, but no reusable causal commitment representation has transferred across parents.",
+      "evidenceRefs": [
+        "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P148",
+      "proposition": "Decision-relevant state may include search-process knowledge such as derived conflicts, uncertainty, or remaining portfolio budget, not just puzzle state.",
+      "v2Status": "underasked",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P149",
+      "proposition": "The solver can separate strategic obligation ordering from tactical route realization and revise either layer independently.",
+      "v2Status": "largely unasked explicit form",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P150",
+      "proposition": "Current accepted-path witnesses are representative enough for target-relative diagnostics; alternate accepted paths may imply different failure stories.",
+      "v2Status": "conditional / known sensitivity surface",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P151",
+      "proposition": "Intended treatment participation must be verified at the final consumer before causal verdicts.",
+      "v2Status": "open / governing guardrail",
+      "postExhaustionClassification": "strongly-confirmed-guardrail",
+      "postV2Interpretation": "A real bug prevented the parity/checkerboard shadow from running, and capability promotions required read-site/default-polarity fixes; runtime participation remains a first-class causal prerequisite.",
+      "evidenceRefs": [
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md",
+        "reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P152",
+      "proposition": "Lifecycle/winner attribution must preserve the actual action, stage, and configuration that produced the solve.",
+      "v2Status": "open / governing guardrail",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P153",
+      "proposition": "Natural exhaustion and budget censoring are causally different outcomes for continuation value.",
+      "v2Status": "established distinction / under-mapped premise",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P154",
+      "proposition": "Predecessor and execution context can change an action's value; isolated action identity is not enough.",
+      "v2Status": "explicitly recognized / incompletely modeled",
+      "postExhaustionClassification": "strengthened-context-dependence",
+      "postV2Interpretation": "H3 allocation value depends strongly on remaining-length ordering, while WS1 historical continuation signatures failed fresh transfer; action value is context/population conditioned.",
+      "evidenceRefs": [
+        "reports/2026-09-20-h3-independent-transfer-result-001.md",
+        "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P155",
+      "proposition": "Root-static preprocessing may be insufficient; state-conditioned graph facts may carry new capability.",
+      "v2Status": "high-value open",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P156",
+      "proposition": "Sound state dominance may compress search where exact equality is rare and lossy merge is unsafe.",
+      "v2Status": "largely unasked explicit form",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P157",
+      "proposition": "Hardness may be driven by competition for shared future resources across mechanics.",
+      "v2Status": "major underasked parent premise",
+      "postExhaustionClassification": "narrow-static-siblings-negative-parent-open",
+      "postV2Interpretation": "Parity/checkerboard static resource forms add negligible incidence, but BC1 demonstrates that a different exact topology/resource fact can matter strongly; shared-resource parent remains fertile.",
+      "evidenceRefs": [
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md",
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P158",
+      "proposition": "Exact/reference-model support coverage conditions which premise populations can be labelled.",
+      "v2Status": "open / selection-effect guardrail",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P159",
+      "proposition": "Exact-query tractability and value may be predictable from current residual structure.",
+      "v2Status": "open / deferred until signal",
+      "postExhaustionClassification": "consumer-specific-negative-parent-open",
+      "postV2Interpretation": "Exact relational viability failed at one beam seam; future exact-query selection needs a different predicate/seam with measurable displaced-work ceiling.",
+      "evidenceRefs": [
+        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P160",
+      "proposition": "Multiple start gates may define complementary basins and deserve explicit allocation and knowledge-transfer analysis.",
+      "v2Status": "underasked",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P161",
+      "proposition": "Solution multiplicity and completion-regime volume affect search difficulty and witness-relative diagnosis.",
+      "v2Status": "underasked parent premise",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P162",
+      "proposition": "Positive solve-local facts such as forced relations, contracts, or exact answers may be worth sharing, not only failures.",
+      "v2Status": "major open",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P163",
+      "proposition": "Future obligations may compete for spatial, axis, corridor, or intersection capacity even when each scalar bound passes.",
+      "v2Status": "major high-value open",
+      "postExhaustionClassification": "narrow-static-siblings-negative-parent-open",
+      "postV2Interpretation": "Static parity/checkerboard capacities failed, but BC1 proves spatial cut structure can expose otherwise-hidden future resource infeasibility; broader resource competition remains open.",
+      "evidenceRefs": [
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md",
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P164",
+      "proposition": "Individually correct mechanic state contracts may still omit useful cross-mechanic derived relations.",
+      "v2Status": "high-value open",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P165",
+      "proposition": "Seed and restart sensitivity can distinguish rugged search basins from semantic or representation gaps.",
+      "v2Status": "underasked / historical evidence exists",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P166",
+      "proposition": "Broad randomization may be closed as a treatment while stochastic landscape diagnostics remain open.",
+      "v2Status": "semantic parent remains open",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P167",
+      "proposition": "Operational-similarity measurements are policy-conditioned and trace-censored.",
+      "v2Status": "open / governing caveat",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P168",
+      "proposition": "Adversarial counterexample generation can search premise space by maximizing solver-belief versus exact-reality disagreement.",
+      "v2Status": "deferred / high-value method",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P169",
+      "proposition": "Partial-order commutativity can eliminate redundant obligation permutations without claiming full state equivalence.",
+      "v2Status": "underasked / historical tool incomplete",
+      "postExhaustionClassification": "phenomenon-positive-capability-unproven",
+      "postV2Interpretation": "Residual-interface commutativity is empirically real, but no feasibility restoration/work reduction/solve consumer has been demonstrated.",
+      "evidenceRefs": [
+        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P170",
+      "proposition": "Certified one-successor macro traversal can recover finite-envelope work without changing search choices.",
+      "v2Status": "historically used / current prevalence unknown",
+      "postExhaustionClassification": "prevalence-positive-global-consumer-negative",
+      "postV2Interpretation": "One-successor local forcedness is common and carries 25.33% of parent expansion work, but global singleton phases are only 0.25% and 0.0014% of discovery work; simple global compression is closed.",
+      "evidenceRefs": [
+        "reports/2026-09-25-forced-work-capture-economics-phase-census-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P171",
+      "proposition": "Dead or removed tooling can preserve an unresolved premise even when the implementation is gone.",
+      "v2Status": "governing archaeology principle",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P172",
+      "proposition": "Early-success or first-match execution censors evidence about later actions on already-solved levels.",
+      "v2Status": "underasked / known execution effect",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P173",
+      "proposition": "Hand-tuned routing thresholds are hypotheses about structural regime boundaries.",
+      "v2Status": "underasked as parent premise",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P174",
+      "proposition": "Abrupt threshold boundaries may misroute structurally adjacent levels unless the underlying regime transition is real.",
+      "v2Status": "underasked",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P175",
+      "proposition": "Counterfactual solved-set churn is evidence about hidden capability exchange even when net solve count rises.",
+      "v2Status": "underasked / partly practiced",
+      "postExhaustionClassification": "strongly-confirmed",
+      "postV2Interpretation": "BC1 is net strongly positive while reproducibly losing several previously solved levels through trajectory perturbation; aggregate solve count alone hides capability exchange.",
+      "evidenceRefs": [
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P176",
+      "proposition": "A level's solution-space topology or volume may be a better notion of intrinsic difficulty than current surface descriptors.",
+      "v2Status": "underasked",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P177",
+      "proposition": "Information useful to future search may be lost specifically at handoffs between beam, DFS, repair, gates, attempts, or external exact observers even when each component is locally adequate.",
+      "v2Status": "major underasked parent premise",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P178",
+      "proposition": "Discarding a live frontier at a work cap assumes reconstruction/restart is an acceptable substitute for preserving continuation state.",
+      "v2Status": "explicit architecture / semantic parent open",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P179",
+      "proposition": "Future-state equivalence may be relative to the remaining policy and work envelope rather than an absolute property of puzzle state.",
+      "v2Status": "underasked",
+      "postExhaustionClassification": "strengthened-policy-relative",
+      "postV2Interpretation": "Lane A compact interfaces lose useful repetition as exact outcome information is added, and BC1 changes future beam behavior without changing puzzle validity; equivalence remains policy/work-envelope relative.",
+      "evidenceRefs": [
+        "reports/2026-09-20-lane-a-c2-global-accounting-result-001.md",
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P180",
+      "proposition": "A dominance proof may need to include remaining work, continuation rights, and acquired solve-local knowledge, not only puzzle resources.",
+      "v2Status": "new refinement",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P181",
+      "proposition": "The current unsolved residual is an endogenous survivor population sculpted by every earlier production capability, budget, and portfolio ordering decision.",
+      "v2Status": "major methodological guardrail",
+      "postExhaustionClassification": "strongly-confirmed-endogenous-residual",
+      "postV2Interpretation": "Promotions on September 26 and October 1 materially change which rows remain unsolved; all prevalence claims must be interpreted against the current production boundary.",
+      "evidenceRefs": [
+        "reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md",
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P182",
+      "proposition": "A technique's observed residual and apparent uniqueness depend on which earlier techniques ran and succeeded first.",
+      "v2Status": "partly recognized / under-generalized",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P183",
+      "proposition": "For a missed solve, can the earliest irreversible loss be tied to a minimal counterfactual decision change rather than merely a timestamped divergence from one witness?",
+      "v2Status": "major parent refinement",
+      "postExhaustionClassification": "evidence-now-rich",
+      "postV2Interpretation": "BC1 gain/loss pairs and WS6 matched divergence pairs provide unusually clean counterfactual material for separating causal loss from harmless divergence.",
+      "evidenceRefs": [
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
+        "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P184",
+      "proposition": "A branch can have strategic option value because it preserves a rare completion regime even when its immediate score and estimated success probability are low.",
+      "v2Status": "underasked parent premise",
+      "postExhaustionClassification": "strengthened-option-value",
+      "postV2Interpretation": "BC1's sound pruning changes which viable states occupy a finite beam, with both gains and losses, directly showing that preserving a scarce future can depend on frontier set composition rather than local validity.",
+      "evidenceRefs": [
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P185",
+      "proposition": "Some search actions may be valuable primarily because they reveal information about feasibility, conflict, or regime structure rather than because they lie on a final solution path.",
+      "v2Status": "major underasked refinement",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P186",
+      "proposition": "Within a level, deciding when to abandon one search hypothesis or architecture may be as important as deciding which one to start.",
+      "v2Status": "underasked",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P187",
+      "proposition": "Solver capability is non-monotone under a fixed envelope: more precision, state, search work, or an added treatment can reduce solves by displacement or changed ordering.",
+      "v2Status": "supported governing premise",
+      "postExhaustionClassification": "strongly-confirmed",
+      "postV2Interpretation": "A sound prune produced both substantial gains and reproducible losses under the same fixed production envelope solely through search-trajectory perturbation; stronger local reasoning is not monotone in solved-set capability.",
+      "evidenceRefs": [
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P188",
+      "proposition": "Research instrumentation has its own missing-data mechanism and may perturb or censor the execution it is intended to observe.",
+      "v2Status": "underasked guardrail",
+      "postExhaustionClassification": "strengthened-observer-missingness",
+      "postV2Interpretation": "The parity/checkerboard observer had a blocking execution bug and GHA cancellation left missing control rows in a later promotion round; absence/missingness must be separated from semantic negatives.",
+      "evidenceRefs": [
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md",
+        "reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P189",
+      "proposition": "Every solve-local fact needs provenance describing whether it is legal production knowledge, offline oracle evidence, or an experimentally derived hypothesis before it can cross process boundaries.",
+      "v2Status": "major governance premise",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P190",
+      "proposition": "Generator adequacy should be assessed against solver-relevant structural/state-space dimensions, not only level-space surface diversity or generator independence.",
+      "v2Status": "major newly explicit parent premise",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P191",
+      "proposition": "Requiring generated levels to be solvable by a construction witness induces a selection distribution over solution topology that may differ from naturally authored solvable levels.",
+      "v2Status": "underasked selection effect",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P192",
+      "proposition": "New solves may be caused by compositions or sequences of capabilities whose marginal contributions cannot be assigned faithfully to one named technique.",
+      "v2Status": "underasked parent premise",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P193",
+      "proposition": "Search-stage interfaces may need explicit contracts for which puzzle state, knowledge state, frontier state, budget state, and causal evidence must survive a handoff.",
+      "v2Status": "new architecture parent",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P194",
+      "proposition": "The same puzzle state may merit a different next action after different failed work histories even when no new puzzle fact has been learned.",
+      "v2Status": "underasked refinement",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P195",
+      "proposition": "Root preprocessing, gate choice, and action grammar can themselves be treated as revisable hypotheses during a solve rather than immutable setup.",
+      "v2Status": "major thin-cell premise",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P196",
+      "proposition": "Premise-space completeness itself should be tested by asking which causal transitions, missing-data mechanisms, and counterfactuals are not representable in the ontology, not only which cells are empty.",
+      "v2Status": "meta-premise / governing audit",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P197",
+      "proposition": "Information that is valid for one role does not automatically have authority for another: referee truth, sound feasibility consequence, safe dominance, heuristic prediction, empirical failed-experience evidence, diagnostic correlation, scheduler prior, and inherited default require different permissions.",
+      "v2Status": "governing distinction / newly explicit",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P198",
+      "proposition": "A solver idea progresses through distinct maturity gates: phenomenon existence, representability, semantic soundness or fidelity, real-search participation, useful-work effect, complementary matched-cost value, schedulability, and production promotion.",
+      "v2Status": "governing research ladder / newly explicit",
+      "postExhaustionClassification": "strongly-confirmed-maturity-ladder",
+      "postV2Interpretation": "BC1-G is sound but too low-incidence for a consumer; relational feasibility is real but useless at one seam; BC1 itself advanced through multiple gates to promotion. Maturity stages are empirically distinct.",
+      "evidenceRefs": [
+        "reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md",
+        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P199",
+      "proposition": "What is the correct identity-free unit over which solver knowledge should generalize: static level features, dynamic failure states, search trajectories, obligation configurations, causal loss classes, or some combination?",
+      "v2Status": "major underasked parent premise",
+      "postExhaustionClassification": "evidence-now-points-to-dynamic-unit-question",
+      "postV2Interpretation": "WS1's historical-population signal vanished on a fresh independent population, while BC1 treatment response is concentrated in a routing regime; the correct identity-free generalization unit remains unresolved and likely richer than one static population label.",
+      "evidenceRefs": [
+        "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md",
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P200",
+      "proposition": "For every expensive fact or search artifact, what is its useful information half-life and transfer radius across nodes, attempts, stages, search families, processes, and related level instances?",
+      "v2Status": "major parent synthesis",
+      "postExhaustionClassification": "narrowed-reuse-economics",
+      "postV2Interpretation": "The computational-work-elimination audit found reusable exact implications whose downstream removable-work numerator was too small; useful information lifetime/transfer must be priced at the consuming seam, not inferred from recurrence.",
+      "evidenceRefs": [
+        "reports/2026-09-21-computational-work-elimination-audit-closeout-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P201",
+      "proposition": "Apparent support volume must be reduced to independent causal ancestry or the appropriate clustered independent unit before it can increase confidence in a premise.",
+      "v2Status": "governing evidence-independence premise / admitted post-v1",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P202",
+      "proposition": "Evidence status is path-dependent and consumable: once an evaluation block or population outcome influences descendant design, it becomes development evidence for those descendants even if it was originally untouched confirmation evidence.",
+      "v2Status": "governing evidence-lifecycle premise / admitted post-v1",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P203",
+      "proposition": "As a research result propagates through reports, capability memory, question state, future-work prose, or execution priority, downstream claims must preserve its scope, conditioning, information authority, causal ancestry, and maturity rather than silently broadening them.",
+      "v2Status": "governing claim-propagation premise / admitted post-v1",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P204",
+      "proposition": "An observation supports a causal research conclusion only to the extent that the observation could discriminate that conclusion from materially different rival explanations.",
+      "v2Status": "governing causal-discriminability premise / admitted post-v1",
+      "postExhaustionClassification": "strongly-confirmed-causal-discriminability",
+      "postV2Interpretation": "Forced-work local prevalence did not imply global compressibility, and exact relational positives did not imply beam consumer value; post-v2 work repeatedly separated phenomenon from rival causal interpretations.",
+      "evidenceRefs": [
+        "reports/2026-09-25-forced-work-capture-economics-phase-census-result-001.md",
+        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P205",
+      "proposition": "Premise-map completeness confidence requires reciprocal source coverage and independent-pass saturation evidence; proposition provenance and internal graph coverage are necessary but cannot establish that premise-bearing source regions were sampled.",
+      "v2Status": "governing map-completeness premise / admitted after frozen v1 mining",
+      "postExhaustionClassification": "standing-no-material-post-v2-change",
+      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
+      "evidenceRefs": [],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    },
+    {
+      "id": "P206",
+      "proposition": "Decision-bearing sample size is the opportunity population in which the treatment can causally change the tested outcome, not raw row count or feature eligibility alone.",
+      "v2Status": "governing detectability specialization / admitted post-v1",
+      "postExhaustionClassification": "strongly-confirmed-opportunity-sizing",
+      "postV2Interpretation": "The underpowered WS1 Stage A was explicitly replaced by a powered N=160 fresh confirmation, which then produced a decisive zero; nominal row count and true decision-bearing opportunity are demonstrably different.",
+      "evidenceRefs": [
+        "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md"
+      ],
+      "semanticNovelty": "EVIDENCE_STATE_CHANGE"
+    }
+  ]
+}
