@@ -171,6 +171,8 @@ If independent interventions repeatedly select the same rows or mutually exclusi
 
 ### C. Counterfactual first-loss refresh — P024/P135/P183
 
+> **Not executed 2026-10-01 (insufficient inputs):** this lane was ordered after A/B/E to synthesize their causal labels. A yielded one label (early dead-state occupancy displacing winner lineages, already removed in production), B stayed inconclusive and E was withdrawn, so there is no label set to unify. Revisit only if lane B's artifact recovery or a corrected WS1 re-run supplies new retained counterfactuals.
+
 v2 lacked a universal first-loss lineage. The repo now contains better material than it did then:
 - exact matched LIVE/DEAD divergences;
 - WS6 causal pairs;
@@ -185,6 +187,8 @@ Question:
 Start with existing cases. No new instrumentation is justified unless the retained cases expose a specific missing observable.
 
 ### D. Cut/resource sibling mining — P012/P032/P157/P163
+
+> **Not executed 2026-10-01 (needs a proof sketch first):** the lane requires a sound candidate resource fact with a proof sketch before any data mining, and none is proposed. The lane A trace shows control frontiers are heavily BC1-dead (136/300 levels reach an entirely dead frontier), which makes an exact deadness oracle for the *treatment* frontier the natural measurement if a sibling fact is ever proposed; it is not a standalone gate.
 
 BC1 proves one exact topological resource statement can matter. Static parity/checkerboard siblings did not.
 
