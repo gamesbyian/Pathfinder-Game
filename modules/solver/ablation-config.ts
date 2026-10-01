@@ -48,6 +48,7 @@ export const FEATURES: Record<string, string> = {
     PRUNE_MC_RESERVED_WALL:     'Reserved-intersection wall: once every remaining intersection is committed to a pending must-cross crossing, visited cells are walls in the connectivity fill (portal-free levels only)',
     PRUNE_DISTANCE_BOUND:       'Goal BFS distance exceeds remaining steps',
     PRUNE_PARITY:               'Exact remaining-length parity mismatch (portal-free and same-parity-portal-only levels)',
+    PRUNE_BC1_BRIDGE_EXCURSION: 'Production default-OFF; opt-in (WS2-CUT-BALANCE-PROJECTION): theorem-BC1 bridge-excursion prune inside the shared hard-prune pipeline (DFS, repair, admissible-order; beam already has STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE), evaluated only where the connectivity flood just ran. Pending production A/B.',
     PRUNE_PORTAL_PARITY_ENVELOPE: 'Production default-OFF; closed retained opt-in: Manhattan parity mismatch on portal levels with at least one twist portal pair. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     PRUNE_MUST_PASS_LB:         'MST lower bound on remaining must-pass visit distance',
     PRUNE_MUST_CROSS_LB:        'MST lower bound on remaining must-cross distance (with approach maps)',
@@ -154,6 +155,7 @@ export const FEATURES: Record<string, string> = {
  * docs/solver-opt-in-experiment-ledger.md before deciding that an opt-in needs more testing. */
 export const OPT_IN_FEATURES = new Set([
     'PRUNE_PORTAL_PARITY_ENVELOPE',
+    'PRUNE_BC1_BRIDGE_EXCURSION',
     'STRATEGY_PORTAL_COARSE_STATE_MERGE',
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS',
     'STRATEGY_REPAIR_TURN_BIAS',
