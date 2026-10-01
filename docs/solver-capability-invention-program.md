@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=6500 max=8500 -->
 # Solver capability invention program
 
-> **Status:** active portfolio authority for acquiring solver capabilities that do not already exist.
+> **Status:** standing portfolio authority; no current live capability-acquisition execution queue as of 2026-10-01.
 > **Priority:** [solver optimization workstreams](solver-optimization-workstreams.md).
 > **Semantic map:** [reasoning capability atlas](solver-reasoning-capability-atlas.md).
 > **Failure diagnosis:** [first-loss causal taxonomy](solver-first-loss-causal-taxonomy.md).
@@ -162,13 +162,18 @@ A demand may nominate a live question only when:
 
 Register promoted questions in the ordinary question authority. Workstreams owns priority; this file is not a second queue.
 
-## Near-term execution
+## Re-entry conditions
 
-1. continue first-loss demand sampling from existing evidence;
+There is no near-term execution authorized by this file while the canonical workstream queue is exhausted.
+
+On future fresh residual evidence or a materially changed solver/corpus:
+1. sample first-loss demand from existing evidence before buying new telemetry;
 2. use preserved technique/decision contrasts for response-guided premise discovery;
-3. run the earned BC1 production-inert safety/economics consumer; separately test bounded 2K/5K exclusive-prefix viability/dominance and a selected CW/CCW operational-trace seam;
-4. promote only recurring, decision-bearing semantic gaps with cheap falsifiers.
+3. check whether the observation is already explained by a closed HARVEST/exposure/allocation form;
+4. promote only recurring, decision-bearing semantic gaps with cheap falsifiers through the ordinary workstream authority.
 
-The output sought is empirical:
+BC1's earned consumer was completed and promoted on 2026-10-01; the older 2K/5K and CW/CCW suggestions are not inherited queue obligations.
 
-> **What capabilities does the current residual actually demand?**
+The standing empirical question remains:
+
+> **What capabilities does a future residual actually demand?**
