@@ -18,7 +18,7 @@ assert.equal(inventionLive, undefined,
 const repairSupportLive = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '6/7');
 assert.ok(repairSupportLive);
 assert.equal(repairSupportLive.executionState, 'supporting');
-assert.equal(repairSupportLive.gateClass, 'bounded-compute');
+assert.equal(repairSupportLive.gateClass, 'blocked/conditional');
 assert.equal(repairSupportLive.questionRef, 'WS6-DEPENDENCY-CONDITIONED-REPAIR');
 assert.equal(repairSupportLive.questionState, 'active-candidate');
 assert.equal(repairSupportLive.questionExecutionRelation, 'active-question');
