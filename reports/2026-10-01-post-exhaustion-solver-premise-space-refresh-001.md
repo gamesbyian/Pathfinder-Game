@@ -151,6 +151,8 @@ Possible outcomes:
 
 ### B. Intervention-response residual atlas — P113/P145/P181/P199
 
+> **Feasibility checked 2026-10-01:** `reports/2026-10-01-intervention-response-atlas-feasibility-001.md` — inconclusive; per-level outcomes are repo-resident only for BC1; one bounded artifact-recovery gate remains.
+
 Recent promoted or well-measured interventions now provide multiple counterfactual response axes:
 - portal-coarse placement;
 - repair dose;
