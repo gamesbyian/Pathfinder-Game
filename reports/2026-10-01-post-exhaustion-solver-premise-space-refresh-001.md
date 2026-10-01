@@ -1,6 +1,13 @@
 # Post-exhaustion solver premise-space refresh — 2026-10-01
 
-## Status
+> **Status:** concluded-positive
+> **Last evidence:** 2026-10-01 — retrospective classification of all 148 premise-map v2 propositions against decision-bearing solver evidence from 2026-09-18 through queue exhaustion (50 material evidence-state updates, 98 standing, 0 new premise IDs).
+> **Decision:** keep the frozen v2 map; adopt the status overlay and the six retained-evidence-first premise-generation lanes (PG-A BC1 perturbation microscope first); none of them is a solver-treatment gate.
+> **Remaining gate:** none for the refresh; each lane enters execution only through its own named discovery gate and, for any treatment, the normal promotion contract.
+> **Evidence role:** forensic.
+> **Owner:** `docs/solver-optimization-workstreams.md`.
+
+## Summary
 
 **Completed retrospective evidence-state refresh against premise-map v2.**
 
