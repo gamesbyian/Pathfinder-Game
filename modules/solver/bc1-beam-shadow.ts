@@ -46,6 +46,11 @@ export function observeBc1ShadowCandidate(
         depth, workBefore: prep._workMeter.units, workSpent: prep._workMeter.units,
         constructionWorkUnits: shadow.constructionWorkUnits, conflicts: shadow.conflicts, path: path(),
     });
+    if (!flagged && research.bc1gShadow && connectivityAlreadyFresh && bc1HasConflictFast(next, ws, level, true) === true) {
+        research.observeBc1Candidate?.({ depth, workBefore: prep._workMeter.units, workSpent: prep._workMeter.units,
+            constructionWorkUnits: 0, conflicts: [], path: path(), theorem: 'bc1g' });
+        return true;
+    }
     return flagged;
 }
 

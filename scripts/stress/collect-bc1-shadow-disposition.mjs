@@ -28,6 +28,7 @@ const sampleResolved = Number(args.get('--sample-resolved') ?? 25);
 const requestedLevelIds = (args.get('--level-ids') ?? '').split(',').map(x => x.trim()).filter(Boolean);
 const lineageAware = args.get('--lineage-aware') === 'true';
 const freshOnly = args.get('--fresh-only') === 'true';
+const bc1g = args.get('--bc1g') === 'true';
 const runId = args.get('--run-id') ?? `bc1-shadow-disposition-${new Date().toISOString()}`;
 const solverRef = process.env.GITHUB_SHA ?? execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
 
@@ -58,7 +59,7 @@ for (const rawId of requestedLevelIds) {
     const offPath = await api.beamSearchFromGate(gateKey, level, offPrep, api.SCORING_PROFILES.default,
         budgetMs, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
 
-    const observer = new api.Bc1ShadowDispositionObserver({ lineageAware, freshOnly });
+    const observer = new api.Bc1ShadowDispositionObserver({ lineageAware, freshOnly, bc1g });
     const onPrep = api.prepLevel(level); onPrep._cfg = shadowCfg(); onPrep._metrics = { nodesExpanded: 0 }; onPrep._beamResearchObserver = observer;
     const onPath = await api.beamSearchFromGate(gateKey, level, onPrep, api.SCORING_PROFILES.default,
         budgetMs, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
@@ -73,7 +74,7 @@ for (const rawId of requestedLevelIds) {
 
     const summary = observer.summary();
     const resolved = summary.resolved;
-    const overlapCounts = resolved.reduce((acc, r) => { acc[r.overlap] = (acc[r.overlap] ?? 0) + 1; return acc; }, {});
+    const overlapCounts = resolved.reduce((acc, r) => { const k = `${r.theorem ?? 'bc1'}:${r.overlap}`; acc[k] = (acc[k] ?? 0) + 1; return acc; }, {});
     const workDistances = resolved.map(r => r.workDistance).filter(w => w !== null);
     const constructionWorkUnits = resolved.map(r => r.constructionWorkUnits);
 
