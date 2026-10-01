@@ -15,6 +15,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 | Production topology-aware state relation | Independent parents show a compact descriptor with decision-bearing discordance, then a sound consequence beyond raw phase |
 | Targeted local surgery / causal backjump operator | Independent evidence finds an actionable causal interface smaller than naive divergence/rollback; Lane E stays closed |
 | Dependency-conditioned repair neighborhood | **DEVELOPMENT POSITIVE.** R03147 nominates path-resource + relational-bound state; require independent-parent replication. [`result`](../reports/2026-09-20-ws6-dependency-interface-observer-result-001.md) |
+| BC1-off dead-last whole-ladder retry | If the default-ON BC1 beam prune's loss rate on already-solved levels (~1.4%: `R01273`, `R02333`, `R02874`, `R03242`, `R02401`) proves worth recovering: rerun the ladder with `STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE` off as an additive true-final retry (precedent: `STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY`). Expected recovery ~4/300 at roughly 2x work on the ~25% still-unsolved levels -- price against fixed `workSpent` before building. |
 | Full complete-path LNS | Frozen production-frontier partials yield fair full relaxed candidates that prove close/local-repairable enough |
 | Per-level search-plan compiler | Two distinct solver architectures have predictable current-input niches and can be chosen/composed without historical identity |
 
