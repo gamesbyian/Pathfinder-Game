@@ -1,0 +1,1290 @@
+{
+  "kind": "pathfinder-ws6-replication-pairs",
+  "corpus": "data/stress/stress-levels-random.json",
+  "excluded": [
+    "R03147"
+  ],
+  "sources": [
+    "reports/stress/class5-production-search-sibling-harvest-exact-labels-2026-09-17.json",
+    "reports/stress/class5-fresh-sibling-harvest-exact-labels-2026-09-17.json",
+    "reports/stress/class5-production-search-frontier-multi-pick-exact-labels-2026-09-17.json",
+    "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+    "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+    "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json"
+  ],
+  "candidatePairs": 69,
+  "parents": 24,
+  "noHintParents": [
+    "P00124",
+    "P00009",
+    "P00148",
+    "P00137"
+  ],
+  "noDivergence": 0,
+  "pairs": [
+    {
+      "levelId": "R01945",
+      "sourceCaseId": "R01945:prod-sibling-0",
+      "deadPrefix": [
+        327685,
+        262149,
+        196613,
+        131077,
+        131078,
+        196614,
+        196613,
+        196612,
+        131076,
+        131075
+      ],
+      "livePrefix": [
+        327685,
+        262149,
+        196613,
+        131077,
+        131078,
+        196614,
+        196613,
+        196612,
+        131076,
+        65540
+      ],
+      "divergenceIndex": 9,
+      "pairId": "R01945:wp0"
+    },
+    {
+      "levelId": "R01945",
+      "sourceCaseId": "R01945:prod-sibling-1",
+      "deadPrefix": [
+        327685,
+        262149,
+        196613,
+        131077,
+        131078,
+        196614,
+        196613,
+        196612,
+        196611
+      ],
+      "livePrefix": [
+        327685,
+        262149,
+        196613,
+        131077,
+        131078,
+        196614,
+        196613,
+        196612,
+        131076
+      ],
+      "divergenceIndex": 8,
+      "pairId": "R01945:wp1"
+    },
+    {
+      "levelId": "R01945",
+      "sourceCaseId": "R01945:prod-sibling-2",
+      "deadPrefix": [
+        327685,
+        262149,
+        196613,
+        131077,
+        131076
+      ],
+      "livePrefix": [
+        327685,
+        262149,
+        196613,
+        131077,
+        131078
+      ],
+      "divergenceIndex": 4,
+      "pairId": "R01945:wp2"
+    },
+    {
+      "levelId": "R01142",
+      "sourceCaseId": "R01142:prod-sibling-0",
+      "deadPrefix": [
+        327681,
+        262145
+      ],
+      "livePrefix": [
+        327681,
+        327680
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R01142:wp3"
+    },
+    {
+      "levelId": "R01142",
+      "sourceCaseId": "R01142:prod-sibling-1",
+      "deadPrefix": [
+        327681,
+        327682
+      ],
+      "livePrefix": [
+        327681,
+        327680
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R01142:wp4"
+    },
+    {
+      "levelId": "R02359",
+      "sourceCaseId": "R02359:prod-sibling-0",
+      "deadPrefix": [
+        786443,
+        786442
+      ],
+      "livePrefix": [
+        786443,
+        720907
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02359:wp5"
+    },
+    {
+      "levelId": "R01600",
+      "sourceCaseId": "R01600:prod-sibling-0",
+      "deadPrefix": [
+        9,
+        10,
+        65546,
+        131082,
+        131081,
+        65545,
+        65544,
+        65543,
+        131079,
+        196615,
+        262151,
+        327687,
+        393223,
+        393224
+      ],
+      "livePrefix": [
+        9,
+        10,
+        65546,
+        131082,
+        131081,
+        65545,
+        65544,
+        65543,
+        131079,
+        196615,
+        262151,
+        327687,
+        393223,
+        458759
+      ],
+      "divergenceIndex": 13,
+      "pairId": "R01600:wp6"
+    },
+    {
+      "levelId": "R01600",
+      "sourceCaseId": "R01600:prod-sibling-2",
+      "deadPrefix": [
+        9,
+        10,
+        65546,
+        131082,
+        131081,
+        196617
+      ],
+      "livePrefix": [
+        9,
+        10,
+        65546,
+        131082,
+        131081,
+        65545
+      ],
+      "divergenceIndex": 5,
+      "pairId": "R01600:wp7"
+    },
+    {
+      "levelId": "R03290",
+      "sourceCaseId": "R03290:prod-sibling-0",
+      "deadPrefix": [
+        262145,
+        196609
+      ],
+      "livePrefix": [
+        262145,
+        262146
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R03290:wp8"
+    },
+    {
+      "levelId": "R02166",
+      "sourceCaseId": "R02166:prod-sibling-0",
+      "deadPrefix": [
+        327680,
+        262144
+      ],
+      "livePrefix": [
+        327680,
+        393216
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02166:wp9"
+    },
+    {
+      "levelId": "R03004",
+      "sourceCaseId": "R03004:prod-sibling-0",
+      "deadPrefix": [
+        131076,
+        131077,
+        131078,
+        131079,
+        196615
+      ],
+      "livePrefix": [
+        131076,
+        131077,
+        131078,
+        131079,
+        131080
+      ],
+      "divergenceIndex": 4,
+      "pairId": "R03004:wp10"
+    },
+    {
+      "levelId": "R03004",
+      "sourceCaseId": "R03004:prod-sibling-1",
+      "deadPrefix": [
+        131076,
+        65540,
+        65541,
+        65542
+      ],
+      "livePrefix": [
+        131076,
+        65540,
+        65541,
+        131077
+      ],
+      "divergenceIndex": 3,
+      "pairId": "R03004:wp11"
+    },
+    {
+      "levelId": "R02471",
+      "sourceCaseId": "R02471:prod-sibling-0",
+      "deadPrefix": [
+        458754,
+        458755
+      ],
+      "livePrefix": [
+        458754,
+        458753
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02471:wp12"
+    },
+    {
+      "levelId": "R03152",
+      "sourceCaseId": "R03152:prod-sibling-0",
+      "deadPrefix": [
+        131077,
+        196613,
+        196612,
+        196611,
+        196610,
+        196609,
+        196608
+      ],
+      "livePrefix": [
+        131077,
+        196613,
+        196612,
+        196611,
+        196610,
+        196609,
+        262145
+      ],
+      "divergenceIndex": 6,
+      "pairId": "R03152:wp13"
+    },
+    {
+      "levelId": "R03152",
+      "sourceCaseId": "R03152:prod-sibling-1",
+      "deadPrefix": [
+        131077,
+        196613,
+        196612,
+        196611,
+        262147,
+        262148,
+        196612,
+        131076,
+        65540,
+        4,
+        5,
+        65541,
+        65540,
+        65539,
+        65538,
+        131074,
+        131073,
+        131072,
+        196608,
+        262144,
+        327680,
+        393216,
+        458752,
+        524288,
+        589824,
+        655360,
+        720896,
+        786432,
+        786433,
+        786434
+      ],
+      "livePrefix": [
+        131077,
+        196613,
+        196612,
+        196611,
+        262147,
+        262148,
+        196612,
+        131076,
+        65540,
+        4,
+        5,
+        65541,
+        65540,
+        65539,
+        65538,
+        131074,
+        131073,
+        131072,
+        196608,
+        262144,
+        327680,
+        393216,
+        458752,
+        524288,
+        589824,
+        655360,
+        720896,
+        786432,
+        786433,
+        720897
+      ],
+      "divergenceIndex": 29,
+      "pairId": "R03152:wp14"
+    },
+    {
+      "levelId": "R01097",
+      "sourceCaseId": "R01097:prod-sibling-0",
+      "deadPrefix": [
+        10,
+        9
+      ],
+      "livePrefix": [
+        10,
+        11
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R01097:wp15"
+    },
+    {
+      "levelId": "R01132",
+      "sourceCaseId": "R01132:prod-sibling-0",
+      "deadPrefix": [
+        131074,
+        196610,
+        196609,
+        131073,
+        65537,
+        524295,
+        458759,
+        458758
+      ],
+      "livePrefix": [
+        131074,
+        196610,
+        196609,
+        131073,
+        65537,
+        524295,
+        458759,
+        393223
+      ],
+      "divergenceIndex": 7,
+      "pairId": "R01132:wp16"
+    },
+    {
+      "levelId": "R01132",
+      "sourceCaseId": "R01132:prod-sibling-1",
+      "deadPrefix": [
+        131074,
+        196610,
+        262146
+      ],
+      "livePrefix": [
+        131074,
+        196610,
+        196609
+      ],
+      "divergenceIndex": 2,
+      "pairId": "R01132:wp17"
+    },
+    {
+      "levelId": "R01132",
+      "sourceCaseId": "R01132:prod-sibling-2",
+      "deadPrefix": [
+        131074,
+        196610,
+        196609,
+        131073,
+        65537,
+        524295,
+        458759,
+        393223,
+        327687
+      ],
+      "livePrefix": [
+        131074,
+        196610,
+        196609,
+        131073,
+        65537,
+        524295,
+        458759,
+        393223,
+        393222
+      ],
+      "divergenceIndex": 8,
+      "pairId": "R01132:wp18"
+    },
+    {
+      "levelId": "R00555",
+      "sourceCaseId": "R00555:prod-sibling-0",
+      "deadPrefix": [
+        524301,
+        524300
+      ],
+      "livePrefix": [
+        524301,
+        458765
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R00555:wp19"
+    },
+    {
+      "levelId": "R02501",
+      "sourceCaseId": "R02501:prod-sibling-0",
+      "deadPrefix": [
+        524296,
+        524297
+      ],
+      "livePrefix": [
+        524296,
+        589832
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02501:wp20"
+    },
+    {
+      "levelId": "R02501",
+      "sourceCaseId": "R02501:prod-sibling-1",
+      "deadPrefix": [
+        524296,
+        524295
+      ],
+      "livePrefix": [
+        524296,
+        589832
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02501:wp21"
+    },
+    {
+      "levelId": "R02300",
+      "sourceCaseId": "R02300:prod-sibling-1",
+      "deadPrefix": [
+        851970,
+        851971
+      ],
+      "livePrefix": [
+        851970,
+        786434
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02300:wp22"
+    },
+    {
+      "levelId": "R02541",
+      "sourceCaseId": "R02541:prod-sibling-0",
+      "deadPrefix": [
+        65538,
+        65539,
+        3,
+        4
+      ],
+      "livePrefix": [
+        65538,
+        65539,
+        3,
+        2
+      ],
+      "divergenceIndex": 3,
+      "pairId": "R02541:wp23"
+    },
+    {
+      "levelId": "R02541",
+      "sourceCaseId": "R02541:prod-sibling-1",
+      "deadPrefix": [
+        65538,
+        65539,
+        65540
+      ],
+      "livePrefix": [
+        65538,
+        65539,
+        3
+      ],
+      "divergenceIndex": 2,
+      "pairId": "R02541:wp24"
+    },
+    {
+      "levelId": "R03328",
+      "sourceCaseId": "R03328:prod-sibling-0",
+      "deadPrefix": [
+        65546,
+        131082,
+        131081,
+        65545
+      ],
+      "livePrefix": [
+        65546,
+        131082,
+        131081,
+        131080
+      ],
+      "divergenceIndex": 3,
+      "pairId": "R03328:wp25"
+    },
+    {
+      "levelId": "R03172",
+      "sourceCaseId": "R03172:prod-sibling-0",
+      "deadPrefix": [
+        524295,
+        524296
+      ],
+      "livePrefix": [
+        524295,
+        524294
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R03172:wp26"
+    },
+    {
+      "levelId": "R03043",
+      "sourceCaseId": "R03043:prod-sibling-0",
+      "deadPrefix": [
+        131078,
+        65542
+      ],
+      "livePrefix": [
+        131078,
+        196614
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R03043:wp27"
+    },
+    {
+      "levelId": "R03043",
+      "sourceCaseId": "R03043:prod-sibling-2",
+      "deadPrefix": [
+        131078,
+        196614,
+        196615,
+        196616
+      ],
+      "livePrefix": [
+        131078,
+        196614,
+        196615,
+        131079
+      ],
+      "divergenceIndex": 3,
+      "pairId": "R03043:wp28"
+    },
+    {
+      "levelId": "R02738",
+      "sourceCaseId": "R02738:prod-sibling-0",
+      "deadPrefix": [
+        131074,
+        131075
+      ],
+      "livePrefix": [
+        131074,
+        131073
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02738:wp29"
+    },
+    {
+      "levelId": "R02738",
+      "sourceCaseId": "R02738:prod-sibling-2",
+      "deadPrefix": [
+        131074,
+        131073,
+        65537,
+        1
+      ],
+      "livePrefix": [
+        131074,
+        131073,
+        65537,
+        65536
+      ],
+      "divergenceIndex": 3,
+      "pairId": "R02738:wp30"
+    },
+    {
+      "levelId": "R03053",
+      "sourceCaseId": "R03053:prod-sibling-0",
+      "deadPrefix": [
+        393227,
+        327691
+      ],
+      "livePrefix": [
+        393227,
+        393226
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R03053:wp31"
+    },
+    {
+      "levelId": "R03053",
+      "sourceCaseId": "R03053:prod-sibling-2",
+      "deadPrefix": [
+        393227,
+        458763
+      ],
+      "livePrefix": [
+        393227,
+        393226
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R03053:wp32"
+    },
+    {
+      "levelId": "R02996",
+      "sourceCaseId": "R02996:prod-sibling-0",
+      "deadPrefix": [
+        327682,
+        327683,
+        262147,
+        196611,
+        196610
+      ],
+      "livePrefix": [
+        327682,
+        327683,
+        262147,
+        196611,
+        196612
+      ],
+      "divergenceIndex": 4,
+      "pairId": "R02996:wp33"
+    },
+    {
+      "levelId": "R03005",
+      "sourceCaseId": "R03005:prod-sibling-0",
+      "deadPrefix": [
+        589830,
+        524294,
+        524293,
+        458757,
+        393221
+      ],
+      "livePrefix": [
+        589830,
+        524294,
+        524293,
+        458757,
+        458756
+      ],
+      "divergenceIndex": 4,
+      "pairId": "R03005:wp34"
+    },
+    {
+      "levelId": "R03005",
+      "sourceCaseId": "R03005:prod-sibling-1",
+      "deadPrefix": [
+        589830,
+        524294,
+        524293,
+        589829
+      ],
+      "livePrefix": [
+        589830,
+        524294,
+        524293,
+        458757
+      ],
+      "divergenceIndex": 3,
+      "pairId": "R03005:wp35"
+    },
+    {
+      "levelId": "R03157",
+      "sourceCaseId": "R03157:prod-sibling-0",
+      "deadPrefix": [
+        262155,
+        262154
+      ],
+      "livePrefix": [
+        262155,
+        196619
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R03157:wp36"
+    },
+    {
+      "levelId": "R02789",
+      "sourceCaseId": "R02789:prod-sibling-0",
+      "deadPrefix": [
+        786435,
+        786436,
+        786437
+      ],
+      "livePrefix": [
+        786435,
+        786436,
+        851972
+      ],
+      "divergenceIndex": 2,
+      "pairId": "R02789:wp37"
+    },
+    {
+      "levelId": "R02789",
+      "sourceCaseId": "R02789:prod-sibling-1",
+      "deadPrefix": [
+        786435,
+        786436,
+        720900
+      ],
+      "livePrefix": [
+        786435,
+        786436,
+        851972
+      ],
+      "divergenceIndex": 2,
+      "pairId": "R02789:wp38"
+    },
+    {
+      "levelId": "R02789",
+      "sourceCaseId": "R02789:prod-sibling-2",
+      "deadPrefix": [
+        786435,
+        786434
+      ],
+      "livePrefix": [
+        786435,
+        786436
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02789:wp39"
+    },
+    {
+      "levelId": "R01945",
+      "sourceCaseId": "R01945:fresh-sibling-0",
+      "deadPrefix": [
+        327685,
+        327686
+      ],
+      "livePrefix": [
+        327685,
+        262149
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R01945:wp40"
+    },
+    {
+      "levelId": "R01600",
+      "sourceCaseId": "R01600:fresh-sibling-0",
+      "deadPrefix": [
+        9,
+        65545
+      ],
+      "livePrefix": [
+        9,
+        10
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R01600:wp41"
+    },
+    {
+      "levelId": "R03290",
+      "sourceCaseId": "R03290:fresh-sibling-0",
+      "deadPrefix": [
+        262145,
+        327681
+      ],
+      "livePrefix": [
+        262145,
+        262146
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R03290:wp42"
+    },
+    {
+      "levelId": "R03004",
+      "sourceCaseId": "R03004:fresh-sibling-0",
+      "deadPrefix": [
+        131076,
+        131077,
+        131078,
+        131079,
+        131080,
+        131081
+      ],
+      "livePrefix": [
+        131076,
+        131077,
+        131078,
+        131079,
+        131080,
+        196616
+      ],
+      "divergenceIndex": 5,
+      "pairId": "R03004:wp43"
+    },
+    {
+      "levelId": "R02471",
+      "sourceCaseId": "R02471:fresh-sibling-0",
+      "deadPrefix": [
+        458754,
+        458753,
+        393217
+      ],
+      "livePrefix": [
+        458754,
+        458753,
+        524289
+      ],
+      "divergenceIndex": 2,
+      "pairId": "R02471:wp44"
+    },
+    {
+      "levelId": "R03152",
+      "sourceCaseId": "R03152:fresh-sibling-0",
+      "deadPrefix": [
+        131077,
+        196613,
+        262149
+      ],
+      "livePrefix": [
+        131077,
+        196613,
+        196612
+      ],
+      "divergenceIndex": 2,
+      "pairId": "R03152:wp45"
+    },
+    {
+      "levelId": "R01097",
+      "sourceCaseId": "R01097:fresh-sibling-0",
+      "deadPrefix": [
+        10,
+        11,
+        65547,
+        131083,
+        196619,
+        196620,
+        131084
+      ],
+      "livePrefix": [
+        10,
+        11,
+        65547,
+        131083,
+        196619,
+        196620,
+        262156
+      ],
+      "divergenceIndex": 6,
+      "pairId": "R01097:wp46"
+    },
+    {
+      "levelId": "R02300",
+      "sourceCaseId": "R02300:fresh-sibling-0",
+      "deadPrefix": [
+        851970,
+        851969
+      ],
+      "livePrefix": [
+        851970,
+        786434
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02300:wp47"
+    },
+    {
+      "levelId": "R02541",
+      "sourceCaseId": "R02541:fresh-sibling-0",
+      "deadPrefix": [
+        65538,
+        65539,
+        131075
+      ],
+      "livePrefix": [
+        65538,
+        65539,
+        3
+      ],
+      "divergenceIndex": 2,
+      "pairId": "R02541:wp48"
+    },
+    {
+      "levelId": "R03328",
+      "sourceCaseId": "R03328:fresh-sibling-0",
+      "deadPrefix": [
+        65546,
+        131082,
+        131081,
+        196617
+      ],
+      "livePrefix": [
+        65546,
+        131082,
+        131081,
+        131080
+      ],
+      "divergenceIndex": 3,
+      "pairId": "R03328:wp49"
+    },
+    {
+      "levelId": "R03043",
+      "sourceCaseId": "R03043:fresh-sibling-0",
+      "deadPrefix": [
+        131078,
+        196614,
+        262150
+      ],
+      "livePrefix": [
+        131078,
+        196614,
+        196615
+      ],
+      "divergenceIndex": 2,
+      "pairId": "R03043:wp50"
+    },
+    {
+      "levelId": "R02996",
+      "sourceCaseId": "R02996:fresh-sibling-0",
+      "deadPrefix": [
+        327682,
+        327683,
+        393219
+      ],
+      "livePrefix": [
+        327682,
+        327683,
+        262147
+      ],
+      "divergenceIndex": 2,
+      "pairId": "R02996:wp51"
+    },
+    {
+      "levelId": "R03005",
+      "sourceCaseId": "R03005:fresh-sibling-0",
+      "deadPrefix": [
+        589830,
+        589831
+      ],
+      "livePrefix": [
+        589830,
+        524294
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R03005:wp52"
+    },
+    {
+      "levelId": "R03157",
+      "sourceCaseId": "R03157:fresh-sibling-0",
+      "deadPrefix": [
+        262155,
+        196619,
+        131083
+      ],
+      "livePrefix": [
+        262155,
+        196619,
+        196618
+      ],
+      "divergenceIndex": 2,
+      "pairId": "R03157:wp53"
+    },
+    {
+      "levelId": "R02789",
+      "sourceCaseId": "R02789:fresh-sibling-0",
+      "deadPrefix": [
+        786435,
+        720899
+      ],
+      "livePrefix": [
+        786435,
+        786436
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02789:wp54"
+    },
+    {
+      "levelId": "R02359",
+      "sourceCaseId": "R02359:fresh-sibling-1",
+      "deadPrefix": [
+        786443,
+        720907,
+        720906,
+        655370
+      ],
+      "livePrefix": [
+        786443,
+        720907,
+        720906,
+        786442
+      ],
+      "divergenceIndex": 3,
+      "pairId": "R02359:wp55"
+    },
+    {
+      "levelId": "R02166",
+      "sourceCaseId": "R02166:fresh-sibling-1",
+      "deadPrefix": [
+        327680,
+        393216,
+        393217,
+        196609,
+        262145
+      ],
+      "livePrefix": [
+        327680,
+        393216,
+        393217,
+        196609,
+        196608
+      ],
+      "divergenceIndex": 4,
+      "pairId": "R02166:wp56"
+    },
+    {
+      "levelId": "R03004",
+      "sourceCaseId": "R03004:fresh-sibling-1",
+      "deadPrefix": [
+        131076,
+        131077,
+        131078,
+        196614
+      ],
+      "livePrefix": [
+        131076,
+        131077,
+        131078,
+        131079
+      ],
+      "divergenceIndex": 3,
+      "pairId": "R03004:wp57"
+    },
+    {
+      "levelId": "R02471",
+      "sourceCaseId": "R02471:fresh-sibling-1",
+      "deadPrefix": [
+        458754,
+        393218
+      ],
+      "livePrefix": [
+        458754,
+        458753
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02471:wp58"
+    },
+    {
+      "levelId": "R02300",
+      "sourceCaseId": "R02300:fresh-sibling-1",
+      "deadPrefix": [
+        851970,
+        786434,
+        720898,
+        720897,
+        655361
+      ],
+      "livePrefix": [
+        851970,
+        786434,
+        720898,
+        720897,
+        720896
+      ],
+      "divergenceIndex": 4,
+      "pairId": "R02300:wp59"
+    },
+    {
+      "levelId": "R02738",
+      "sourceCaseId": "R02738:fresh-sibling-1",
+      "deadPrefix": [
+        131074,
+        196610
+      ],
+      "livePrefix": [
+        131074,
+        131073
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02738:wp60"
+    },
+    {
+      "levelId": "R03053",
+      "sourceCaseId": "R03053:fresh-sibling-1",
+      "deadPrefix": [
+        393227,
+        393226,
+        393225,
+        393224,
+        393223,
+        327687
+      ],
+      "livePrefix": [
+        393227,
+        393226,
+        393225,
+        393224,
+        393223,
+        458759
+      ],
+      "divergenceIndex": 5,
+      "pairId": "R03053:wp61"
+    },
+    {
+      "levelId": "R02996",
+      "sourceCaseId": "R02996:fresh-sibling-1",
+      "deadPrefix": [
+        327682,
+        393218
+      ],
+      "livePrefix": [
+        327682,
+        327683
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R02996:wp62"
+    },
+    {
+      "levelId": "R02359",
+      "sourceCaseId": "R02359:fresh-sibling-2",
+      "deadPrefix": [
+        786443,
+        720907,
+        720906,
+        720905
+      ],
+      "livePrefix": [
+        786443,
+        720907,
+        720906,
+        786442
+      ],
+      "divergenceIndex": 3,
+      "pairId": "R02359:wp63"
+    },
+    {
+      "levelId": "R01097",
+      "sourceCaseId": "R01097:fresh-sibling-2",
+      "deadPrefix": [
+        10,
+        65546
+      ],
+      "livePrefix": [
+        10,
+        11
+      ],
+      "divergenceIndex": 1,
+      "pairId": "R01097:wp64"
+    },
+    {
+      "levelId": "R02501",
+      "sourceCaseId": "R02501:fresh-sibling-2",
+      "deadPrefix": [
+        524296,
+        589832,
+        589833
+      ],
+      "livePrefix": [
+        524296,
+        589832,
+        655368
+      ],
+      "divergenceIndex": 2,
+      "pairId": "R02501:wp65"
+    },
+    {
+      "levelId": "R02300",
+      "sourceCaseId": "R02300:fresh-sibling-2",
+      "deadPrefix": [
+        851970,
+        786434,
+        720898,
+        655362
+      ],
+      "livePrefix": [
+        851970,
+        786434,
+        720898,
+        720897
+      ],
+      "divergenceIndex": 3,
+      "pairId": "R02300:wp66"
+    },
+    {
+      "levelId": "R02996",
+      "sourceCaseId": "R02996:fresh-sibling-2",
+      "deadPrefix": [
+        327682,
+        327683,
+        327684
+      ],
+      "livePrefix": [
+        327682,
+        327683,
+        262147
+      ],
+      "divergenceIndex": 2,
+      "pairId": "R02996:wp67"
+    },
+    {
+      "levelId": "R01600",
+      "sourceCaseId": "R01600:multi-pick-54",
+      "deadPrefix": [
+        9,
+        10,
+        65546,
+        131082,
+        131081,
+        65545,
+        65544,
+        65543,
+        65542
+      ],
+      "livePrefix": [
+        9,
+        10,
+        65546,
+        131082,
+        131081,
+        65545,
+        65544,
+        65543,
+        131079
+      ],
+      "divergenceIndex": 8,
+      "pairId": "R01600:wp68"
+    }
+  ]
+}
