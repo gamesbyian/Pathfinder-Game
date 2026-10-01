@@ -71,7 +71,7 @@ The ladder is hand-tuned. Historical corpus1 analysis found 79% of solved-level 
 - Iterative with undo tokens; no recursion.
 - `applyMove()` mutates/returns undo; `undoMove()` restores.
 - LDS probes `k = 0,1,2,4,8`, then unbounded. Each wave also honors deterministic node/work limits and the outer deadline.
-- Prunes: over-length/intersection, must-cross ceiling, goal distance, parity, MP/MC MST bounds, connectivity.
+- Prunes: over-length/intersection, must-cross ceiling, goal distance, parity, MP/MC MST bounds, connectivity; beam also applies theorem BC1 (bridge-excursion; default-ON `STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE`) where connectivity just ran.
 - `mustPassLowerBound`/`mustCrossLowerBound` memoize under `STRATEGY_LOWER_BOUND_MEMO`; keys must include every dependency. See MST bug below.
 
 ## Beam search (`beamSearchFromGate`)
