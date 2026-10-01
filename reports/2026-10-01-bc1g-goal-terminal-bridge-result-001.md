@@ -18,3 +18,6 @@ BC1 first-flag roots 14,974 (11,588 later-lossy-cull / 3,386 later-deterministic
 
 ## Why it stops here
 The extra roots are 2.7% of BC1's; BC1's measured production effect (~+19 net solves per 300 levels) came from ~15k roots, and the 300-level A/B already shows a perturbation loss floor of ~4-5 levels per 300, so a BC1-G A/B would need many thousands of levels to resolve a plausible +1. Code is retained as research-only (`bc1HasConflictFast(..., goalTerminal)`, `bc1gShadow` observer option, witness-soundness harness) because it is sound and reusable for a future regime-specific incidence question; no production consumer, no default change.
+
+## Multi-portal follow-up (regime-specific incidence)
+The 12 multi-portal levels among the 75 main-unsolved random-300 ids (same shadow settings, width 500, 3M nodes): BC1 first-flag roots **6263**, BC1-G extra roots **277** (4/12 parents; R02633 alone has 160 of them), 0 safety alarms, behaviorIdentical 12/12. The one-parent concentration is a sampling accident, not a regime-wide effect, so the "reopen for portal-heavy regime" condition above is not met by this population either.
