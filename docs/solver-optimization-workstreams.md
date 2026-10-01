@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-26.
+> **Reconciled:** 2026-10-01.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 > **Historical snapshot:** [pre-compaction queue](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md).
 
@@ -46,15 +46,15 @@ Question: `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` — closed. Reopen only wi
 
 Evidence: [confirmation result](../reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md) · [plan](../reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md) · [recovery](../reports/2026-09-25-ws1-precommitment-overlap-recovery-001.md) · [Stage A](../reports/2026-09-25-ws1-late-continuation-stage-a-opportunity-canary-result-001.md).
 
-### 4. BC1 later-disposition shadow / fresh-connectivity prune
+### 4. BC1 fresh-connectivity prune — CLOSED, PROMOTED
 
-**State:** ACTIVE — opt-in consumer `STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE` (default-OFF) under production-ladder confirmation.
+**State:** CONCLUDED-POSITIVE. `STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE` default-ON (2026-10-01).
 
-Shadow economics closed the "check every survivor" form (lineage-inflated 1.55x; 63% under a first-flag model), and the fresh-only schedule (evaluate BC1 only where ordinary connectivity just ran) removed all canonical flood cost at 86% dead-lineage coverage. The behavioral consumer then produced, at matched raw-beam settings, 20 gains / 1 loss on a disjoint 300 levels; on the production ladder the 21 gain/loss ids went 21/21 vs 20/21 (-15.9% work, one new cold solve `R00180`), but the 150-level solved-control run lost `R02401` (trajectory perturbation of a single width-5000 retry beam; control solves it at its 39th attempt). Net so far +1/-1 on production. Next gate: representative 300-id production A/B (control vs flag, runs 36772811676 / 36772815197); promote only on a clearly positive net with bounded losses, otherwise keep opt-in and consider stage-restricted application.
+Theorem BC1 (bridge excursion) prunes beam candidates only where ordinary connectivity just ran (reused flood, zero canonical work; typed-array `bc1HasConflictFast`). Random-300 production A/B at 50M: **206 -> 225 solved, 23 gains / 4 losses** (19/23 gains and all losses intersection-heavy); 21 gain/loss ids 21/21 vs 20/21 at -15.9% work; solved-control 150: 1 loss; regression gate 160/160. Losses are trajectory perturbations of single late retry beams, not soundness failures. Closed forms: unconditional per-candidate checking (lineage-inflated economics), pipeline-wide DFS/repair/admissible-order BC1 (0/72), the strengthened goal-terminal form BC1-G (sound over 664,514 valid-solution states but only +2.7% roots; research-only), every-phase checking and higher-budget probes. Parked: BC1-off dead-last whole-ladder retry ([future work](solver-future-work.md)).
 
-Question: `WS2-CUT-BALANCE-PROJECTION`.
+Question: `WS2-CUT-BALANCE-PROJECTION` — closed. Reopen only with a different fact family that has its own proof and perturbation matrix.
 
-Evidence: [production/raw A/B](../reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md) · [fresh-only pre-filter](../reports/2026-09-30-bc1-fresh-only-prefilter-result-001.md) · [lineage cost](../reports/2026-09-30-bc1-lineage-aware-cost-result-001.md) · [cost-reduction result](../reports/2026-09-30-bc1-shadow-construction-cost-reduction-result-001.md) · [pilot result](../reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md) · [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md).
+Evidence: [A/B result](../reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md) · [BC1-G](../reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md) · [fresh-only](../reports/2026-09-30-bc1-fresh-only-prefilter-result-001.md) · [lineage cost](../reports/2026-09-30-bc1-lineage-aware-cost-result-001.md) · [cost reduction](../reports/2026-09-30-bc1-shadow-construction-cost-reduction-result-001.md) · [pilot](../reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md) · [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md).
 
 ### 5. WS6 repair reachability / speed
 
