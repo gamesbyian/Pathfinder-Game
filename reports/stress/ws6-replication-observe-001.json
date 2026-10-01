@@ -1,0 +1,149 @@
+{
+  "kind": "pathfinder-ws6-replication-observe",
+  "alpha": 0.01,
+  "counts": {
+    "candidate": 69,
+    "deadByExact": 9,
+    "liveBySat": 0,
+    "abstain": 60,
+    "missingLabel": 0,
+    "accountingDiffers": 3,
+    "existingHardFact": 4,
+    "liveAlarm": 0,
+    "eligible": 2
+  },
+  "deadLive": {
+    "parents": 2,
+    "features": {
+      "mustPassLowerBound": {
+        "deadHigher": 0,
+        "deadLower": 0,
+        "tie": 2,
+        "p": 1,
+        "significant": false
+      },
+      "legalSuccessorCount": {
+        "deadHigher": 1,
+        "deadLower": 0,
+        "tie": 1,
+        "p": 1,
+        "significant": false
+      },
+      "bothAxesUsedCells": {
+        "deadHigher": 1,
+        "deadLower": 1,
+        "tie": 0,
+        "p": 1,
+        "significant": false
+      },
+      "horizontalUsedCells": {
+        "deadHigher": 2,
+        "deadLower": 0,
+        "tie": 0,
+        "p": 0.5,
+        "significant": false
+      },
+      "verticalUsedCells": {
+        "deadHigher": 0,
+        "deadLower": 2,
+        "tie": 0,
+        "p": 0.5,
+        "significant": false
+      }
+    }
+  },
+  "liveLiveNull": {
+    "pairs": 97,
+    "parents": 2,
+    "features": {
+      "mustPassLowerBound": {
+        "deadHigher": 2,
+        "deadLower": 0,
+        "tie": 0,
+        "p": 0.5,
+        "significant": false
+      },
+      "legalSuccessorCount": {
+        "deadHigher": 1,
+        "deadLower": 0,
+        "tie": 1,
+        "p": 1,
+        "significant": false
+      },
+      "bothAxesUsedCells": {
+        "deadHigher": 1,
+        "deadLower": 1,
+        "tie": 0,
+        "p": 1,
+        "significant": false
+      },
+      "horizontalUsedCells": {
+        "deadHigher": 0,
+        "deadLower": 2,
+        "tie": 0,
+        "p": 0.5,
+        "significant": false
+      },
+      "verticalUsedCells": {
+        "deadHigher": 2,
+        "deadLower": 0,
+        "tie": 0,
+        "p": 0.5,
+        "significant": false
+      }
+    }
+  },
+  "eligible": [
+    {
+      "levelId": "R01945",
+      "pairId": "R01945:wp0",
+      "delta": {
+        "mustPassLowerBound": 0,
+        "legalSuccessorCount": 2,
+        "bothAxesUsedCells": 1,
+        "horizontalUsedCells": 2,
+        "verticalUsedCells": -1
+      },
+      "dead": {
+        "mustPassLowerBound": 31,
+        "legalSuccessorCount": 3,
+        "bothAxesUsedCells": 6,
+        "horizontalUsedCells": 7,
+        "verticalUsedCells": 8
+      },
+      "live": {
+        "mustPassLowerBound": 31,
+        "legalSuccessorCount": 1,
+        "bothAxesUsedCells": 5,
+        "horizontalUsedCells": 5,
+        "verticalUsedCells": 9
+      }
+    },
+    {
+      "levelId": "R01600",
+      "pairId": "R01600:wp68",
+      "delta": {
+        "mustPassLowerBound": 0,
+        "legalSuccessorCount": 0,
+        "bothAxesUsedCells": -1,
+        "horizontalUsedCells": 1,
+        "verticalUsedCells": -2
+      },
+      "dead": {
+        "mustPassLowerBound": 40,
+        "legalSuccessorCount": 1,
+        "bothAxesUsedCells": 4,
+        "horizontalUsedCells": 8,
+        "verticalUsedCells": 5
+      },
+      "live": {
+        "mustPassLowerBound": 40,
+        "legalSuccessorCount": 1,
+        "bothAxesUsedCells": 5,
+        "horizontalUsedCells": 7,
+        "verticalUsedCells": 7
+      }
+    }
+  ],
+  "verdict": "inconclusive-insufficient-parents"
+}
