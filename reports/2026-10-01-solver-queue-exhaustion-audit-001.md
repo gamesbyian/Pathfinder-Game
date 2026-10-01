@@ -1,5 +1,12 @@
 # Solver queue exhaustion audit — 2026-10-01
 
+> **Status:** concluded-positive
+> **Last evidence:** 2026-10-01 — audit of the canonical workstream authority, question relations, future-work routing and support plans after the BC1 closeout and the WS6 replication (inconclusive).
+> **Decision:** no earned immediate solver-science execution gate remains on current evidence; stale active/supporting states (BC1, WS6, repair-deadline, reserve repricing, capability invention, WS1) were reconciled to closed/dormant/reopen-only.
+> **Remaining gate:** none; future work enters only through a named reopen condition, a materially changed premise/corpus/solver, or new decision-bearing residual evidence.
+> **Evidence role:** forensic.
+> **Owner:** `docs/solver-optimization-workstreams.md`.
+
 ## Conclusion
 
 **PASS after reconciliation:** the current solver-science execution queue is exhausted.

@@ -59,11 +59,11 @@ Evidence: [A/B result](../reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-r
 
 ### 5. WS6 repair reachability / speed
 
-**State:** SUPPORTING / DORMANT.
+**State:** DORMANT (replication inconclusive, 2026-10-01).
 
-There is no immediate WS6 execution gate. Independent-parent interface replication / fresh speed profiling remains a conditional continuation only when a suitable independent-parent population and a concrete consumer question make it decision-changing.
+The frozen independent-parent replication of the R03147 path-resource / relational-bound interface could not reach its pre-registered 12-parent minimum from retained evidence: 2/24 parents eligible (60/69 exact queries abstain at 60 s; 4/9 resolvable exact-dead divergences are already explained by existing prunes). Per the standing rule, no broad new exact truth is generated for this nomination. Reopen only if an independent-parent matched-pair population with exact point-of-no-return labels is acquired for another reason; fresh speed profiling stays on-demand. [Result](../reports/2026-10-01-ws6-independent-parent-replication-result-001.md).
 
-Question: `WS6-DEPENDENCY-CONDITIONED-REPAIR` — supporting, not queued for execution.
+Question: `WS6-DEPENDENCY-CONDITIONED-REPAIR` — dormant, not queued for execution.
 
 ## Supporting infrastructure — research execution efficiency
 
@@ -132,7 +132,7 @@ Detailed closeout evidence and reopen conditions are preserved in the [pre-compa
 | 2X | Small exact projections | `closed` | `reopen-only` | BC1 fresh-connectivity prune PROMOTED 2026-10-01; unconditional/every-phase/pipeline-wide forms and BC1-G production use closed; BC1-off dead-last retry parked conditionally in future work | none; reopen only for a materially different fact family or an explicitly justified conditional descendant | `WS2-CUT-BALANCE-PROJECTION` |
 | 2F | Forced-work capture economics | `closed` | `reopen-only` | tested global-compression/post-recognition forms closed; broader question identity retained | reopen only for a materially different sound recognizer | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
 | 2R | Parity response signature | `on-demand` | `reopen-only` | static parity form closed; dormant conditional lane retained for materially different mechanism evidence | reopen only on materially different parity opportunity structure | `WS2-PARITY-RESPONSE-SIGNATURE` |
-| 6/7 | Repair reachability / speed | `supporting` | `blocked/conditional` | development-positive one-parent interface observation; no current execution priority | independent-parent replication only when a suitable population and concrete consumer make it decision-changing | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
+| 6/7 | Repair reachability / speed | `on-demand` | `reopen-only` | replication inconclusive (2/24 eligible parents); dormant | reopen only on an independently acquired exact matched-pair population | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
 | 5 | Exact/reference service | `on-demand` | `service` | exact/reference truth service for microscopes | use only when a live discriminator requires it | — |
 | 3 | Generalization method | `method-complete` | `method` | independent-unit / selection-pressure methodology established | preserve method in future confirmations | — |
 
