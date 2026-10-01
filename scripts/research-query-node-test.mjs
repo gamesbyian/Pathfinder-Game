@@ -199,7 +199,18 @@ assert.deepEqual(preGateDiff.newlyBoundedCompute, []);
 const searched = queryResearchGraph(graph, { query: 'portal coarse', limit: 20 });
 assert.ok(searched.nodes.some(node => node.type === 'questions'));
 
-const activeQuestions = queryResearchGraph(graph, { type: 'questions', status: 'active', limit: 100 });
+// The live registry may legitimately have no active questions (queue exhaustion), so the status
+// filter is exercised on a fixture with one question promoted to an active state.
+let activeFixtureApplied = false;
+const activeQuestionFixture = {
+  ...graph,
+  nodes: graph.nodes.map(node => {
+    if (node.type !== 'questions' || activeFixtureApplied) return node;
+    activeFixtureApplied = true;
+    return { ...node, row: { ...node.row, state: 'active-candidate' } };
+  }),
+};
+const activeQuestions = queryResearchGraph(activeQuestionFixture, { type: 'questions', status: 'active', limit: 100 });
 assert.ok(activeQuestions.nodes.length > 0);
 assert.ok(activeQuestions.nodes.every(node => String(node.row.state).includes('active')));
 
