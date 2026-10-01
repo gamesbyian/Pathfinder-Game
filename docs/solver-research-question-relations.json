@@ -484,11 +484,11 @@
       "id": "WS6-DEPENDENCY-CONDITIONED-REPAIR",
       "question": "When append-only repair cannot rescue a near miss, is the missing neighborhood better defined by a compact set of earlier coupled commitments than by rollback/path distance?",
       "owner": "WS6",
-      "state": "active-candidate",
+      "state": "deferred-reopen",
       "answeredBy": [
         "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md"
       ],
-      "result": "Development microscope positive on retained R03147 exact pairs: both independent causal divergence points change the same bounded families, local path-resource occupancy and relational must-pass lower bound, while global accounting matches and both branches pass current hard prunes. This earns independent-parent replication of the frozen interface only; one parent is insufficient for a reusable descriptor or repair consumer.",
+      "result": "Development microscope positive on retained R03147 exact pairs: both independent causal divergence points change the same bounded families, local path-resource occupancy and relational must-pass lower bound, while global accounting matches and both branches pass current hard prunes. One parent is insufficient for a reusable descriptor or repair consumer. This remains a supporting deferred premise, not an immediate execution gate, until a suitable independent-parent population and concrete decision-changing consumer justify replication.",
       "constrainedBy": [
         "docs/solver-archaeology-register.md",
         "reports/2026-09-20-ws6-dependency-interface-observer-reopen-001.md"
@@ -498,7 +498,7 @@
         "Freeze the same path-resource/relational-bound projection before independent-parent outcomes; do not feature-shop or infer a directional threshold from R03147.",
         "No dependency-conditioned repair, backjump, LNS, classifier, or hard prune before independent-parent recurrence and a separate consumer falsifier."
       ],
-      "reopensOn": "A retained or independently justified exact matched-pair population provides independent parents with a comparable known causal divergence, allowing the frozen path-resource/relational-bound interface to be tested without new feature selection.",
+      "reopensOn": "A suitable independent-parent exact matched-pair population plus a concrete consumer question make replication decision-changing; do not acquire a population or profile speed merely to keep the solver queue active.",
       "aliases": [
         "dependency-conditioned repair",
         "repair neighborhood"
@@ -1024,7 +1024,7 @@
       "id": "WS2-CUT-BALANCE-PROJECTION",
       "question": "Can a small exact current-input cut/region-flow projection expose sound decision-bearing conservation, capacity, or pressure that existing scalar connectivity/volume and Lane-A separator signatures miss?",
       "owner": "WS2",
-      "state": "active-candidate",
+      "state": "concluded-positive",
       "aliases": [
         "cut balance",
         "boundary crossing balance",
@@ -1044,19 +1044,21 @@
         "reports/2026-09-21-cut-region-flow-stage0-audit-001.md",
         "reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md",
         "reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md",
-        "reports/2026-09-30-bc1-shadow-construction-cost-reduction-result-001.md"
+        "reports/2026-09-30-bc1-shadow-construction-cost-reduction-result-001.md",
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
+        "reports/2026-09-30-bc1-fresh-only-prefilter-result-001.md",
+        "reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md"
       ],
-      "result": "Stage-B incidence is positive (2026-09-21): BC1 conflicts occur on 22/24 eligible independent parents and 105/263 connectivity-passing sampled states. The production-inert beam later-disposition shadow (2026-09-26) confirmed this on a live, exhaustive 24-parent population: 100% parent recurrence, zero production-inertness or solution-safety alarms, full disposition closure, and excellent per-catch construction economics (12 canonical work units versus a median 2,800-17,600 units of later work). Full-population cost accounting (2026-09-30, after a verified but modest connectivity-reuse/pending-mandatory-early-exit optimization pair) settled the aggregate question negatively: pricing every evaluated candidate (not only flagged ones) shows an unconditional per-candidate shadow costs 1,083,213 checks / 11,067,084 canonical work units -- 1.55x the entire 24-parent campaign's own workSpent (7,160,719); only 38.3% of checks are ever flagged, and the two optimizations cut average per-check cost only 14.9%. 'Check every survivor' is closed as a consumer policy; BC1's soundness and per-catch value are untouched, and no hot-path prune or general k-cut/flow machinery is authorized.",
+      "result": "CONCLUDED-POSITIVE / PROMOTED 2026-10-01. BC1 fresh-connectivity pruning was reduced to a zero-canonical-work check at the seam where ordinary connectivity already ran, then cleared matched-budget production A/B, gain/loss replay, solved-control, and regression gates. Random-300 at 50M improved 206 -> 225 solved (23 gains / 4 losses); the production flag is default-ON. Unconditional per-candidate checking, pipeline-wide DFS/repair/admissible-order application, every-phase checking, higher-budget probes, and BC1-G production use are closed in their tested forms. BC1-G remains a sound research-only strengthening with low incremental incidence. The BC1-off dead-last whole-ladder retry is parked in solver-future-work.md and is not a current gate.",
       "constrains": [
         "Do not reopen Lane A C0-C2 unchanged: recurring compact interface identity and per-state bridge conservation are different premises.",
-        "Do not build a hot-path prune or general min-cut/flow engine from incidence alone.",
-        "'Check every hard-prune-surviving candidate' is closed negative on full-population cost (1.55x campaign work); do not re-test that exact policy. A cheaper pre-filter for which candidates to check is the open direction.",
-        "Do not treat summed per-candidate work-distance as an additive saved-work estimate: flagged candidates' proof-to-disposition windows overlap within shared beam phases; only the per-parent median is a defensible per-catch statistic.",
-        "Do not infer an optimization has no aggregate value from a flat flagged-only cost metric: an early exit that only ever applies to unflagged candidates is structurally invisible there -- full-population accounting is required to price an optimization honestly.",
+        "BC1 fresh-connectivity pruning is promoted/default-ON; do not buy another generic confirmation round for the same treatment.",
+        "Unconditional per-candidate, pipeline-wide, every-phase, higher-budget, and BC1-G production forms are closed in their tested forms.",
+        "Do not treat BC1-G's soundness as production value: its incremental incidence is too small in the tested regime.",
         "Preserve transition-resource multiplicity: parallel cardinal and portal edges between the same cells are distinct multiedges.",
-        "Other projection families remain candidates, not live experiments, until separately earned."
+        "Other projection families need their own positive premise, soundness argument, perturbation matrix, and economics gate."
       ],
-      "reopensOn": null
+      "reopensOn": "A materially different cut/topology fact family with its own soundness proof and perturbation/economics matrix, or an explicitly justified conditional descendant such as the parked BC1-off dead-last retry after its recovery economics become decision-relevant."
     },
     {
       "id": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
@@ -1090,7 +1092,7 @@
         "Use normalized actionBoundaryDigest rather than workflow-run ID or commit SHA alone when deciding whether retained executions are distinct evidence units for this question.",
         "No retained family/variant population currently supplies both the modern production stage identity and canonical workSpent contract with enough independent-parent support for confirmation; do not manufacture confirmation by translating legacy attempts, re-splitting C2, or treating missing work as zero.",
         "Stage A's 2026-09-25 opportunity-starved outcome does not license widening the frozen model, changing the development/validation split function, or drawing a second random block under new seeds to retry exposure; any further fresh-population confirmation attempt needs a new, separately reasoned acquisition plan.",
-        "The single-stage N=160 plan is designed, not dispatched; do not treat its existence as a result, and do not dispatch a differently-sized draw without redoing its power calculation."
+        "The single-stage N=160 confirmation was dispatched once under the frozen plan and concluded negative; do not rerun this exact frozen model at another sample size."
       ],
       "reopensOn": "A materially different legal-signal design (different signature family, model, or acquisition source) proposes fresh-population transfer; do not reopen by retesting this exact frozen 15-signature model at any sample size.",
       "premiseRefs": [],
