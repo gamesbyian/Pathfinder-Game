@@ -121,6 +121,10 @@ const mainSearchLateReserveFraction = argMap.has('--main-search-late-reserve-fra
 const mainSearchLateReserveConfigCount = argMap.has('--main-search-late-reserve-config-count')
     ? Number(argMap.get('--main-search-late-reserve-config-count')) : undefined;
 const disableExtraBudgetPasses = flags.has('--disable-extra-budget-passes');
+// Opt-in per-attempt `workSpent`/ceiling telemetry on every attempt row (SolveOpts.attemptBudgetTelemetry; the same
+// rows --lifecycle-telemetry produces in level-blind-capability-sweep). Required by the work-banded action-boundary
+// scorers (scripts/analyze-action-selection-legal-signals.mjs); without it attempt rows carry no workSpent.
+const attemptBudgetTelemetry = flags.has('--attempt-budget-telemetry');
 // DEPRECATED --baseline-budget: per-level adaptive node budgets scaled off recorded per-level
 // nodesExpanded, instead of one flat --node-budget on every level. Rationale (measured on
 // stress-corpus-2's baseline): the winning attempt is cheap (p50 68K, p90 9M nodes) but a flat
@@ -390,6 +394,7 @@ if (Number.isFinite(mainSearchLateReserveConfigCount)) solveOpts.mainSearchLateR
 // `?? (disableExtraBudgetPasses ? 0 : undefined)`, so an explicit --repair-budget-fraction etc. still
 // wins over this flag — the additive semantics its own SolveOpts comment promises.
 if (disableExtraBudgetPasses) solveOpts.disableExtraBudgetPasses = true;
+if (attemptBudgetTelemetry) solveOpts.attemptBudgetTelemetry = true;
 if (ablation) solveOpts.ablation = ablation;
 
 // Fail loudly, up front, rather than mid-run: any SolveOpts field the raced engine cannot honor
@@ -709,7 +714,7 @@ for (const row of cachedSkipRows) recordRow(row, { fromCheckpointOrCache: true }
 
 const effectiveParallelism = workerCount * Math.max(1, racePoolSize);
 const cpuCount = os.cpus().length;
-console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(goalAttractionDisabledRetryBudgetFraction) ? ` goal-attraction-disabled-retry-budget-fraction=${goalAttractionDisabledRetryBudgetFraction}` : ''}${Number.isFinite(admissibleOrderBudgetFraction) ? ` admissible-order-budget-fraction=${admissibleOrderBudgetFraction}` : ''}${Number.isFinite(admissibleOrderNodeReserveFraction) ? ` admissible-order-node-reserve-fraction=${admissibleOrderNodeReserveFraction}` : ''}${Number.isFinite(mainSearchLateReserveFraction) ? ` main-search-late-reserve-fraction=${mainSearchLateReserveFraction}` : ''}${Number.isFinite(mainSearchLateReserveConfigCount) ? ` main-search-late-reserve-config-count=${mainSearchLateReserveConfigCount}` : ''}${disableExtraBudgetPasses ? ' disable-extra-budget-passes' : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
+console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(goalAttractionDisabledRetryBudgetFraction) ? ` goal-attraction-disabled-retry-budget-fraction=${goalAttractionDisabledRetryBudgetFraction}` : ''}${Number.isFinite(admissibleOrderBudgetFraction) ? ` admissible-order-budget-fraction=${admissibleOrderBudgetFraction}` : ''}${Number.isFinite(admissibleOrderNodeReserveFraction) ? ` admissible-order-node-reserve-fraction=${admissibleOrderNodeReserveFraction}` : ''}${Number.isFinite(mainSearchLateReserveFraction) ? ` main-search-late-reserve-fraction=${mainSearchLateReserveFraction}` : ''}${Number.isFinite(mainSearchLateReserveConfigCount) ? ` main-search-late-reserve-config-count=${mainSearchLateReserveConfigCount}` : ''}${disableExtraBudgetPasses ? ' disable-extra-budget-passes' : ''}${attemptBudgetTelemetry ? ' attempt-budget-telemetry' : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
 if (adaptiveBudget) {
     const assigned = toActuallyRun.map(n => nodeBudgetFor(rawLevels[n - 1]?.id));
     const capped = assigned.filter(b => b !== undefined).sort((a, b) => a - b);

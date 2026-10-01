@@ -31,6 +31,12 @@ The plan (`reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-pla
 - `attemptWorkCoverage()` in `scripts/analyze-action-selection-legal-signals.mjs`; `apply-action-selection-legal-signal-model.mjs` now records coverage in its result and exits 3 when any reachable attempt lacks `workSpent` (override `--allow-missing-work` for exploration only); the confirmation evaluator refuses a verdict (exit 2) on an incomplete-coverage scoring input. Both have node tests.
 - Authority corrections: the confirmation result report status block, `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` in `docs/solver-research-question-relations.json` (`deferred-reopen`), and `docs/solver-optimization-workstreams.md`.
 
+## Producer fix and re-dispatch recipe
+
+`portfolio-solve-sweep.mjs` now accepts `--attempt-budget-telemetry` (sets `SolveOpts.attemptBudgetTelemetry`, the flag `--lifecycle-telemetry` implies in the level-blind sweep). Local check on R00001 at a small budget: 73/73 attempts carry `workSpent`, the scorer reports complete coverage and exits 0, and total work (6,449,417), nodes (1,350,035) and attempt count (73) are identical to the run without the flag. Telemetry only relabels some attempt outcomes (`budget-starved` instead of `timed-out`, derived from the pre-dispatch work-ceiling snapshot); the scorer maps both to `censored`, and the historical producer carried the same labels.
+
+A corrected re-dispatch is the frozen workflow's solve step plus this one flag (seed `2026092591`, 160 parents, 50M nodes / 67M work, frozen model and split, no other change). The workflow file itself was not edited, because it carries the frozen plan-quality contract; whoever dispatches should add the flag in a dedicated revision and keep the scorer's coverage gate on.
+
 ## What this does not establish
 
 That the frozen model would transfer (or not); that a re-dispatch is worth its cost (about one 160-parent production solve at 50M/67M, 40 shards); or that the other WS1 evidence is affected. The retained evidence bundle's other fields were not re-audited.
