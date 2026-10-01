@@ -20,7 +20,7 @@ assert.ok(graph.nodes.some(node =>
   'authored free-text premise relation targets must be represented as concepts rather than dangling premise IDs');
 assert.deepEqual(graph.diagnostics.shapeDebt.openExperimentsOnTerminalQuestions, [],
   'stable experiment/question ownership must not leave an open promotion gate on a terminal question');
-assert.ok(graph.diagnostics.shapeDebt.acquisitionNeedLexicalFallbackQuestions.includes('WS2-CUT-BALANCE-PROJECTION'),
+assert.ok(graph.diagnostics.shapeDebt.acquisitionNeedLexicalFallbackQuestions.includes('WS2-BEHAVIORAL-STATE-QUOTIENT'),
   'query diagnostics should expose active questions whose acquisition route would use lexical fallback');
 assert.ok(!graph.diagnostics.shapeDebt.acquisitionNeedLexicalFallbackQuestions.includes('WS2-REPAIR-DEADLINE-ALLOCATION'),
   'questions with explicit acquisitionNeed must not be reported as lexical fallback');
