@@ -59,3 +59,14 @@ Pre-specified seeded random sample (seed 2026093001, disjoint from the 24 Stage-
 **23 gains / 4 losses, net +19 new cold solves (+6.3 pp of the population; 24.5% of control-unsolved).** Gains: R00046 R00180 R00440 R02084 R02274 R02422 R02425 R02431 R02440 R02590 R02629 R02666 R02676 R02703 R02748 R02956 R03024 R03115 R03117 R03121 R03152 R03261 R03301. Losses: R01273 R02333 R02874 R03242 (trajectory perturbations of the same kind as R02401; BC1 is sound so none can be caused by pruning a valid completion). Exact sign test 23 vs 4 is p~3e-4. Combined with the solved-control 150 (1 loss, R02401), the flag is net strongly positive on every production population tested: +1/-0 beyond the raw-beam nominations is not needed to see it.
 
 Earns: promotion to default-ON subject to the published-corpus regression gate and `npm run ci`. Loss rate on already-solved levels is small but non-zero (~1.4% across both controls), accepted as the usual trajectory-perturbation cost given 6x more gains than losses.
+
+### Routing-regime breakdown of the random-300 (joined via `classifyRoutingRegime`, level-blind features)
+
+| regime | levels | main-unsolved (flag ON) | gains | losses |
+|---|---:|---:|---:|---:|
+| intersection-heavy | 230 | 57 (25%) | 19 | 4 |
+| multi-portal | 29 | 12 (41%) | 2 | 0 |
+| must-cross-heavy | 28 | 4 (14%) | 1 | 0 |
+| general | 13 | 2 (15%) | 1 | 0 |
+
+The gain mass and all four losses sit in the intersection-heavy regime (net +15 of 230, +6.5 pp there), which is also where 76% of the remaining unsolved levels are; the next capability frontier on this population is intersection-heavy and multi-portal (41% unsolved, smallest regime and least-benefited by BC1).
