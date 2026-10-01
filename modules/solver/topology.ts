@@ -1132,6 +1132,104 @@ export function computeBc1ShadowConflicts(
     return { conflicts: bc1.eligible ? bc1.conflicts : [], constructionWorkUnits };
 }
 
+// ─── BC1 fast boolean check (typed-array port of the Map/Set path above) ─────────────────────────
+// Same theorem/graph as connectivityResearchSnapshot + findBridgeExcursionConflicts, reduced to the
+// one bit a consumer needs: does any bridge leave the goal on the current side while stranding a
+// pending mandatory cell? DFS from `current` makes every bridge a tree edge (u -> v, low[v] > tin[u]);
+// it strands exactly subtree(v), and current is never inside it, so a conflict is a bridge whose
+// subtree contains no goal and >= 1 pending cell. Differentially verified against the slow path by
+// the BC1 shadow collector (`Bc1FastCheckMismatch`), and by topology.test.ts.
+const _BC1_MAX = MAX_BITROW_DIM * MAX_BITROW_DIM;
+const _bc1Tin = new Int32Array(_BC1_MAX), _bc1Low = new Int32Array(_BC1_MAX), _bc1Tout = new Int32Array(_BC1_MAX);
+const _bc1Parent = new Int32Array(_BC1_MAX), _bc1ParentKind = new Int8Array(_BC1_MAX), _bc1Next = new Int8Array(_BC1_MAX);
+const _bc1Stack = new Int32Array(_BC1_MAX), _bc1PendCount = new Int32Array(_BC1_MAX), _bc1Order = new Int32Array(_BC1_MAX);
+const _bc1PortalCache = new WeakMap<NormalizedLevel, Int32Array | null>();
+
+/** Undirected portal partner per cell index (-1 none); null when the portal map is not a simple matching (caller falls back). */
+function _bc1PortalPartners(level: NormalizedLevel): Int32Array | null {
+    if (_bc1PortalCache.has(level)) return _bc1PortalCache.get(level)!;
+    const w = level.grid.w;
+    const partner = new Int32Array(_BC1_MAX).fill(-1);
+    let ok = true;
+    for (const [a, portal] of level.portalMap) {
+        const b = portal.dest;
+        const ia = ((a >>> 16) & 0xFFFF) * w + (a & 0xFFFF), ib = ((b >>> 16) & 0xFFFF) * w + (b & 0xFFFF);
+        if (ia === ib) continue;
+        if (partner[ia] !== -1 && partner[ia] !== ib) ok = false;
+        if (partner[ib] !== -1 && partner[ib] !== ia) ok = false;
+        partner[ia] = ib; partner[ib] = ia;
+    }
+    const result = ok ? partner : null;
+    _bc1PortalCache.set(level, result);
+    return result;
+}
+
+/** Fast BC1 conflict existence. Requires `_reached()` to be fresh for (pos, state). Returns null when unsupported (caller uses the slow path). */
+export function bc1HasConflictFast(pos: number, state: SolverSearchState, level: NormalizedLevel): boolean | null {
+    const { w, h } = level.grid;
+    if (w > MAX_BITROW_DIM || h > MAX_BITROW_DIM) return null;
+    const partner = _bc1PortalPartners(level);
+    if (!partner) return null;
+    const idx = (k: number): number => ((k >>> 16) & 0xFFFF) * w + (k & 0xFFFF);
+    const n = w * h;
+    // Pending mandatory marks (per cell), only for reached cells (unreached pending => ordinary connectivity fails, not BC1's job).
+    let pendingTotal = 0;
+    const pendMark = _bc1PendCount; // reuse as per-cell mark first, then overwritten by subtree counts below
+    pendMark.fill(0, 0, n);
+    for (let i = 0; i < level.mustPassKeys.length; i++) {
+        if ((state.mpVisitedMask & (1 << i)) === 0) { const c = idx(level.mustPassKeys[i]); if (pendMark[c] === 0) { pendMark[c] = 1; pendingTotal++; } }
+    }
+    for (let i = 0; i < level.mustCrossKeys.length; i++) {
+        if ((state.mustCrossMask & (1 << i)) !== 0) { const c = idx(level.mustCrossKeys[i]); if (pendMark[c] === 0) { pendMark[c] = 1; pendingTotal++; } }
+    }
+    if (pendingTotal === 0) return false;
+    const start = idx(pos), goal = idx(level.goalKey);
+    _bc1Tin.fill(-1, 0, n);
+    let time = 0, sp = 0, orderLen = 0;
+    _bc1Tin[start] = _bc1Low[start] = time++; _bc1Parent[start] = -1; _bc1ParentKind[start] = -1; _bc1Next[start] = 0;
+    _bc1Stack[sp++] = start; _bc1Order[orderLen++] = start;
+    while (sp > 0) {
+        const v = _bc1Stack[sp - 1];
+        const kind = _bc1Next[v]++;
+        if (kind > 4) {
+            sp--;
+            _bc1Tout[v] = time - 1;
+            const p = _bc1Parent[v];
+            if (p >= 0 && _bc1Low[v] < _bc1Low[p]) _bc1Low[p] = _bc1Low[v];
+            continue;
+        }
+        const vx = v % w, vy = (v - vx) / w;
+        let u = -1;
+        if (kind === 0) { if (vx + 1 < w) u = v + 1; }
+        else if (kind === 1) { if (vx > 0) u = v - 1; }
+        else if (kind === 2) { if (vy + 1 < h) u = v + w; }
+        else if (kind === 3) { if (vy > 0) u = v - w; }
+        else u = partner[v];
+        if (u < 0) continue;
+        const uKey = ((u / w | 0) << 16) | (u % w);
+        if (!_reached(uKey)) continue;
+        if (u === _bc1Parent[v] && (kind < 4) === (_bc1ParentKind[v] < 4)) continue; // the tree edge itself (a parallel portal/cardinal edge is a distinct edge)
+        if (_bc1Tin[u] !== -1) { if (_bc1Tin[u] < _bc1Low[v]) _bc1Low[v] = _bc1Tin[u]; continue; }
+        _bc1Tin[u] = _bc1Low[u] = time++; _bc1Parent[u] = v; _bc1ParentKind[u] = kind; _bc1Next[u] = 0;
+        _bc1Stack[sp++] = u; _bc1Order[orderLen++] = u;
+    }
+    // Subtree pending counts via reverse discovery order (children finish before parents).
+    // pendMark currently holds 0/1 marks; accumulate in place.
+    for (let i = orderLen - 1; i > 0; i--) {
+        const v = _bc1Order[i];
+        pendMark[_bc1Parent[v]] += pendMark[v];
+    }
+    if (_bc1Tin[goal] === -1) return null; // goal not in reached graph: ordinary connectivity failure, defer to slow path
+    for (let i = 1; i < orderLen; i++) {
+        const v = _bc1Order[i];
+        if (_bc1Low[v] <= _bc1Tin[_bc1Parent[v]]) continue; // not a bridge
+        if (pendMark[v] === 0) continue;
+        if (_bc1Tin[goal] >= _bc1Tin[v] && _bc1Tin[goal] <= _bc1Tout[v]) continue; // goal inside stranded side
+        return true;
+    }
+    return false;
+}
+
 export function isConnectedForFalseGoalTriggerSearch(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     const intNeeded = level.requiredIntersections - state.ints;
     const maxVisit = intNeeded > 0 ? 1 : 0;

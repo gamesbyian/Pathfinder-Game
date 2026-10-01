@@ -484,7 +484,19 @@ export interface BeamResearchObserver {
      * per-candidate deployment cost in aggregate?" because it only ever fires for flagged candidates
      * (2026-09-30 cost-reduction result's own finding) -- this is the seam that closes that gap.
      */
-    observeBc1ShadowCost?(constructionWorkUnits: number): void;
+    observeBc1ShadowCost?(constructionWorkUnits: number, lineage?: 'inherited' | 'first-flag' | 'clear' | 'skipped', features?: { pending: number; remainingSteps: number; depth: number; wallMs?: number }): void;
+    /**
+     * Opt-in BC1 lineage-aware mode (2026-09-30 lineage-inflation audit): when true, a candidate whose
+     * beam parent was already BC1-flagged inherits "dead" without recomputation (sound: BC1 proves the
+     * parent has no valid completion, so no child does), modelling a consumer that prunes at the FIRST
+     * flag instead of re-checking a dead subtree the shadow (which prunes nothing) keeps expanding.
+     * `observeBc1ShadowCost` then receives `inherited` for those skipped candidates.
+     */
+    bc1LineageAware?: boolean;
+    /** Research pre-filter policy: evaluate BC1 only when ordinary connectivity was just computed for this candidate (flood free); other candidates are `skipped` (treated live). */
+    bc1FreshOnly?: boolean;
+    /** Differential check of bc1HasConflictFast against the slow path: called with true on agreement (fast path used), false on mismatch. */
+    verifyBc1Fast?(agreed: boolean): void;
 }
 
 export interface RepairEliteResearchRecord {

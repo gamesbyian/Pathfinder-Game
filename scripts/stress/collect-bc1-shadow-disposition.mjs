@@ -26,6 +26,8 @@ const budgetMs = Number(args.get('--budget-ms') ?? 120000);
 const outFile = args.get('--out') ?? 'reports/stress/collect-bc1-shadow-disposition.json';
 const sampleResolved = Number(args.get('--sample-resolved') ?? 25);
 const requestedLevelIds = (args.get('--level-ids') ?? '').split(',').map(x => x.trim()).filter(Boolean);
+const lineageAware = args.get('--lineage-aware') === 'true';
+const freshOnly = args.get('--fresh-only') === 'true';
 const runId = args.get('--run-id') ?? `bc1-shadow-disposition-${new Date().toISOString()}`;
 const solverRef = process.env.GITHUB_SHA ?? execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
 
@@ -37,6 +39,9 @@ if (new Set(requestedLevelIds).size !== requestedLevelIds.length) throw new Erro
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
+const { defaultConfig } = await import('../../modules/solver/ablation-config.ts');
+// The BC1 prune is default-ON in production; the shadow must observe the UNPRUNED search, so pin it OFF in both arms.
+const shadowCfg = () => ({ ...defaultConfig(), STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE: false });
 const Solver = createSolver();
 const rawLevels = readLevelCorpusDocumentWithHints(levelsFile).levels;
 const byId = new Map(rawLevels.map(level => [String(level.id), level]));
@@ -49,12 +54,12 @@ for (const rawId of requestedLevelIds) {
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
     const gateKey = level.gateKeys[0];
 
-    const offPrep = api.prepLevel(level); offPrep._cfg = null; offPrep._metrics = { nodesExpanded: 0 };
+    const offPrep = api.prepLevel(level); offPrep._cfg = shadowCfg(); offPrep._metrics = { nodesExpanded: 0 };
     const offPath = await api.beamSearchFromGate(gateKey, level, offPrep, api.SCORING_PROFILES.default,
         budgetMs, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
 
-    const observer = new api.Bc1ShadowDispositionObserver();
-    const onPrep = api.prepLevel(level); onPrep._cfg = null; onPrep._metrics = { nodesExpanded: 0 }; onPrep._beamResearchObserver = observer;
+    const observer = new api.Bc1ShadowDispositionObserver({ lineageAware, freshOnly });
+    const onPrep = api.prepLevel(level); onPrep._cfg = shadowCfg(); onPrep._metrics = { nodesExpanded: 0 }; onPrep._beamResearchObserver = observer;
     const onPath = await api.beamSearchFromGate(gateKey, level, onPrep, api.SCORING_PROFILES.default,
         budgetMs, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
 
@@ -90,6 +95,7 @@ for (const rawId of requestedLevelIds) {
         // deployment cost figure totalConstructionWorkUnits (flagged-only) cannot supply, per the
         // 2026-09-30 cost-reduction result.
         shadowInvocations: summary.shadowInvocations, shadowTotalCost: summary.shadowTotalCost,
+        lineageAware, freshOnly, shadowWallMs: summary.shadowWallMs, fastAgree: summary.fastAgree, fastMismatch: summary.fastMismatch, lineageCounts: summary.lineageCounts, featureHist: summary.featureHist,
         // Full per-candidate `resolved` (one entry per flagged prefix, each carrying its own path
         // array) is not retained: flagged counts run into the tens of thousands per level, and
         // JSON.stringify-ing every one across a multi-parent run can exceed V8's max string length.
@@ -113,6 +119,9 @@ const document = {
         parentsWithAnyFlag: rows.filter(x => x.flaggedCount > 0).length,
         totalShadowInvocations: rows.reduce((n, x) => n + x.shadowInvocations, 0),
         totalShadowCost: rows.reduce((n, x) => n + x.shadowTotalCost, 0),
+        lineageAware,
+        lineageCounts: rows.reduce((a, x) => { for (const k of Object.keys(a)) a[k] += x.lineageCounts[k]; return a; }, { inherited: 0, 'first-flag': 0, clear: 0, skipped: 0 }),
+        freshOnly, shadowWallMs: rows.reduce((n, x) => n + x.shadowWallMs, 0),
         totalCampaignWorkSpent: rows.reduce((n, x) => n + x.workSpent, 0),
         overlapCounts: rows.reduce((acc, x) => {
             for (const [k, v] of Object.entries(x.overlapCounts)) acc[k] = (acc[k] ?? 0) + v;

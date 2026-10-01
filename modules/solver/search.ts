@@ -4,7 +4,7 @@ import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import type { PruneDiagnostics } from './hard-prune-pipeline.js';
-import { computeBc1ShadowConflicts } from './topology.js';
+import { observeBc1ShadowCandidate, bc1FreshConnectivityPrunes } from './bc1-beam-shadow.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, UndoToken, ScoringProfile, StructuralOrderingBias, SolverSearchState } from './types.js';
 
@@ -724,6 +724,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     const ws = resumeFrom ? resumeFrom.ws : createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     const research = prep._beamResearchObserver;
+    // BC1 lineage-aware research mode only (see BeamResearchObserver.bc1LineageAware): retained beam nodes proven dead.
+    const bc1DeadNodes = new WeakSet<BeamNode>();
     const flow = prep._beamFlowCounters;
     const countFlow = (stage: import('./types.js').BeamFlowStage, count: number): void => {
         if (flow && count > 0) flow[stage] = (flow[stage] ?? 0) + count;
@@ -1045,6 +1047,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             // Loop-invariant: pos is fixed for this whole candidate batch, same as curCtx above.
             const pAtPos = level.portalMap.get(pos);
             for (const next of neighbors) {
+                let bc1InheritedDead = false;
                 const isJump = !!(pAtPos && !ws.lastWasPortalJump && pAtPos.dest === next);
                 const undo = applyMove(next, ws, level, prep, isJump);
                 const realLen = getRealLengthFromState(ws);
@@ -1083,21 +1086,17 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                             cause: Object.keys(pruneDiagnostics!.rejected)[0] ?? (next === level.goalKey ? '_invalid-goal' : '_fundamental'),
                             diagnostics: pruneDiagnostics });
                     } else if (research.observeBc1Candidate || research.observeBc1ShadowCost) {
-                        // WS2-CUT-BALANCE-PROJECTION shadow, only for candidates that already passed
-                        // the gauntlet above (`ok`). See computeBc1ShadowConflicts's own doc for why its
-                        // construction cost is snapshotted/restored rather than left in prep._workMeter,
-                        // and for connectivityAlreadyFresh's cost-reduction rationale.
-                        const connectivityAlreadyFresh = !!(runConnectivity && (!cfg || cfg.PRUNE_CONNECTIVITY));
-                        const shadow = computeBc1ShadowConflicts(next, ws, level, prep, connectivityAlreadyFresh);
-                        research.observeBc1ShadowCost?.(shadow.constructionWorkUnits);
-                        if (shadow.conflicts.length > 0) research.observeBc1Candidate?.({
-                            depth: node.depth + 1, workBefore: prep._workMeter.units, workSpent: prep._workMeter.units,
-                            constructionWorkUnits: shadow.constructionWorkUnits, conflicts: shadow.conflicts,
-                            path: [..._reconstructBeamPath(diagnosticNode, [])],
-                        });
+                        // WS2-CUT-BALANCE-PROJECTION shadow (see bc1-beam-shadow.ts).
+                        bc1InheritedDead = observeBc1ShadowCandidate(research, bc1DeadNodes.has(node),
+                            !!(runConnectivity && (!cfg || cfg.PRUNE_CONNECTIVITY)), next, ws, level, prep, rSteps,
+                            node.depth + 1, () => [..._reconstructBeamPath(diagnosticNode, [])]);
                     }
                 }
-                if (ok) {
+                // STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE (default-ON; see bc1-beam-shadow.ts).
+                const bc1Pruned = ok && (!cfg || cfg.STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE === true) && runConnectivity
+                    && (!cfg || !!cfg.PRUNE_CONNECTIVITY) && bc1FreshConnectivityPrunes(next, ws, level, prep);
+                if (bc1Pruned) countFlow('hard-pruned', 1);
+                if (ok && !bc1Pruned) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, orderingBias, curCtx);
                     // Constraint-state fields snapshotted from ws right after this candidate's move —
                     // used by beamStateKey (coarse-state merge) and _mechanicBucketSelect below. Stored as
@@ -1140,11 +1139,13 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                         const _pairIdx = _portalPairIndexByCell.get(pos);
                         if (_pairIdx !== undefined) _usedPortalPairs |= (1 << _pairIdx);
                     }
-                    cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
+                    const _cand: BeamNode = { key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
                                  ints: ws.ints, mpVisitedMask: ws.mpVisitedMask, mustCrossMask: ws.mustCrossMask,
                                  flipperUsedMask: ws.flipperUsedMask, surroundMask: ws.surroundMask,
                                  mustTurnMask: ws.mustTurnMask, adjTurnMask: ws.adjTurnMask,
-                                 insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci, usedPortalPairs: _usedPortalPairs });
+                                 insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci, usedPortalPairs: _usedPortalPairs };
+                    cands.push(_cand);
+                    if (bc1InheritedDead) bc1DeadNodes.add(_cand);
                     if (_BEAM_DEBUG) { _dbgCandBuildNs += _hrtNow() - _tb; _dbgCandBuildCalls++; }
                 }
                 undoMove(undo, ws);
