@@ -70,3 +70,7 @@ Earns: promotion to default-ON subject to the published-corpus regression gate a
 | general | 13 | 2 (15%) | 1 | 0 |
 
 The gain mass and all four losses sit in the intersection-heavy regime (net +15 of 230, +6.5 pp there), which is also where 76% of the remaining unsolved levels are; the next capability frontier on this population is intersection-heavy and multi-portal (41% unsolved, smallest regime and least-benefited by BC1).
+
+## Pipeline-wide BC1 (DFS/repair/admissible-order): closed negative
+
+Same sound prune inside the shared hard-prune pipeline (opt-in flag `PRUNE_BC1_BRIDGE_EXCURSION`, treatment-only on the 75 random-300 levels unsolved on main at 50M; control known = all unsolved; GHA run 36808759045, commit 5c4127b1): **0/72 observed solved** (3 shards incomplete, final population gate failed; indeterminate ids not counted). Every unsolved id stayed node-budget-reached. A clear zero on the population where gains would have to appear closes the tested form; the beam consumer's gains are a beam-slot-freeing effect that DFS/repair pruning does not reproduce. Code and flag removed (git is the archive); the reopen condition is a materially different repair-side consumer, not a retest.

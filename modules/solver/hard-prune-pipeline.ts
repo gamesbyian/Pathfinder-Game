@@ -6,7 +6,7 @@ import { evaluateObligationClusters } from './joint-obligation-propagation.js';
 import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustCrossNeighborBudgetDeadlocked, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { isSolutionState } from './solution.js';
 import { stateSignature } from './nogood-cache.js';
-import { bc1HasConflictFast, computeBc1ShadowConflicts, isConnected, probeUnscheduledConnectivityGoalCutCertificate } from './topology.js';
+import { isConnected, probeUnscheduledConnectivityGoalCutCertificate } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, PrepLevel, SolverSearchState } from './types.js';
@@ -20,7 +20,7 @@ export type PruneId =
     | 'PRUNE_PORTAL_PARITY_ENVELOPE' | 'PRUNE_MUST_PASS_LB' | 'PRUNE_MUST_CROSS_LB'
     | 'PRUNE_SURROUND_LB' | 'PRUNE_ADJ_TURN_LB' | 'PRUNE_MUST_TURN_DEADLOCK'
     | 'PRUNE_MC_FORCED_NEIGHBOR' | 'PRUNE_MC_NEIGHBOR_BUDGET' | 'PRUNE_MC_PORTAL_FORCED_NEIGHBOR'
-    | 'PRUNE_INTERSECTION_DEFICIT' | 'PRUNE_CONNECTIVITY' | 'PRUNE_BC1_BRIDGE_EXCURSION';
+    | 'PRUNE_INTERSECTION_DEFICIT' | 'PRUNE_CONNECTIVITY';
 
 /** Optional caller-owned counters; production stays allocation-free. */
 export interface PruneDiagnostics {
@@ -265,15 +265,6 @@ export function evaluatePrunedMove(
     if (runConnectivity && (!cfg || cfg.PRUNE_CONNECTIVITY)) {
         reached(diagnostics, 'PRUNE_CONNECTIVITY');
         if (!isConnected(next, state, level, prep)) return reject(diagnostics, 'PRUNE_CONNECTIVITY');
-        // Theorem BC1 (docs/solver-small-exact-projections-program.md): the flood above just ran for this exact
-        // (next, state), so its reached set is reused for free. Opt-in for every pipeline caller (DFS, repair,
-        // admissible-order); the beam has its own default-ON consumer (bc1-beam-shadow.ts).
-        if (cfg && cfg.PRUNE_BC1_BRIDGE_EXCURSION === true) {
-            reached(diagnostics, 'PRUNE_BC1_BRIDGE_EXCURSION');
-            if (bc1HasConflictFast(next, state, level) ?? computeBc1ShadowConflicts(next, state, level, prep, true).conflicts.length > 0) {
-                return reject(diagnostics, 'PRUNE_BC1_BRIDGE_EXCURSION');
-            }
-        }
     }
 
     return 'pass';
