@@ -210,6 +210,8 @@ The goal is not to rescue the frozen selector. It is to learn what unit should c
 
 ### F. Local-forcedness reinterpretation — P170/P198/P204
 
+> **Executed 2026-10-01:** `reports/2026-10-01-forcedness-winner-descriptor-result-001.md` — null on 42 solved levels (winner percentile 0.500; one-successor rate 43.9% vs 42.3%); closed as a treatment generator.
+
 The forced-work program found a large local one-successor reservoir and almost no global phase collapse.
 
 Question:
