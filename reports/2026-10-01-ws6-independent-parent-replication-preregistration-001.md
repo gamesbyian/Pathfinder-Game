@@ -1,9 +1,9 @@
 # WS6 independent-parent replication preregistration 001
 
-> **Status:** active
+> **Status:** concluded-negative
 > **Last evidence:** 2026-10-01 — population and decision rules frozen from retained exact-label files and stored hint solutions before any feature outcome was computed.
 > **Decision:** replicate the frozen R03147 path-resource / relational-bound interface on independent parents with exact DEAD/LIVE matched pairs; a directional, recurrent difference nominates a bounded matched-work consumer falsifier, anything else leaves `WS6-DEPENDENCY-CONDITIONED-REPAIR` dormant.
-> **Remaining gate:** run `scripts/stress/ws6-replication-observe.mjs` once on the frozen pairs and record the result.
+> **Remaining gate:** none; executed once, see the [result](2026-10-01-ws6-independent-parent-replication-result-001.md) (inconclusive-insufficient-parents).
 > **Evidence role:** development.
 > **Owner:** `WS6-DEPENDENCY-CONDITIONED-REPAIR`.
 

@@ -484,11 +484,12 @@
       "id": "WS6-DEPENDENCY-CONDITIONED-REPAIR",
       "question": "When append-only repair cannot rescue a near miss, is the missing neighborhood better defined by a compact set of earlier coupled commitments than by rollback/path distance?",
       "owner": "WS6",
-      "state": "active-candidate",
+      "state": "deferred-reopen",
       "answeredBy": [
-        "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md"
+        "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md",
+        "reports/2026-10-01-ws6-independent-parent-replication-result-001.md"
       ],
-      "result": "Development microscope positive on retained R03147 exact pairs: both independent causal divergence points change the same bounded families, local path-resource occupancy and relational must-pass lower bound, while global accounting matches and both branches pass current hard prunes. This earns independent-parent replication of the frozen interface only; one parent is insufficient for a reusable descriptor or repair consumer.",
+      "result": "Development microscope positive on retained R03147 exact pairs: both independent causal divergence points change the same bounded families, local path-resource occupancy and relational must-pass lower bound, while global accounting matches and both branches pass current hard prunes. This earns independent-parent replication of the frozen interface only; one parent is insufficient for a reusable descriptor or repair consumer. Independent-parent replication (2026-10-01) was inconclusive: only 2 of 24 parents yielded an eligible exact DEAD/LIVE pair (min 12), 4/9 resolvable exact-dead divergences were already rejected by existing prunes, 60/69 CP-SAT queries abstained at 60 s; WS6 returns to dormant.",
       "constrainedBy": [
         "docs/solver-archaeology-register.md",
         "reports/2026-09-20-ws6-dependency-interface-observer-reopen-001.md"
