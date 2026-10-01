@@ -23,7 +23,7 @@
       "proposition": "The current benchmark population is representative enough that solve-count deltas generalize to the residual of interest.",
       "v2Status": "open / population-sensitive",
       "postExhaustionClassification": "strengthened-population-sensitive",
-      "postV2Interpretation": "WS1 frozen legal-signal behavior failed to transfer from historical C2 regimes to 160 fresh independent parents; BC1 effects also concentrate by routing regime.",
+      "postV2Interpretation": "WS1 frozen legal-signal transfer to 160 fresh independent parents is UNTESTED (instrument-invalid: per-attempt workSpent absent, reports/2026-10-01-ws1-confirmation-instrument-validity-audit-001.md); BC1 effects concentrate by routing regime.",
       "evidenceRefs": [
         "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md",
         "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
@@ -53,7 +53,7 @@
       "proposition": "Historical negative evidence remains portable across architecture, production boundary, budgets, and residual populations.",
       "v2Status": "explicitly conditional",
       "postExhaustionClassification": "strengthened-explicitly-conditional",
-      "postV2Interpretation": "Fresh-population WS1 confirmation diverged sharply from retained historical behavior, reinforcing architecture/population-epoch conditioning of old results.",
+      "postV2Interpretation": "The fresh-population WS1 confirmation does NOT bear on architecture/population-epoch conditioning: its attempt rows lacked workSpent, so the 'divergence' was a producer difference (reports/2026-10-01-ws1-confirmation-instrument-validity-audit-001.md); no update from WS1 on this premise.",
       "evidenceRefs": [
         "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md"
       ],
@@ -944,7 +944,7 @@
       "proposition": "Predecessor and execution context can change an action's value; isolated action identity is not enough.",
       "v2Status": "explicitly recognized / incompletely modeled",
       "postExhaustionClassification": "strengthened-context-dependence",
-      "postV2Interpretation": "H3 allocation value depends strongly on remaining-length ordering, while WS1 historical continuation signatures failed fresh transfer; action value is context/population conditioned.",
+      "postV2Interpretation": "H3 allocation value depends strongly on remaining-length ordering; the WS1 'failed fresh transfer' reading is withdrawn (instrument-invalid confirmation), so only the H3 evidence is retained here.",
       "evidenceRefs": [
         "reports/2026-09-20-h3-independent-transfer-result-001.md",
         "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md"
@@ -1385,7 +1385,7 @@
       "proposition": "What is the correct identity-free unit over which solver knowledge should generalize: static level features, dynamic failure states, search trajectories, obligation configurations, causal loss classes, or some combination?",
       "v2Status": "major underasked parent premise",
       "postExhaustionClassification": "evidence-now-points-to-dynamic-unit-question",
-      "postV2Interpretation": "WS1's historical-population signal vanished on a fresh independent population, while BC1 treatment response is concentrated in a routing regime; the correct identity-free generalization unit remains unresolved and likely richer than one static population label.",
+      "postV2Interpretation": "BC1 treatment response is concentrated in a routing regime; the WS1 'historical signal vanished' reading is withdrawn (instrument-invalid confirmation, no per-attempt workSpent); the correct identity-free generalization unit remains unresolved.",
       "evidenceRefs": [
         "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md",
         "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
@@ -1456,7 +1456,7 @@
       "proposition": "Decision-bearing sample size is the opportunity population in which the treatment can causally change the tested outcome, not raw row count or feature eligibility alone.",
       "v2Status": "governing detectability specialization / admitted post-v1",
       "postExhaustionClassification": "strongly-confirmed-opportunity-sizing",
-      "postV2Interpretation": "The underpowered WS1 Stage A was explicitly replaced by a powered N=160 fresh confirmation, which then produced a decisive zero; nominal row count and true decision-bearing opportunity are demonstrably different.",
+      "postV2Interpretation": "The underpowered WS1 Stage A was replaced by a powered N=160 fresh confirmation, but both used a producer without per-attempt workSpent, so neither measured opportunity; nominal row count and true decision-bearing opportunity are demonstrably different (an instrument-coverage lesson, see reports/2026-10-01-ws1-confirmation-instrument-validity-audit-001.md).",
       "evidenceRefs": [
         "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md"
       ],

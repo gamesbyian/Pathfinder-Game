@@ -1,9 +1,9 @@
 # WS1 late-continuation single-stage confirmation result 001
 
-> **Status:** concluded-negative
-> **Last evidence:** 2026-09-26 — the frozen one-shot workflow (`ws1-late-continuation-single-stage-confirmation.yml`), dispatched exactly once from merged main (run [36220112812](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36220112812), commit `d722e1ca28b02c50e0e09e886b5bc273a5e2c3db`), per `reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md`.
-> **Decision:** **NEGATIVE.** All 160 fresh independent parents (seed `2026092591`, block `ws1-late-continuation-single-001`) solved for real (113/160), but the frozen legal-signal model found **zero nominated pre-winner boundaries across all 44 solved validation-split levels** — not merely below the `>=3` floor, but exactly zero, with `nominatedPreWinnerWork: 0` and `capturedPreWinnerWorkShare: null`. Per the plan's own precommitment, this is a genuine negative, not rescued by retuning.
-> **Remaining gate:** none for this exact frozen model/protocol. Closes `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`'s fresh-acquisition confirmation line in this tested form.
+> **Status:** inconclusive
+> **Last evidence:** 2026-10-01 — instrument-validity audit of the run below (originally concluded 2026-09-26 from the frozen one-shot workflow (`ws1-late-continuation-single-stage-confirmation.yml`), dispatched exactly once from merged main (run [36220112812](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36220112812), commit `d722e1ca28b02c50e0e09e886b5bc273a5e2c3db`), per `reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md`.)
+> **Decision:** **RETRACTED 2026-10-01 — uninformative, not negative.** The scoring input carried no per-attempt `workSpent` (0/5,167 attempts) and every frozen signature requires a cumulative work band of `>=10m`, so zero nominations was guaranteed; see `reports/2026-10-01-ws1-confirmation-instrument-validity-audit-001.md`. The original text below is kept as the record of what was concluded at the time.
+> **Remaining gate:** a decision on re-dispatching the identical preregistered protocol with a producer that emits per-attempt work (see the audit); the scorer now refuses work-less inputs.
 > **Evidence role:** confirmation (the properly-powered single-stage replacement for the under-sized two-stage design)
 > **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
 > **Production effect:** none. No production behavior changed; the frozen model was never live-consuming.

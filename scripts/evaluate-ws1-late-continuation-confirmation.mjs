@@ -25,6 +25,11 @@ if (!result || result.kind !== 'pathfinder-action-selection-frozen-legal-signal-
   process.exit(2);
 }
 
+if (doc?.attemptWorkCoverage && doc.attemptWorkCoverage.complete !== true) {
+  console.error('scoring input is instrument-invalid: not every reachable attempt carries workSpent, so the work-banded signatures cannot match; refusing to issue a verdict');
+  process.exit(2);
+}
+
 const requiredNumeric = [
   ['endangeredWinnerLevels', result.endangeredWinnerLevels],
   ['nominatedPreWinnerLevels', result.nominatedPreWinnerLevels],
