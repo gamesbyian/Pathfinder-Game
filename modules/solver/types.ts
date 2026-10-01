@@ -460,6 +460,8 @@ export interface Bc1ShadowCandidateInfo {
     constructionWorkUnits: number;
     path: number[];
     conflicts: import('./topology.js').BridgeExcursionConflict[];
+    /** Which theorem flagged this candidate (default 'bc1'); 'bc1g' = the goal-terminal strengthening, flagged only when BC1 did not. */
+    theorem?: 'bc1' | 'bc1g';
 }
 
 export interface BeamResearchObserver {
@@ -495,6 +497,8 @@ export interface BeamResearchObserver {
     bc1LineageAware?: boolean;
     /** Research pre-filter policy: evaluate BC1 only when ordinary connectivity was just computed for this candidate (flood free); other candidates are `skipped` (treated live). */
     bc1FreshOnly?: boolean;
+    /** Research: also evaluate BC1-G on fresh candidates BC1 did not flag and report them via observeBc1Candidate({theorem:'bc1g'}). */
+    bc1gShadow?: boolean;
     /** Differential check of bc1HasConflictFast against the slow path: called with true on agreement (fast path used), false on mismatch. */
     verifyBc1Fast?(agreed: boolean): void;
 }

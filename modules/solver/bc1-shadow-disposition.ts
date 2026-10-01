@@ -35,6 +35,7 @@ export interface Bc1FlaggedNode {
     workAtProof: number;
     constructionWorkUnits: number;
     conflicts: Bc1ShadowCandidateInfo['conflicts'];
+    theorem: 'bc1' | 'bc1g';
 }
 
 /** `hard-pruned` = an ordinary rule later proved the same branch impossible (strongest saved-work
@@ -75,13 +76,15 @@ export class Bc1ShadowDispositionObserver implements BeamResearchObserver {
     /** Lineage-aware mode: descendants of a flagged node are not re-checked (see BeamResearchObserver.bc1LineageAware). */
     readonly bc1LineageAware: boolean;
     readonly bc1FreshOnly: boolean;
+    readonly bc1gShadow: boolean;
     private shadowWallMs = 0;
     fastAgree = 0;
     fastMismatch = 0;
     verifyBc1Fast(agreed: boolean): void { if (agreed) this.fastAgree++; else this.fastMismatch++; }
 
-    constructor(options: { lineageAware?: boolean; freshOnly?: boolean } = {}) {
+    constructor(options: { lineageAware?: boolean; freshOnly?: boolean; bc1g?: boolean } = {}) {
         this.bc1FreshOnly = options.freshOnly === true;
+        this.bc1gShadow = options.bc1g === true;
         this.bc1LineageAware = options.lineageAware === true;
     }
 
@@ -110,7 +113,7 @@ export class Bc1ShadowDispositionObserver implements BeamResearchObserver {
         if (this.flaggedKeys.has(key)) return; // first proof for this exact prefix wins; never reflag
         this.flaggedKeys.add(key);
         const node: Bc1FlaggedNode = { path: info.path, depth: info.depth, workAtProof: info.workSpent,
-            constructionWorkUnits: info.constructionWorkUnits, conflicts: info.conflicts };
+            constructionWorkUnits: info.constructionWorkUnits, conflicts: info.conflicts, theorem: info.theorem ?? 'bc1' };
         this.states.push({ node, everExpanded: false, resolved: false, aliveSinceLastBoundary: true,
             lastRemovalWithExtension: null, disposition: null });
     }

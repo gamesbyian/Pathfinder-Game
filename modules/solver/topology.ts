@@ -1143,6 +1143,7 @@ const _BC1_MAX = MAX_BITROW_DIM * MAX_BITROW_DIM;
 const _bc1Tin = new Int32Array(_BC1_MAX), _bc1Low = new Int32Array(_BC1_MAX), _bc1Tout = new Int32Array(_BC1_MAX);
 const _bc1Parent = new Int32Array(_BC1_MAX), _bc1ParentKind = new Int8Array(_BC1_MAX), _bc1Next = new Int8Array(_BC1_MAX);
 const _bc1Stack = new Int32Array(_BC1_MAX), _bc1PendCount = new Int32Array(_BC1_MAX), _bc1Order = new Int32Array(_BC1_MAX);
+const _bc1GoalNbr = new Int32Array(8), _bc1Needed = new Int32Array(_BC1_MAX), _bc1Mark = new Int32Array(_BC1_MAX);
 const _bc1PortalCache = new WeakMap<NormalizedLevel, Int32Array | null>();
 
 /** Undirected portal partner per cell index (-1 none); null when the portal map is not a simple matching (caller falls back). */
@@ -1165,7 +1166,7 @@ function _bc1PortalPartners(level: NormalizedLevel): Int32Array | null {
 }
 
 /** Fast BC1 conflict existence. Requires `_reached()` to be fresh for (pos, state). Returns null when unsupported (caller uses the slow path). */
-export function bc1HasConflictFast(pos: number, state: SolverSearchState, level: NormalizedLevel): boolean | null {
+export function bc1HasConflictFast(pos: number, state: SolverSearchState, level: NormalizedLevel, goalTerminal = false): boolean | null {
     const { w, h } = level.grid;
     if (w > MAX_BITROW_DIM || h > MAX_BITROW_DIM) return null;
     const partner = _bc1PortalPartners(level);
@@ -1183,9 +1184,10 @@ export function bc1HasConflictFast(pos: number, state: SolverSearchState, level:
         if ((state.mustCrossMask & (1 << i)) !== 0) { const c = idx(level.mustCrossKeys[i]); if (pendMark[c] === 0) { pendMark[c] = 1; pendingTotal++; } }
     }
     if (pendingTotal === 0) return false;
+    if (goalTerminal) _bc1Mark.set(pendMark.subarray(0, n));
     const start = idx(pos), goal = idx(level.goalKey);
     _bc1Tin.fill(-1, 0, n);
-    let time = 0, sp = 0, orderLen = 0;
+    let time = 0, sp = 0, orderLen = 0, gnCount = 0;
     _bc1Tin[start] = _bc1Low[start] = time++; _bc1Parent[start] = -1; _bc1ParentKind[start] = -1; _bc1Next[start] = 0;
     _bc1Stack[sp++] = start; _bc1Order[orderLen++] = start;
     while (sp > 0) {
@@ -1208,6 +1210,7 @@ export function bc1HasConflictFast(pos: number, state: SolverSearchState, level:
         if (u < 0) continue;
         const uKey = ((u / w | 0) << 16) | (u % w);
         if (!_reached(uKey)) continue;
+        if (goalTerminal && u === goal) { if (gnCount < 8) _bc1GoalNbr[gnCount++] = v; continue; } // BC1-G: the goal is terminal, never traversed through
         if (u === _bc1Parent[v] && (kind < 4) === (_bc1ParentKind[v] < 4)) continue; // the tree edge itself (a parallel portal/cardinal edge is a distinct edge)
         if (_bc1Tin[u] !== -1) { if (_bc1Tin[u] < _bc1Low[v]) _bc1Low[v] = _bc1Tin[u]; continue; }
         _bc1Tin[u] = _bc1Low[u] = time++; _bc1Parent[u] = v; _bc1ParentKind[u] = kind; _bc1Next[u] = 0;
@@ -1218,6 +1221,34 @@ export function bc1HasConflictFast(pos: number, state: SolverSearchState, level:
     for (let i = orderLen - 1; i > 0; i--) {
         const v = _bc1Order[i];
         pendMark[_bc1Parent[v]] += pendMark[v];
+    }
+    if (goalTerminal) {
+        // BC1-G (docs/solver-small-exact-projections-program.md): stepping onto the goal early is a reject, so the goal is a
+        // terminal never traversed through. Remove it, and the path must END at one of its neighbours. Any pending cell
+        // unreachable without passing through the goal, or two pending-bearing bridge subtrees no single goal-neighbour lies
+        // inside of, forces an excursion that reuses a single-use transition resource.
+        let pendingSeen = 0;
+        for (let i = 0; i < orderLen; i++) if (_bc1Mark[_bc1Order[i]] !== 0) pendingSeen++;
+        if (gnCount === 0) return null; // goal not entered from the reached set: ordinary connectivity failure, defer
+        if (pendingSeen < pendingTotal) return true;
+        const needed = _bc1Needed; let nNeeded = 0;
+        for (let i = 1; i < orderLen; i++) {
+            const v = _bc1Order[i];
+            if (_bc1Low[v] <= _bc1Tin[_bc1Parent[v]]) continue;
+            if (pendMark[v] === 0) continue;
+            needed[nNeeded++] = v;
+        }
+        if (nNeeded === 0) return false;
+        for (let g = 0; g < gnCount; g++) {
+            const tn = _bc1Tin[_bc1GoalNbr[g]];
+            let ok = true;
+            for (let j = 0; j < nNeeded; j++) {
+                const v = needed[j];
+                if (tn < _bc1Tin[v] || tn > _bc1Tout[v]) { ok = false; break; }
+            }
+            if (ok) return false;
+        }
+        return true;
     }
     if (_bc1Tin[goal] === -1) return null; // goal not in reached graph: ordinary connectivity failure, defer to slow path
     for (let i = 1; i < orderLen; i++) {
