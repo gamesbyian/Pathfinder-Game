@@ -124,6 +124,8 @@ These are **premise-generation lanes**, not solver-execution queue entries.
 
 ### A. BC1 perturbation microscope — P144/P175/P183/P184/P187
 
+> **Executed 2026-10-01:** `reports/2026-10-01-bc1-perturbation-microscope-result-001.md`. Gains are consistent with early dead-state occupancy displacing winner lineages (dead fraction 0.40 vs 0.15 at 20% of path); no further set-level property; closed as a treatment generator.
+
 Retained material already contains:
 - representative treatment gains;
 - reproducible treatment losses;
