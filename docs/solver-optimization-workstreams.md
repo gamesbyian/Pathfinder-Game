@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Program state:** **QUEUE EXHAUSTED.** There is no earned immediate solver-science execution gate on current evidence. Closed/promoted/negative rows stay closed; supporting/service rows activate only when a named reopen condition or external need is satisfied.
+> **Program state:** **SOLVER-TREATMENT QUEUE EXHAUSTED; PREMISE-DISCOVERY LANE ACTIVE.** There is no earned immediate solver-treatment experiment on current evidence. Closed/promoted/negative rows stay closed; supporting/service rows activate only when a named reopen condition or external need is satisfied. The active work below is retained-evidence premise generation, not permission to change production behavior.
 > **Reconciled:** 2026-10-01.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 > **Historical snapshot:** [pre-compaction queue](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md).
@@ -12,7 +12,29 @@ Method: [operating model](solver-research-operating-model.md) · [scheduling](so
 
 C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts, never historical outcomes/identity/hints. Negatives close only tested claims.
 
-## Current execution priority
+## Current premise-discovery priority
+
+The [post-exhaustion premise refresh](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md) reconciles all 148 v2 premises against post-September-17 evidence. It admits no new premise IDs, but identifies retained-evidence microscopes that can generate sharper premises without first launching a new solver treatment.
+
+These are ordered by information value. They are **discovery gates**, not solver-treatment gates:
+
+| ID | Discovery lane | State | Cheapest next discriminator | Stop / handoff condition |
+|---:|---|---|---|---|
+| PG-A | BC1 perturbation microscope | `active / retained-evidence` | compare earliest frontier-set divergence on bounded BC1 gain/loss controls; characterize displaced/preserved survivor properties using existing descriptors | stop if churn is idiosyncratic; hand off only a recurring causal/set-level property under P144/P175/P183/P184/P187 |
+| PG-B | Intervention-response residual atlas | `next / retained-evidence` | sparse level × intervention response matrix across BC1, CID exposure, repair dose, portal placement, with ancestry/missingness explicit | nominate only reproducible causal regimes; do not treat unobserved as negative |
+| PG-E | WS1 generalization-unit failure analysis | `next / retained-evidence` | explain historical-positive/fresh-zero transfer by static structure, opportunity topology, dynamic failure state, action-boundary exposure, or another identity-free unit | retire if no recurring distributional discriminator; otherwise specialize P199 |
+| PG-C | Counterfactual first-loss refresh | `dependent` | synthesize retained WS6/BC1/exact/failure-response pairs after A/B/E add causal labels | require a compact recurrent causal event taxonomy before new instrumentation |
+| PG-D | Cut/resource sibling mining | `conditional` | mine retained BC1/BC1-G states for a materially different sound cut/resource consequence with proof sketch + recurrence | no consumer until theorem/soundness and nontrivial incidence both exist |
+| PG-F | Local-forcedness reinterpretation | `conditional` | test whether local forcedness has decision value as descriptor/handoff boundary rather than compression | zero oracle ceiling at candidate seams closes the lane |
+
+Authority boundary:
+- these lanes may produce reports, relation updates, premise specializations or a newly admitted premise;
+- they may **not** create a solver treatment, production flag, broad acquisition run or architecture build without satisfying the ordinary promotion contract;
+- prefer retained evidence; new acquisition must be justified by a specifically missing observable exposed by a discovery lane.
+
+Machine overlay: [post-exhaustion premise status](solver-premise-map-post-exhaustion-status-2026-10-01.json).
+
+## Closed solver-treatment record
 
 ### 1. WS2 repair-deadline allocation — CLOSED, PROMOTED
 
@@ -92,7 +114,7 @@ The September 20–25 retrospective found several lessons not yet fully propagat
 Near-term order:
 1. ~~finish #2122 / WS1 confirmation~~ — done 2026-09-26, concluded-negative;
 2. ~~close the remaining live WS2/BC1 gates~~ — repair-deadline allocation and capability-invention promoted 2026-09-26; BC1 promoted and closed 2026-10-01;
-3. solver science is now queue-exhausted; convergence audits may continue only as independently justified repository/infrastructure work and must not be mistaken for a scientific queue.
+3. the solver-treatment queue is exhausted; execute the retained-evidence premise-discovery lanes above without treating them as production-treatment authority. Convergence audits may continue only when independently justified.
 
 Backlog themes:
 - research evidence cadence/claim ownership;
@@ -136,7 +158,7 @@ Detailed closeout evidence and reopen conditions are preserved in the [pre-compa
 | 5 | Exact/reference service | `on-demand` | `service` | exact/reference truth service for microscopes | use only when a live discriminator requires it | — |
 | 3 | Generalization method | `method-complete` | `method` | independent-unit / selection-pressure methodology established | preserve method in future confirmations | — |
 
-There are **no active immediate-execution solver-science rows**. All tested forms are closed/reopen-only/subsumed, while supporting/service rows are conditional resources rather than queued experiments. See the historical snapshot and future-work authority for exact reopen conditions.
+There are **no active immediate-execution solver-treatment rows**. All tested treatment forms are closed/reopen-only/subsumed, while supporting/service rows are conditional resources. The only active scientific work is the non-treatment premise-discovery lane above. See the historical snapshot and future-work authority for exact reopen conditions.
 
 ## Queue-transition closure
 
@@ -155,7 +177,7 @@ At minimum, inspect the corresponding record in `solver-research-question-relati
 - Hard consumers require soundness; correlation/signatures are not proofs.
 - Classify proposed solver work as **HARVEST / EXTENSION / INVENTION** before implementation.
 - No generic engine from an open gap: **positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned**.
-- Keep execution/infrastructure work subordinate to the live scientific queue.
+- Keep treatment execution/infrastructure work subordinate to earned treatment gates; premise-discovery work may remain active while the treatment queue is empty, but cannot bypass promotion requirements.
 
 ## Cheap evidence routing
 
