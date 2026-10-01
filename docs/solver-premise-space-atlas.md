@@ -1,9 +1,12 @@
 # Pathfinder solver premise-space atlas
 
-**Date:** 2026-09-16  
+**Original atlas date:** 2026-09-16  
+**Current map generation:** v2 frozen 2026-09-17, 148 propositions / 184 relations.  
+**Post-exhaustion evidence refresh:** 2026-10-01 — [report](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md) · [148-row status overlay](solver-premise-map-post-exhaustion-status-2026-10-01.json).  
 **Scope:** premises, open questions, speculations, implicit architectural assumptions, negative conclusions, and epistemic assumptions relevant to increasing solve count.  
-**Inventory:** 92 normalized propositions across 14 conceptual domains.  
-**Companion data:** `pathfinder-solver-premise-register.csv` and `pathfinder-solver-premise-graph.json`.
+**Canonical premise data:** `solver-premise-space-register.csv` plus the versioned 2026-09-17 extension layers; relation graph through `solver-premise-space-relations-v4.json`; frozen manifest `solver-premise-map-snapshot-v2.json`.
+
+> **Current-use note (2026-10-01):** the body below preserves the original conceptual atlas and therefore contains some September-16/17 execution-state language that is historical. Do not infer live queue priority from those passages. The canonical solver queue is currently exhausted; use the post-exhaustion refresh for current evidence state and `solver-optimization-workstreams.md` for execution authority.
 
 ## What this map is for
 
