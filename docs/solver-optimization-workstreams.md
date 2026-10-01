@@ -1,6 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
+> **Program state:** **QUEUE EXHAUSTED.** There is no earned immediate solver-science execution gate on current evidence. Closed/promoted/negative rows stay closed; supporting/service rows activate only when a named reopen condition or external need is satisfied.
 > **Reconciled:** 2026-10-01.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 > **Historical snapshot:** [pre-compaction queue](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md).
@@ -58,11 +59,11 @@ Evidence: [A/B result](../reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-r
 
 ### 5. WS6 repair reachability / speed
 
-**State:** SUPPORTING.
+**State:** SUPPORTING / DORMANT.
 
-Use independent-parent interface replication / fresh speed profiling only when it becomes the immediate queue gate.
+There is no immediate WS6 execution gate. Independent-parent interface replication / fresh speed profiling remains a conditional continuation only when a suitable independent-parent population and a concrete consumer question make it decision-changing.
 
-Question: `WS6-DEPENDENCY-CONDITIONED-REPAIR`.
+Question: `WS6-DEPENDENCY-CONDITIONED-REPAIR` — supporting, not queued for execution.
 
 ## Supporting infrastructure — research execution efficiency
 
@@ -76,11 +77,11 @@ Current facts:
 - canonical Hint persistence remains owned by `harvest-solver-evidence.yml`;
 - live search-vs-plumbing audit found no accidental solver-as-fixture defect in generic targeted sweep or WS1 frozen scoring.
 
-Next infrastructure gate:
-- obtain real production hit/miss timing from a targeted dispatch;
+Dormant infrastructure continuation:
+- obtain real production hit/miss timing only from a targeted dispatch that is independently justified;
 - extend dependency-tree reuse only to short jobs where bootstrap is material;
-- audit BC1/WS6 search-vs-plumbing only when either becomes immediate;
-- do not optimize closed historical harnesses.
+- audit WS6 search-vs-plumbing only if WS6 becomes an immediate scientific gate;
+- do not optimize closed historical harnesses merely to keep this program active.
 
 Plan: [execution efficiency](solver-research-execution-efficiency-plan.md) · [handoff](../reports/2026-09-25-research-execution-efficiency-session-handoff-001.md) · [topology census](../reports/2026-09-25-solver-research-execution-topology-starting-census-001.md).
 
@@ -90,8 +91,8 @@ The September 20–25 retrospective found several lessons not yet fully propagat
 
 Near-term order:
 1. ~~finish #2122 / WS1 confirmation~~ — done 2026-09-26, concluded-negative;
-2. ~~keep live WS2 gates moving~~ — repair-deadline allocation promoted 2026-09-26, closed; capability-invention already closed;
-3. execute the highest-leverage convergence audits without creating a second scientific queue.
+2. ~~close the remaining live WS2/BC1 gates~~ — repair-deadline allocation and capability-invention promoted 2026-09-26; BC1 promoted and closed 2026-10-01;
+3. solver science is now queue-exhausted; convergence audits may continue only as independently justified repository/infrastructure work and must not be mistaken for a scientific queue.
 
 Backlog themes:
 - research evidence cadence/claim ownership;
@@ -128,14 +129,14 @@ Detailed closeout evidence and reopen conditions are preserved in the [pre-compa
 | 2 | Repair-deadline allocation | `closed` | `reopen-only` | PROMOTED 2026-09-26: 7 gains/0 losses nomination + 180/180 zero-regression confirmation both positive; MS_CAP interaction resolved (interactive path never runs the probe regardless of its value) | none; reopen only for a materially different dose/premise | `WS2-REPAIR-DEADLINE-ALLOCATION` |
 | 2I | Capability invention | `closed` | `reopen-only` | PROMOTED 2026-09-26: both flags default-ON, 10 referee-valid solves (8 new), 0 regressions across every tested branch row | none; reopen only for a materially different exposure form | `WS2-CAPABILITY-INVENTION-DEMAND` |
 | 1 | Automatic action selection | `closed` | `reopen-only` | CONCLUDED-NEGATIVE: N=160 confirmation found 0/44 nominated validation levels, well below the well-powered expectation | reopen only with a materially different signal/model design | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
-| 2X | Small exact projections | `supporting` | `bounded-compute` | BC1 beam later-disposition shadow built and piloted (24 parents): zero safety alarms, 100% recurrence; unconditional-per-candidate checking closed negative on full-population cost (1.55x campaign work) | find a materially cheaper pre-filter for which candidates to check, then behavioral consumer at matched work | `WS2-CUT-BALANCE-PROJECTION` |
+| 2X | Small exact projections | `closed` | `reopen-only` | BC1 fresh-connectivity prune PROMOTED 2026-10-01; unconditional/every-phase/pipeline-wide forms and BC1-G production use closed; BC1-off dead-last retry parked conditionally in future work | none; reopen only for a materially different fact family or an explicitly justified conditional descendant | `WS2-CUT-BALANCE-PROJECTION` |
 | 2F | Forced-work capture economics | `closed` | `reopen-only` | tested global-compression/post-recognition forms closed; broader question identity retained | reopen only for a materially different sound recognizer | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
 | 2R | Parity response signature | `on-demand` | `reopen-only` | static parity form closed; dormant conditional lane retained for materially different mechanism evidence | reopen only on materially different parity opportunity structure | `WS2-PARITY-RESPONSE-SIGNATURE` |
-| 6/7 | Repair reachability / speed | `supporting` | `bounded-compute` | independent-parent replication/speed support lane | replication/speed profiling when immediate | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
+| 6/7 | Repair reachability / speed | `supporting` | `blocked/conditional` | development-positive one-parent interface observation; no current execution priority | independent-parent replication only when a suitable population and concrete consumer make it decision-changing | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
 | 5 | Exact/reference service | `on-demand` | `service` | exact/reference truth service for microscopes | use only when a live discriminator requires it | — |
 | 3 | Generalization method | `method-complete` | `method` | independent-unit / selection-pressure methodology established | preserve method in future confirmations | — |
 
-All other tested forms are closed/reopen-only/subsumed. See the historical snapshot and future-work authority for exact reopen conditions.
+There are **no active immediate-execution solver-science rows**. All tested forms are closed/reopen-only/subsumed, while supporting/service rows are conditional resources rather than queued experiments. See the historical snapshot and future-work authority for exact reopen conditions.
 
 ## Queue-transition closure
 
