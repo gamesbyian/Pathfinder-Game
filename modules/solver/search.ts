@@ -4,7 +4,7 @@ import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import type { PruneDiagnostics } from './hard-prune-pipeline.js';
-import { observeBc1ShadowCandidate, bc1FreshConnectivityPrunes, bc1VolumePrunes } from './bc1-beam-shadow.js';
+import { observeBc1ShadowCandidate, bc1FreshConnectivityPrunes, bc1WithVolumePrunes } from './bc1-beam-shadow.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, UndoToken, ScoringProfile, StructuralOrderingBias, SolverSearchState } from './types.js';
 
@@ -1094,8 +1094,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 }
                 // STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE (default-ON; see bc1-beam-shadow.ts).
                 const bc1Pruned = ok && (!cfg || cfg.STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE === true) && runConnectivity
-                    && (!cfg || !!cfg.PRUNE_CONNECTIVITY) && (bc1FreshConnectivityPrunes(next, ws, level, prep)
-                        || ((cfg?.STRATEGY_BC1_VOLUME_PRUNE === true || cfg?.STRATEGY_BC1_VERTEX_VOLUME_PRUNE === true) && bc1VolumePrunes(next, ws, level, prep, rSteps)));
+                    && (!cfg || !!cfg.PRUNE_CONNECTIVITY) && ((cfg?.STRATEGY_BC1_VOLUME_PRUNE === true || cfg?.STRATEGY_BC1_VERTEX_VOLUME_PRUNE === true)
+                        ? bc1WithVolumePrunes(next, ws, level, prep, rSteps)
+                        : bc1FreshConnectivityPrunes(next, ws, level, prep));
                 if (bc1Pruned) countFlow('hard-pruned', 1);
                 if (ok && !bc1Pruned) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, orderingBias, curCtx);

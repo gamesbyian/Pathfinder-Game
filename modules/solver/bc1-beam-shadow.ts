@@ -85,3 +85,21 @@ export function bc1VolumePrunes(next: number, ws: SolverSearchState, level: Norm
     if (reject) bc1VolumeCounters.rejected++;
     return reject;
 }
+
+/**
+ * One-DFS beam seam for BC1 plus BC1-V/VX (used only when a volume flag is on): the same verdict as
+ * `bc1FreshConnectivityPrunes(...) || bc1VolumePrunes(...)`, without a second DFS when a pending cell exists.
+ * Falls back to the two separate calls where the typed-array path is unsupported.
+ */
+export function bc1WithVolumePrunes(next: number, ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, rSteps: number): boolean {
+    const portalVolumeOff = level.portalMap.size > 0 && prep._cfg?.PRUNE_CONNECTIVITY_VOLUME_PORTAL === false;
+    const v = portalVolumeOff ? null : bc1StrandedFreshVolume(next, ws, level, prep._cfg?.STRATEGY_BC1_VERTEX_VOLUME_PRUNE === true);
+    if (!v) return bc1FreshConnectivityPrunes(next, ws, level, prep) || bc1VolumePrunes(next, ws, level, prep, rSteps);
+    if (v.bc1Conflict) return true;
+    bc1VolumeCounters.evaluated++;
+    if (v.strandedFresh === 0) return false;
+    bc1VolumeCounters.strandedPositive++;
+    const reject = v.freshVolume - v.strandedFresh + level.requiredIntersections - ws.ints < rSteps;
+    if (reject) bc1VolumeCounters.rejected++;
+    return reject;
+}

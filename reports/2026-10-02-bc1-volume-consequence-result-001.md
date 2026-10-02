@@ -47,7 +47,7 @@ Novelty witness (`topology.test.ts`): on a 5×3 board with blocks at (3,1) and (
 | 2 | 9 | 11 | 3 | 1 | 34,560 / 639,807 |
 | **All 300** | **42** | **48** | **7** | **1** | 117,886 / 2,043,189 (5.8%) |
 
-Gains: R02357 R00712 R02293 R02046 R02666 R02698 R01157. Loss: R02099. Canonical `workSpent` fell 2.2% (101.35M → 99.26M). Wall time rose about 18% (75 s → 88 s per 100 levels) from the extra DFS on candidates BC1 skips because nothing mandatory is pending. If promoted, one DFS can serve BC1 and BC1-V/VX: a BC1 conflict is exactly a pending cell that is stranded in bridge-only mode.
+Gains: R02357 R00712 R02293 R02046 R02666 R02698 R01157. Loss: R02099. Canonical `workSpent` fell 2.2% (101.35M → 99.26M). Wall time rose about 18% (75 s → 88 s per 100 levels) from the extra DFS on candidates BC1 skips because nothing mandatory is pending. One DFS now serves both checks when a volume flag is on (`bc1WithVolumePrunes`): a BC1 conflict is exactly a pending cell stranded in bridge-only mode. On shard 1 the one-pass BC1-VX run is identical to the two-pass run (24 solved, identical `workSpent`, 44,887 / 709,688 rejections / evaluations). Its wall overhead over the BC1-only control is +8% (24.9 s → 26.9 s per 100 levels).
 
 The exchange (7:1) is smaller than BC1's raw beam (20:1) and has the same character: rejected candidates are provably dead and free beam slots. Raw-beam gains are not cold solves; most raw-beam BC1 gains were already solved by the wider ladder.
 

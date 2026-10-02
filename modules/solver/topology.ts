@@ -1283,7 +1283,7 @@ function _bc1PendingMustCross(cell: number, w: number, state: SolverSearchState,
  * `isConnected` counts it (pos counts 1) and the number of fresh cells stranded behind goal-free
  * bridges, or null when the typed-array path is unsupported.
  */
-export function bc1StrandedFreshVolume(pos: number, state: SolverSearchState, level: NormalizedLevel, vertexCuts = false): { freshVolume: number; strandedFresh: number } | null {
+export function bc1StrandedFreshVolume(pos: number, state: SolverSearchState, level: NormalizedLevel, vertexCuts = false): { freshVolume: number; strandedFresh: number; bc1Conflict: boolean } | null {
     const { w, h } = level.grid;
     if (w > MAX_BITROW_DIM || h > MAX_BITROW_DIM) return null;
     const partner = _bc1PortalPartners(level);
@@ -1327,24 +1327,34 @@ export function bc1StrandedFreshVolume(pos: number, state: SolverSearchState, le
     // separated by the cut vertex p (low[v] >= tin[p]) can only be entered and left through p, which needs a second
     // visit to p; it is unusable unless p itself is a pending must-cross cell (whose second crossing is still allowed).
     const freeIntZero = vertexCuts && level.requiredIntersections - state.ints - popcount(state.mustCrossMask) <= 0;
-    // Discovery order puts parents first, so one forward pass marks every cell inside a goal-free bridge subtree.
-    const stranded = _bc1Mark;
-    stranded[start] = 0;
+    // Discovery order puts parents first, so one forward pass marks every cell inside a goal-free bridge subtree
+    // (`bridgeSide`) and, in vertex mode, also behind a non-revisitable cut vertex (`stranded`).
+    const bridgeSide = _bc1Mark, stranded = _bc1Needed;
+    bridgeSide[start] = 0; stranded[start] = 0;
     let freshVolume = 1, strandedFresh = 0;
     const goalTin = _bc1Tin[goal];
     for (let i = 1; i < orderLen; i++) {
         const v = _bc1Order[i];
         const p = _bc1Parent[v];
-        let s = stranded[p];
-        if (s === 0 && (goalTin < _bc1Tin[v] || goalTin > _bc1Tout[v])) {
-            if (_bc1Low[v] > _bc1Tin[p]) s = 1;
-            else if (freeIntZero && _bc1Low[v] >= _bc1Tin[p] && !_bc1PendingMustCross(p, w, state, level)) s = 1;
-        }
+        const goalOutside = goalTin < _bc1Tin[v] || goalTin > _bc1Tout[v];
+        const b = bridgeSide[p] !== 0 || (goalOutside && _bc1Low[v] > _bc1Tin[p]) ? 1 : 0;
+        bridgeSide[v] = b;
+        const s = b !== 0 || stranded[p] !== 0
+            || (freeIntZero && goalOutside && _bc1Low[v] >= _bc1Tin[p] && !_bc1PendingMustCross(p, w, state, level)) ? 1 : 0;
         stranded[v] = s;
         const vKey = ((v / w | 0) << 16) | (v % w);
         if (state.visited[vKey] === 0) { freshVolume++; if (s) strandedFresh++; }
     }
-    return { freshVolume, strandedFresh };
+    // BC1 itself (same verdict as bc1HasConflictFast): some pending mandatory cell lies on a goal-free bridge side.
+    let bc1Conflict = false;
+    const sideOf = (key: number): boolean => { const c = ((key >>> 16) & 0xFFFF) * w + (key & 0xFFFF); return _bc1Tin[c] !== -1 && bridgeSide[c] !== 0; };
+    for (let i = 0; i < level.mustPassKeys.length && !bc1Conflict; i++) {
+        if ((state.mpVisitedMask & (1 << i)) === 0 && sideOf(level.mustPassKeys[i])) bc1Conflict = true;
+    }
+    for (let i = 0; i < level.mustCrossKeys.length && !bc1Conflict; i++) {
+        if ((state.mustCrossMask & (1 << i)) !== 0 && sideOf(level.mustCrossKeys[i])) bc1Conflict = true;
+    }
+    return { freshVolume, strandedFresh, bc1Conflict };
 }
 
 export function isConnectedForFalseGoalTriggerSearch(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
