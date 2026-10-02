@@ -25,6 +25,15 @@ Level history over all 24 transitions: 1,103 levels never flip, 356 flip once (a
 
 Eight levels solved earlier in the stable era are unsolved at the latest retained baseline: `R00536 R02196 R02206 R02258 R02458 R03251 R03323` (all lost at the 09-11 MC-portal fold and solved in the five runs before it) and `R01761` (solved once). Four of the seven were cheap early-repair solves (1–14M work), so the loss is a trajectory change, not a capability that was removed. `R03251` and `R03323` were later solved by the WS2 repair-deadline treatment at raised caps (2026-09-25 matched-work A/B), so current `main` may already have recovered them. The fresh control settles it.
 
+### Exposure check on the 29 ever-solved residual levels
+
+The 29 latest-residual levels that some retained run had solved split into two kinds:
+
+- **20 last solved in the volatile era (≤ 32459711208).** Their winning configs use the older portfolio vocabulary (`ida:default`, `beam:intersectionHarvest@beam5000`, `dfs:repair:repair`). The current ladder's attempt keys do not use these names. These rows come from a different harness and cannot show that today's ladder lost them. Two of them (`R00180`, `R00440`) are BC1 gains on the random-300.
+- **7 stable-era losses plus R01761.** For all 7, today's ladder still attempts the exact historically winning config (`failedStrategies` at 35944989969 contains it), so these are trajectory losses, not removed exposure. `R01761` was a single solve (`dfs:portalFirstTransfer`).
+
+So the retained history names no underexposed existing capability. Recovering these levels would need a different trajectory, not new routing.
+
 ## Retrospective contrasts (BC1 random-300; all historical runs predate BC1)
 
 | Contrast | Responders marked | Non-responders marked | OR | Fisher p |
