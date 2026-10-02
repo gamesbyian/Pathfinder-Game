@@ -101,7 +101,7 @@ test('bc1StrandedFreshVolume removes cells behind a goal-free bridge from the vo
     const state = stateAt(pocketLevel, prep, [K(1, 1)]);
     assert.equal(isConnected(K(1, 1), state, pocketLevel, prep), true, 'the ordinary volume check (13 + 0 >= 8) passes');
     const v = bc1StrandedFreshVolume(K(1, 1), state, pocketLevel);
-    assert.deepEqual(v, { freshVolume: 13, strandedFresh: 7, bc1Conflict: false }, 'corridor + pocket are stranded: one path cannot cross (2,2)-(3,2) twice');
+    assert.deepEqual(v, { freshVolume: 13, strandedFresh: 7, bc1Conflict: false, vertexConflict: false }, 'corridor + pocket are stranded: one path cannot cross (2,2)-(3,2) twice');
     assert.ok(v!.freshVolume - v!.strandedFresh + 0 < 8, 'only the 2x3 left block is usable, so length 8 is infeasible');
 
     // Same board with the goal inside the pocket: the bridge is crossed once and nothing is stranded on that side.
@@ -112,7 +112,7 @@ test('bc1StrandedFreshVolume removes cells behind a goal-free bridge from the vo
     const prep2 = prepLevel(goalInPocket);
     const state2 = stateAt(goalInPocket, prep2, [K(1, 1)]);
     assert.equal(isConnected(K(1, 1), state2, goalInPocket, prep2), true);
-    assert.deepEqual(bc1StrandedFreshVolume(K(1, 1), state2, goalInPocket), { freshVolume: 13, strandedFresh: 0, bc1Conflict: false });
+    assert.deepEqual(bc1StrandedFreshVolume(K(1, 1), state2, goalInPocket), { freshVolume: 13, strandedFresh: 0, bc1Conflict: false, vertexConflict: false });
 });
 
 test('computeBc1ShadowConflicts skips all flood/graph work when no mandatory cell is outstanding', () => {

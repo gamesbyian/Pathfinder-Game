@@ -1,0 +1,2727 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-bc1v-prune-ab",
+  "treatmentFlag": "STRATEGY_BC1_VERTEX_VOLUME_PRUNE",
+  "baseFlags": [],
+  "solverRef": "83bd61920e29b21f7033b9a43011760d825f3b34",
+  "generatedAt": "2026-10-02T19:16:06.960Z",
+  "levelsFile": "data/stress/stress-levels-random.json",
+  "beamWidth": 500,
+  "nodeBudget": 3000000,
+  "budgetMs": 300000,
+  "rows": [
+    {
+      "levelId": "R02164",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 48586,
+        "workSpent": 509939,
+        "ms": 616
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 11515,
+          "strandedPositive": 11515,
+          "rejected": 44
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 48847,
+        "workSpent": 519145,
+        "ms": 583
+      }
+    },
+    {
+      "levelId": "R00512",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 24371,
+        "workSpent": 231534,
+        "ms": 193
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 4029,
+          "strandedPositive": 3955,
+          "rejected": 146
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 24400,
+        "workSpent": 232035,
+        "ms": 181
+      }
+    },
+    {
+      "levelId": "R02858",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 28551,
+        "workSpent": 275011,
+        "ms": 354
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 3534,
+          "strandedPositive": 3150,
+          "rejected": 797
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 27417,
+        "workSpent": 280084,
+        "ms": 267
+      }
+    },
+    {
+      "levelId": "R02475",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 25509,
+        "workSpent": 244623,
+        "ms": 293
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 4206,
+          "strandedPositive": 4205,
+          "rejected": 609
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 24075,
+        "workSpent": 217551,
+        "ms": 504
+      }
+    },
+    {
+      "levelId": "R02780",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 37836,
+        "workSpent": 365953,
+        "ms": 367
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5655,
+          "strandedPositive": 5655,
+          "rejected": 200
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 34258,
+        "workSpent": 335203,
+        "ms": 263
+      }
+    },
+    {
+      "levelId": "R00434",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 121,
+        "nodes": 54627,
+        "workSpent": 606941,
+        "ms": 345
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 21927,
+          "strandedPositive": 21927,
+          "rejected": 416
+        },
+        "solved": true,
+        "pathLength": 121,
+        "nodes": 54581,
+        "workSpent": 613972,
+        "ms": 576
+      }
+    },
+    {
+      "levelId": "R02784",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 73,
+        "nodes": 23248,
+        "workSpent": 301891,
+        "ms": 184
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 10517,
+          "strandedPositive": 10285,
+          "rejected": 1573
+        },
+        "solved": true,
+        "pathLength": 73,
+        "nodes": 24511,
+        "workSpent": 343542,
+        "ms": 167
+      }
+    },
+    {
+      "levelId": "R00815",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 43984,
+        "workSpent": 424599,
+        "ms": 589
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 8374,
+          "strandedPositive": 7895,
+          "rejected": 85
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 45045,
+        "workSpent": 443560,
+        "ms": 403
+      }
+    },
+    {
+      "levelId": "R02112",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 76,
+        "nodes": 20406,
+        "workSpent": 224254,
+        "ms": 264
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 8362,
+          "strandedPositive": 6687,
+          "rejected": 1064
+        },
+        "solved": true,
+        "pathLength": 76,
+        "nodes": 24821,
+        "workSpent": 323325,
+        "ms": 213
+      }
+    },
+    {
+      "levelId": "R02538",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 46533,
+        "workSpent": 534042,
+        "ms": 483
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 3954,
+          "strandedPositive": 3700,
+          "rejected": 339
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 41885,
+        "workSpent": 414163,
+        "ms": 480
+      }
+    },
+    {
+      "levelId": "R00712",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 27221,
+        "workSpent": 263324,
+        "ms": 236
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 9053,
+          "strandedPositive": 8183,
+          "rejected": 1667
+        },
+        "solved": true,
+        "pathLength": 89,
+        "nodes": 30392,
+        "workSpent": 369478,
+        "ms": 381
+      }
+    },
+    {
+      "levelId": "R02439",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 106,
+        "nodes": 45758,
+        "workSpent": 561715,
+        "ms": 268
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 14184,
+          "strandedPositive": 14162,
+          "rejected": 1098
+        },
+        "solved": true,
+        "pathLength": 106,
+        "nodes": 45075,
+        "workSpent": 555115,
+        "ms": 298
+      }
+    },
+    {
+      "levelId": "R02066",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 83,
+        "nodes": 13584,
+        "workSpent": 208301,
+        "ms": 149
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 1715,
+          "strandedPositive": 969,
+          "rejected": 188
+        },
+        "solved": true,
+        "pathLength": 83,
+        "nodes": 10682,
+        "workSpent": 159677,
+        "ms": 76
+      }
+    },
+    {
+      "levelId": "R02130",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 14006,
+        "workSpent": 133035,
+        "ms": 102
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 1424,
+          "strandedPositive": 1424,
+          "rejected": 18
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 13940,
+        "workSpent": 131169,
+        "ms": 101
+      }
+    },
+    {
+      "levelId": "R03213",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 38049,
+        "workSpent": 386492,
+        "ms": 576
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 8266,
+          "strandedPositive": 8266,
+          "rejected": 439
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 37615,
+        "workSpent": 381929,
+        "ms": 371
+      }
+    },
+    {
+      "levelId": "R03117",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 47931,
+        "workSpent": 449243,
+        "ms": 436
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 8750,
+          "strandedPositive": 8750,
+          "rejected": 84
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 47987,
+        "workSpent": 448412,
+        "ms": 347
+      }
+    },
+    {
+      "levelId": "R03277",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 96,
+        "nodes": 30113,
+        "workSpent": 374077,
+        "ms": 214
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 7565,
+          "strandedPositive": 7007,
+          "rejected": 747
+        },
+        "solved": true,
+        "pathLength": 96,
+        "nodes": 28794,
+        "workSpent": 344943,
+        "ms": 264
+      }
+    },
+    {
+      "levelId": "R03037",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 34402,
+        "workSpent": 332769,
+        "ms": 247
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 7821,
+          "strandedPositive": 7821,
+          "rejected": 90
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 34233,
+        "workSpent": 326869,
+        "ms": 342
+      }
+    },
+    {
+      "levelId": "R02633",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 16459,
+        "workSpent": 144470,
+        "ms": 99
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 2732,
+          "strandedPositive": 2732,
+          "rejected": 123
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 16646,
+        "workSpent": 145097,
+        "ms": 100
+      }
+    },
+    {
+      "levelId": "R03312",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 134,
+        "nodes": 57275,
+        "workSpent": 657018,
+        "ms": 513
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 16442,
+          "strandedPositive": 11604,
+          "rejected": 511
+        },
+        "solved": true,
+        "pathLength": 134,
+        "nodes": 56747,
+        "workSpent": 646063,
+        "ms": 540
+      }
+    },
+    {
+      "levelId": "R02036",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 33378,
+        "workSpent": 291875,
+        "ms": 239
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5003,
+          "strandedPositive": 5003,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 33378,
+        "workSpent": 291875,
+        "ms": 263
+      }
+    },
+    {
+      "levelId": "R02293",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 42096,
+        "workSpent": 457051,
+        "ms": 376
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 11534,
+          "strandedPositive": 11534,
+          "rejected": 2515
+        },
+        "solved": true,
+        "pathLength": 109,
+        "nodes": 40845,
+        "workSpent": 447826,
+        "ms": 235
+      }
+    },
+    {
+      "levelId": "R03262",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 87,
+        "nodes": 7910,
+        "workSpent": 83049,
+        "ms": 75
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 855,
+          "strandedPositive": 429,
+          "rejected": 305
+        },
+        "solved": true,
+        "pathLength": 87,
+        "nodes": 8494,
+        "workSpent": 108211,
+        "ms": 100
+      }
+    },
+    {
+      "levelId": "R02336",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 40037,
+        "workSpent": 602511,
+        "ms": 360
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 13619,
+          "strandedPositive": 13487,
+          "rejected": 358
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 39886,
+        "workSpent": 604603,
+        "ms": 393
+      }
+    },
+    {
+      "levelId": "R03148",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 36611,
+        "workSpent": 467094,
+        "ms": 245
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 16685,
+          "strandedPositive": 16685,
+          "rejected": 107
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 36553,
+        "workSpent": 466493,
+        "ms": 329
+      }
+    },
+    {
+      "levelId": "R02511",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 30345,
+        "workSpent": 296526,
+        "ms": 192
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 4891,
+          "strandedPositive": 4890,
+          "rejected": 146
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 28945,
+        "workSpent": 270538,
+        "ms": 165
+      }
+    },
+    {
+      "levelId": "R02004",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 17407,
+        "workSpent": 158264,
+        "ms": 115
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 1999,
+          "strandedPositive": 1991,
+          "rejected": 7
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 17383,
+        "workSpent": 157951,
+        "ms": 114
+      }
+    },
+    {
+      "levelId": "R02067",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 40765,
+        "workSpent": 373913,
+        "ms": 296
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 7541,
+          "strandedPositive": 7537,
+          "rejected": 718
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 40591,
+        "workSpent": 376061,
+        "ms": 332
+      }
+    },
+    {
+      "levelId": "R02818",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 35184,
+        "workSpent": 327128,
+        "ms": 320
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5973,
+          "strandedPositive": 5665,
+          "rejected": 175
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 35047,
+        "workSpent": 321462,
+        "ms": 312
+      }
+    },
+    {
+      "levelId": "R02423",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 34310,
+        "workSpent": 315167,
+        "ms": 208
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 7582,
+          "strandedPositive": 7582,
+          "rejected": 326
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 33944,
+        "workSpent": 316245,
+        "ms": 236
+      }
+    },
+    {
+      "levelId": "R02102",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 29139,
+        "workSpent": 255512,
+        "ms": 303
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5003,
+          "strandedPositive": 5003,
+          "rejected": 5
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 29119,
+        "workSpent": 255410,
+        "ms": 215
+      }
+    },
+    {
+      "levelId": "R02046",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 24619,
+        "workSpent": 257651,
+        "ms": 153
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 3900,
+          "strandedPositive": 3840,
+          "rejected": 998
+        },
+        "solved": true,
+        "pathLength": 91,
+        "nodes": 24099,
+        "workSpent": 279312,
+        "ms": 141
+      }
+    },
+    {
+      "levelId": "R00702",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 27736,
+        "workSpent": 286598,
+        "ms": 158
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 3299,
+          "strandedPositive": 3279,
+          "rejected": 434
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 23013,
+        "workSpent": 242089,
+        "ms": 139
+      }
+    },
+    {
+      "levelId": "R02602",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 19760,
+        "workSpent": 167085,
+        "ms": 138
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 2912,
+          "strandedPositive": 2911,
+          "rejected": 5
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 19757,
+        "workSpent": 167071,
+        "ms": 182
+      }
+    },
+    {
+      "levelId": "R01501",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 44754,
+        "workSpent": 477706,
+        "ms": 298
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 7134,
+          "strandedPositive": 7134,
+          "rejected": 317
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 37717,
+        "workSpent": 385209,
+        "ms": 242
+      }
+    },
+    {
+      "levelId": "R02091",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 39975,
+        "workSpent": 370631,
+        "ms": 316
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 4968,
+          "strandedPositive": 2837,
+          "rejected": 770
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 38193,
+        "workSpent": 355990,
+        "ms": 276
+      }
+    },
+    {
+      "levelId": "R00153",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 28003,
+        "workSpent": 292827,
+        "ms": 245
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 4538,
+          "strandedPositive": 4537,
+          "rejected": 1
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 28003,
+        "workSpent": 292845,
+        "ms": 269
+      }
+    },
+    {
+      "levelId": "R02721",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 29842,
+        "workSpent": 389263,
+        "ms": 215
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 15916,
+          "strandedPositive": 15167,
+          "rejected": 158
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 29841,
+        "workSpent": 390295,
+        "ms": 307
+      }
+    },
+    {
+      "levelId": "R03173",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 28807,
+        "workSpent": 263130,
+        "ms": 127
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5167,
+          "strandedPositive": 4948,
+          "rejected": 1440
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 26417,
+        "workSpent": 242592,
+        "ms": 177
+      }
+    },
+    {
+      "levelId": "R02128",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 37036,
+        "workSpent": 361177,
+        "ms": 261
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 6144,
+          "strandedPositive": 6120,
+          "rejected": 1166
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 34019,
+        "workSpent": 315354,
+        "ms": 217
+      }
+    },
+    {
+      "levelId": "R02470",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 35997,
+        "workSpent": 317255,
+        "ms": 229
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 6299,
+          "strandedPositive": 6299,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 35997,
+        "workSpent": 317255,
+        "ms": 273
+      }
+    },
+    {
+      "levelId": "R02956",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 33900,
+        "workSpent": 344799,
+        "ms": 225
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 3379,
+          "strandedPositive": 3266,
+          "rejected": 274
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 33867,
+        "workSpent": 352661,
+        "ms": 313
+      }
+    },
+    {
+      "levelId": "R02274",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 18023,
+        "workSpent": 179859,
+        "ms": 111
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 1052,
+          "strandedPositive": 989,
+          "rejected": 391
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 24000,
+        "workSpent": 226415,
+        "ms": 141
+      }
+    },
+    {
+      "levelId": "R02897",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 30340,
+        "workSpent": 398833,
+        "ms": 285
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 4889,
+          "strandedPositive": 4786,
+          "rejected": 801
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 26095,
+        "workSpent": 307642,
+        "ms": 334
+      }
+    },
+    {
+      "levelId": "R02620",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 36218,
+        "workSpent": 384067,
+        "ms": 309
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 6282,
+          "strandedPositive": 6254,
+          "rejected": 52
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 36173,
+        "workSpent": 381648,
+        "ms": 248
+      }
+    },
+    {
+      "levelId": "R00260",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 117,
+        "nodes": 47205,
+        "workSpent": 558388,
+        "ms": 245
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 13250,
+          "strandedPositive": 13198,
+          "rejected": 1022
+        },
+        "solved": true,
+        "pathLength": 117,
+        "nodes": 46348,
+        "workSpent": 549504,
+        "ms": 340
+      }
+    },
+    {
+      "levelId": "R03139",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 83,
+        "nodes": 28559,
+        "workSpent": 328307,
+        "ms": 207
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5381,
+          "strandedPositive": 5141,
+          "rejected": 159
+        },
+        "solved": true,
+        "pathLength": 83,
+        "nodes": 27739,
+        "workSpent": 309886,
+        "ms": 205
+      }
+    },
+    {
+      "levelId": "R02732",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 29309,
+        "workSpent": 298964,
+        "ms": 331
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 8979,
+          "strandedPositive": 8979,
+          "rejected": 726
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 29490,
+        "workSpent": 306669,
+        "ms": 183
+      }
+    },
+    {
+      "levelId": "R02938",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 47275,
+        "workSpent": 487000,
+        "ms": 446
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 7549,
+          "strandedPositive": 7545,
+          "rejected": 711
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 44008,
+        "workSpent": 440497,
+        "ms": 375
+      }
+    },
+    {
+      "levelId": "R02637",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 37051,
+        "workSpent": 332098,
+        "ms": 335
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 7725,
+          "strandedPositive": 7725,
+          "rejected": 38
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 37037,
+        "workSpent": 332022,
+        "ms": 349
+      }
+    },
+    {
+      "levelId": "R02449",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 82,
+        "nodes": 31307,
+        "workSpent": 420408,
+        "ms": 200
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 16436,
+          "strandedPositive": 15863,
+          "rejected": 3729
+        },
+        "solved": true,
+        "pathLength": 82,
+        "nodes": 32527,
+        "workSpent": 457829,
+        "ms": 254
+      }
+    },
+    {
+      "levelId": "R00990",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 34624,
+        "workSpent": 337824,
+        "ms": 252
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 7073,
+          "strandedPositive": 7073,
+          "rejected": 65
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 34135,
+        "workSpent": 334421,
+        "ms": 304
+      }
+    },
+    {
+      "levelId": "R02092",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 15509,
+        "workSpent": 135961,
+        "ms": 77
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 1143,
+          "strandedPositive": 1092,
+          "rejected": 633
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 13587,
+        "workSpent": 124831,
+        "ms": 70
+      }
+    },
+    {
+      "levelId": "R03115",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 22005,
+        "workSpent": 196744,
+        "ms": 138
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 2739,
+          "strandedPositive": 2739,
+          "rejected": 77
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 20383,
+        "workSpent": 179960,
+        "ms": 237
+      }
+    },
+    {
+      "levelId": "R02998",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 44444,
+        "workSpent": 387168,
+        "ms": 343
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 7160,
+          "strandedPositive": 7158,
+          "rejected": 319
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 43441,
+        "workSpent": 384183,
+        "ms": 354
+      }
+    },
+    {
+      "levelId": "R03008",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 49869,
+        "workSpent": 441909,
+        "ms": 462
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 8527,
+          "strandedPositive": 8527,
+          "rejected": 4
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 49869,
+        "workSpent": 441893,
+        "ms": 398
+      }
+    },
+    {
+      "levelId": "R02777",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 25735,
+        "workSpent": 252992,
+        "ms": 125
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 2945,
+          "strandedPositive": 2908,
+          "rejected": 755
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 13621,
+        "workSpent": 124679,
+        "ms": 85
+      }
+    },
+    {
+      "levelId": "R02440",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 43513,
+        "workSpent": 432810,
+        "ms": 280
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 6275,
+          "strandedPositive": 6275,
+          "rejected": 1140
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 44186,
+        "workSpent": 416477,
+        "ms": 292
+      }
+    },
+    {
+      "levelId": "R02627",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 53794,
+        "workSpent": 494274,
+        "ms": 650
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 8500,
+          "strandedPositive": 8500,
+          "rejected": 237
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 49624,
+        "workSpent": 453793,
+        "ms": 478
+      }
+    },
+    {
+      "levelId": "R03318",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 45956,
+        "workSpent": 550736,
+        "ms": 470
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 16458,
+          "strandedPositive": 16455,
+          "rejected": 3
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 43886,
+        "workSpent": 526827,
+        "ms": 389
+      }
+    },
+    {
+      "levelId": "R02830",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 30866,
+        "workSpent": 412180,
+        "ms": 273
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 3286,
+          "strandedPositive": 3265,
+          "rejected": 21
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 30609,
+        "workSpent": 409661,
+        "ms": 279
+      }
+    },
+    {
+      "levelId": "R02419",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 28873,
+        "workSpent": 264639,
+        "ms": 328
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 4242,
+          "strandedPositive": 4242,
+          "rejected": 87
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 28941,
+        "workSpent": 264435,
+        "ms": 212
+      }
+    },
+    {
+      "levelId": "R02214",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 24418,
+        "workSpent": 228645,
+        "ms": 176
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 3241,
+          "strandedPositive": 2739,
+          "rejected": 502
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 24159,
+        "workSpent": 235999,
+        "ms": 240
+      }
+    },
+    {
+      "levelId": "R02518",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 26924,
+        "workSpent": 233141,
+        "ms": 276
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 3282,
+          "strandedPositive": 3282,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 26924,
+        "workSpent": 233141,
+        "ms": 361
+      }
+    },
+    {
+      "levelId": "R02261",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 27862,
+        "workSpent": 266692,
+        "ms": 247
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 3375,
+          "strandedPositive": 3083,
+          "rejected": 38
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 25162,
+        "workSpent": 241566,
+        "ms": 303
+      }
+    },
+    {
+      "levelId": "R03301",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 33545,
+        "workSpent": 360274,
+        "ms": 262
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5240,
+          "strandedPositive": 5178,
+          "rejected": 197
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 33329,
+        "workSpent": 357306,
+        "ms": 324
+      }
+    },
+    {
+      "levelId": "R02590",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 18271,
+        "workSpent": 197880,
+        "ms": 232
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 1240,
+          "strandedPositive": 1213,
+          "rejected": 490
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 14189,
+        "workSpent": 133624,
+        "ms": 102
+      }
+    },
+    {
+      "levelId": "R02131",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 25113,
+        "workSpent": 324931,
+        "ms": 157
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5209,
+          "strandedPositive": 5018,
+          "rejected": 1723
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 21239,
+        "workSpent": 233686,
+        "ms": 127
+      }
+    },
+    {
+      "levelId": "R02580",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 19577,
+        "workSpent": 179867,
+        "ms": 134
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 1257,
+          "strandedPositive": 1146,
+          "rejected": 504
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 15011,
+        "workSpent": 129061,
+        "ms": 115
+      }
+    },
+    {
+      "levelId": "R02375",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 30182,
+        "workSpent": 285514,
+        "ms": 201
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 3774,
+          "strandedPositive": 3769,
+          "rejected": 730
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 30766,
+        "workSpent": 295013,
+        "ms": 221
+      }
+    },
+    {
+      "levelId": "R03024",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 22576,
+        "workSpent": 275661,
+        "ms": 269
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5970,
+          "strandedPositive": 5957,
+          "rejected": 73
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 22530,
+        "workSpent": 276489,
+        "ms": 150
+      }
+    },
+    {
+      "levelId": "R02975",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 75,
+        "nodes": 28568,
+        "workSpent": 383341,
+        "ms": 193
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 7699,
+          "strandedPositive": 7301,
+          "rejected": 632
+        },
+        "solved": true,
+        "pathLength": 74,
+        "nodes": 25932,
+        "workSpent": 323835,
+        "ms": 179
+      }
+    },
+    {
+      "levelId": "R00709",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 38407,
+        "workSpent": 347738,
+        "ms": 187
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5130,
+          "strandedPositive": 5130,
+          "rejected": 24
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 30505,
+        "workSpent": 271900,
+        "ms": 179
+      }
+    },
+    {
+      "levelId": "R02374",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 15971,
+        "workSpent": 179764,
+        "ms": 150
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 1721,
+          "strandedPositive": 1652,
+          "rejected": 194
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 15699,
+        "workSpent": 178488,
+        "ms": 291
+      }
+    },
+    {
+      "levelId": "R00228",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 26884,
+        "workSpent": 313702,
+        "ms": 176
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 3642,
+          "strandedPositive": 2803,
+          "rejected": 358
+        },
+        "solved": true,
+        "pathLength": 115,
+        "nodes": 23102,
+        "workSpent": 277452,
+        "ms": 144
+      }
+    },
+    {
+      "levelId": "R02105",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 89,
+        "nodes": 25812,
+        "workSpent": 275213,
+        "ms": 203
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5922,
+          "strandedPositive": 5165,
+          "rejected": 1461
+        },
+        "solved": true,
+        "pathLength": 89,
+        "nodes": 25210,
+        "workSpent": 277602,
+        "ms": 153
+      }
+    },
+    {
+      "levelId": "R01644",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 106,
+        "nodes": 40271,
+        "workSpent": 431472,
+        "ms": 219
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 9309,
+          "strandedPositive": 9166,
+          "rejected": 506
+        },
+        "solved": true,
+        "pathLength": 106,
+        "nodes": 39090,
+        "workSpent": 413733,
+        "ms": 229
+      }
+    },
+    {
+      "levelId": "R02228",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 73,
+        "nodes": 25165,
+        "workSpent": 331064,
+        "ms": 351
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 10960,
+          "strandedPositive": 10960,
+          "rejected": 206
+        },
+        "solved": true,
+        "pathLength": 73,
+        "nodes": 24952,
+        "workSpent": 326839,
+        "ms": 178
+      }
+    },
+    {
+      "levelId": "R01097",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 40683,
+        "workSpent": 415657,
+        "ms": 338
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 4123,
+          "strandedPositive": 4079,
+          "rejected": 613
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 38852,
+        "workSpent": 410536,
+        "ms": 334
+      }
+    },
+    {
+      "levelId": "R03174",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 52625,
+        "workSpent": 578297,
+        "ms": 486
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 14001,
+          "strandedPositive": 13983,
+          "rejected": 564
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 52908,
+        "workSpent": 587006,
+        "ms": 417
+      }
+    },
+    {
+      "levelId": "R02129",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 112,
+        "nodes": 45980,
+        "workSpent": 528931,
+        "ms": 296
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 17676,
+          "strandedPositive": 17676,
+          "rejected": 606
+        },
+        "solved": true,
+        "pathLength": 112,
+        "nodes": 46776,
+        "workSpent": 547995,
+        "ms": 397
+      }
+    },
+    {
+      "levelId": "R03089",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 23271,
+        "workSpent": 242568,
+        "ms": 245
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 1307,
+          "strandedPositive": 1165,
+          "rejected": 416
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 17993,
+        "workSpent": 188877,
+        "ms": 235
+      }
+    },
+    {
+      "levelId": "R03219",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 89,
+        "nodes": 37262,
+        "workSpent": 471175,
+        "ms": 309
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 15407,
+          "strandedPositive": 13709,
+          "rejected": 213
+        },
+        "solved": true,
+        "pathLength": 89,
+        "nodes": 37196,
+        "workSpent": 469484,
+        "ms": 333
+      }
+    },
+    {
+      "levelId": "R00399",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 42254,
+        "workSpent": 415941,
+        "ms": 421
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5676,
+          "strandedPositive": 5670,
+          "rejected": 24
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 41457,
+        "workSpent": 407373,
+        "ms": 342
+      }
+    },
+    {
+      "levelId": "R02534",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 45191,
+        "workSpent": 398432,
+        "ms": 312
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 8791,
+          "strandedPositive": 8791,
+          "rejected": 95
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 45030,
+        "workSpent": 396995,
+        "ms": 489
+      }
+    },
+    {
+      "levelId": "R02665",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 27737,
+        "workSpent": 263196,
+        "ms": 250
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 3631,
+          "strandedPositive": 3631,
+          "rejected": 227
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 27153,
+        "workSpent": 260588,
+        "ms": 196
+      }
+    },
+    {
+      "levelId": "R02029",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 24208,
+        "workSpent": 198187,
+        "ms": 149
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 2748,
+          "strandedPositive": 2730,
+          "rejected": 21
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 24208,
+        "workSpent": 198187,
+        "ms": 150
+      }
+    },
+    {
+      "levelId": "R00370",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 37500,
+        "workSpent": 430664,
+        "ms": 274
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 12269,
+          "strandedPositive": 12269,
+          "rejected": 321
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 37123,
+        "workSpent": 425683,
+        "ms": 272
+      }
+    },
+    {
+      "levelId": "R01909",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 31963,
+        "workSpent": 336650,
+        "ms": 353
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 9355,
+          "strandedPositive": 9355,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 31963,
+        "workSpent": 336650,
+        "ms": 296
+      }
+    },
+    {
+      "levelId": "R02434",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 34577,
+        "workSpent": 329433,
+        "ms": 124
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 5945,
+          "strandedPositive": 5945,
+          "rejected": 495
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 31527,
+        "workSpent": 321085,
+        "ms": 176
+      }
+    },
+    {
+      "levelId": "R03261",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 24211,
+        "workSpent": 232760,
+        "ms": 252
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 4635,
+          "strandedPositive": 3048,
+          "rejected": 2
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 24209,
+        "workSpent": 232754,
+        "ms": 220
+      }
+    },
+    {
+      "levelId": "R03035",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 90,
+        "nodes": 36696,
+        "workSpent": 467384,
+        "ms": 295
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 13656,
+          "strandedPositive": 13515,
+          "rejected": 144
+        },
+        "solved": true,
+        "pathLength": 90,
+        "nodes": 35764,
+        "workSpent": 449083,
+        "ms": 344
+      }
+    },
+    {
+      "levelId": "R02985",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": true,
+        "pathLength": 113,
+        "nodes": 46529,
+        "workSpent": 562449,
+        "ms": 386
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 16857,
+          "strandedPositive": 16772,
+          "rejected": 855
+        },
+        "solved": true,
+        "pathLength": 113,
+        "nodes": 46012,
+        "workSpent": 558855,
+        "ms": 335
+      }
+    },
+    {
+      "levelId": "R02233",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 16893,
+        "workSpent": 161141,
+        "ms": 184
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 2137,
+          "strandedPositive": 1836,
+          "rejected": 301
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 20434,
+        "workSpent": 190387,
+        "ms": 155
+      }
+    },
+    {
+      "levelId": "R00440",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 45376,
+        "workSpent": 443023,
+        "ms": 357
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 8115,
+          "strandedPositive": 8112,
+          "rejected": 653
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 44255,
+        "workSpent": 430298,
+        "ms": 452
+      }
+    },
+    {
+      "levelId": "R02140",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 24820,
+        "workSpent": 253325,
+        "ms": 216
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 1992,
+          "strandedPositive": 1937,
+          "rejected": 260
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 23441,
+        "workSpent": 234783,
+        "ms": 184
+      }
+    },
+    {
+      "levelId": "R03289",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 45055,
+        "workSpent": 438515,
+        "ms": 306
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 10373,
+          "strandedPositive": 10373,
+          "rejected": 321
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 48082,
+        "workSpent": 463428,
+        "ms": 333
+      }
+    },
+    {
+      "levelId": "R02402",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 43746,
+        "workSpent": 413190,
+        "ms": 273
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 8543,
+          "strandedPositive": 8543,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 43746,
+        "workSpent": 413190,
+        "ms": 456
+      }
+    },
+    {
+      "levelId": "R02162",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 23951,
+        "workSpent": 242936,
+        "ms": 151
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 1705,
+          "strandedPositive": 1641,
+          "rejected": 377
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 22161,
+        "workSpent": 230629,
+        "ms": 135
+      }
+    },
+    {
+      "levelId": "R02094",
+      "control": {
+        "bc1v": {
+          "evaluated": 0,
+          "strandedPositive": 0,
+          "rejected": 0
+        },
+        "solved": false,
+        "pathLength": null,
+        "nodes": 44738,
+        "workSpent": 547042,
+        "ms": 572
+      },
+      "treatment": {
+        "bc1v": {
+          "evaluated": 13432,
+          "strandedPositive": 13132,
+          "rejected": 908
+        },
+        "solved": true,
+        "pathLength": 124,
+        "nodes": 45165,
+        "workSpent": 571520,
+        "ms": 554
+      }
+    }
+  ],
+  "summary": {
+    "levels": 100,
+    "controlSolved": 19,
+    "treatmentSolved": 24,
+    "gains": 5,
+    "losses": 0,
+    "controlWork": 34666399,
+    "treatmentWork": 33693072,
+    "controlMs": 27471,
+    "treatmentMs": 27315,
+    "bc1vRejected": 46487,
+    "bc1vEvaluated": 703602
+  }
+}

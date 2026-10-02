@@ -48,6 +48,7 @@ for (const raw of levels) {
             if (v.strandedFresh > 0) strandedStates++;
             const slack = v.freshVolume - v.strandedFresh + intNeeded - rSteps;
             if (slack < minSlack) minSlack = slack;
+            if (v.bc1Conflict || v.vertexConflict) alarms.push({ levelId: raw.id, step: i, kind: v.bc1Conflict ? 'bc1' : 'vertex-mandatory' });
             if (slack < 0) alarms.push({ levelId: raw.id, step: i, freshVolume: v.freshVolume, strandedFresh: v.strandedFresh, intNeeded, rSteps });
         }
         for (let i = undos.length - 1; i >= 0; i--) api.undoMove(undos[i], state);

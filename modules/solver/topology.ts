@@ -1283,7 +1283,7 @@ function _bc1PendingMustCross(cell: number, w: number, state: SolverSearchState,
  * `isConnected` counts it (pos counts 1) and the number of fresh cells stranded behind goal-free
  * bridges, or null when the typed-array path is unsupported.
  */
-export function bc1StrandedFreshVolume(pos: number, state: SolverSearchState, level: NormalizedLevel, vertexCuts = false): { freshVolume: number; strandedFresh: number; bc1Conflict: boolean } | null {
+export function bc1StrandedFreshVolume(pos: number, state: SolverSearchState, level: NormalizedLevel, vertexCuts = false): { freshVolume: number; strandedFresh: number; bc1Conflict: boolean; vertexConflict: boolean } | null {
     const { w, h } = level.grid;
     if (w > MAX_BITROW_DIM || h > MAX_BITROW_DIM) return null;
     const partner = _bc1PortalPartners(level);
@@ -1346,15 +1346,17 @@ export function bc1StrandedFreshVolume(pos: number, state: SolverSearchState, le
         if (state.visited[vKey] === 0) { freshVolume++; if (s) strandedFresh++; }
     }
     // BC1 itself (same verdict as bc1HasConflictFast): some pending mandatory cell lies on a goal-free bridge side.
-    let bc1Conflict = false;
-    const sideOf = (key: number): boolean => { const c = ((key >>> 16) & 0xFFFF) * w + (key & 0xFFFF); return _bc1Tin[c] !== -1 && bridgeSide[c] !== 0; };
-    for (let i = 0; i < level.mustPassKeys.length && !bc1Conflict; i++) {
-        if ((state.mpVisitedMask & (1 << i)) === 0 && sideOf(level.mustPassKeys[i])) bc1Conflict = true;
-    }
-    for (let i = 0; i < level.mustCrossKeys.length && !bc1Conflict; i++) {
-        if ((state.mustCrossMask & (1 << i)) !== 0 && sideOf(level.mustCrossKeys[i])) bc1Conflict = true;
-    }
-    return { freshVolume, strandedFresh, bc1Conflict };
+    // vertexConflict (BC1-VX's mandatory consequence): a pending mandatory cell behind a non-revisitable cut vertex.
+    let bc1Conflict = false, vertexConflict = false;
+    const check = (key: number): void => {
+        const c = ((key >>> 16) & 0xFFFF) * w + (key & 0xFFFF);
+        if (_bc1Tin[c] === -1) return;
+        if (bridgeSide[c] !== 0) bc1Conflict = true;
+        if (stranded[c] !== 0) vertexConflict = true;
+    };
+    for (let i = 0; i < level.mustPassKeys.length; i++) if ((state.mpVisitedMask & (1 << i)) === 0) check(level.mustPassKeys[i]);
+    for (let i = 0; i < level.mustCrossKeys.length; i++) if ((state.mustCrossMask & (1 << i)) !== 0) check(level.mustCrossKeys[i]);
+    return { freshVolume, strandedFresh, bc1Conflict, vertexConflict };
 }
 
 export function isConnectedForFalseGoalTriggerSearch(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {

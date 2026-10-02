@@ -97,6 +97,8 @@ export function bc1WithVolumePrunes(next: number, ws: SolverSearchState, level: 
     if (!v) return bc1FreshConnectivityPrunes(next, ws, level, prep) || bc1VolumePrunes(next, ws, level, prep, rSteps);
     if (v.bc1Conflict) return true;
     bc1VolumeCounters.evaluated++;
+    // v.vertexConflict (a pending cell behind a non-revisitable cut vertex) is sound but deliberately unused: on the
+    // random-300 raw beam it added no net solves over the volume rule (reports/2026-10-02-bc1-volume-consequence-result-001.md).
     if (v.strandedFresh === 0) return false;
     bc1VolumeCounters.strandedPositive++;
     const reject = v.freshVolume - v.strandedFresh + level.requiredIntersections - ws.ints < rSteps;

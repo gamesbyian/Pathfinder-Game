@@ -62,6 +62,8 @@ When `requiredIntersections − ints − popcount(mustCrossMask) ≤ 0`, every r
 
 Cumulative raw-beam effect versus the production BC1-only beam: 42 → 51 on the random-300.
 
+**Mandatory form tested and not adopted.** The same no-free-intersection argument also kills a state whose pending must-pass/must-cross cell lies behind a non-revisitable cut vertex (BC1's own consequence carried to cut vertices). It is sound: the witness harness checks it too, with 0 alarms on 861k states. But adding it as a reject on top of volume-only BC1-VX gave 42 → 50 (11 gains / 3 losses; `reports/stress/bc1vx-mandatory-prune-ab-001-shard{0,1,2}.json`) against 51 without it. It adds no net solves and only perturbs trajectories, so the consumer computes it (`vertexConflict`) but does not act on it.
+
 ## What this does not establish
 
 Production-ladder value is not yet measured. The A/B above is one raw configuration on one population.
