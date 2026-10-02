@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Program state:** **SOLVER-TREATMENT QUEUE EXHAUSTED; PREMISE-DISCOVERY LANE EXECUTED.** There is no earned immediate solver-treatment experiment on current evidence. Closed/promoted/negative rows stay closed; supporting/service rows activate only on a named reopen condition or external need. The 2026-10-02 premise-discovery pass produced no treatment gate (table below); the WS1 consumer was resolved as work-only and parked (seam audit), and the one open discovery item is PG-B.
+> **Program state:** **SOLVER-TREATMENT QUEUE EXHAUSTED; PREMISE-DISCOVERY LANE EXECUTED.** There is no earned immediate solver-treatment experiment on current evidence. Closed/promoted/negative rows stay closed; supporting/service rows activate only on a named reopen condition or external need. The 2026-10-02 premise-discovery pass produced no treatment gate (table below); the WS1 consumer was resolved as work-only and parked (seam audit), and the one open discovery item is PG-B (prospective arms running).
 > **Reconciled:** 2026-10-02.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 > **Historical snapshots:** [2026-09-25](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md) · [2026-10-02](../reports/2026-10-02-solver-optimization-workstreams-precompaction-snapshot-002.md) (full closed-record narratives, including the retracted WS1 negative).
@@ -19,7 +19,7 @@ The [post-exhaustion premise refresh](../reports/2026-10-01-post-exhaustion-solv
 | ID | Lane | Outcome | Result |
 |---:|---|---|---|
 | PG-A | BC1 perturbation microscope | closed | gains reflect early dead-state occupancy displacing winner lineages; nothing beyond what production BC1 removes ([result](../reports/2026-10-01-bc1-perturbation-microscope-result-001.md)) |
-| PG-B | Intervention-response atlas | inconclusive | per-level outcomes repo-resident only for BC1; needs GHA artifact recovery first ([feasibility](../reports/2026-10-01-intervention-response-atlas-feasibility-001.md)) |
+| PG-B | Intervention-response atlas | active | built from 25 retained Corpus-2 capability runs the feasibility audit missed; retrospective: no shared soft-residual regime (BC1 gains not enriched for other capabilities' nominations, OR 1.26 p 0.72); predictions pre-registered for current-main control vs BC1-off full-corpus arms (GHA 37049775397 / 37049784486), which also price the BC1-off dead-last retry ([atlas](../reports/2026-10-02-intervention-response-atlas-result-001.md)) |
 | PG-E | WS1 transfer-failure analysis | withdrawn | the failure was an instrument defect; corrected re-run is positive (WS1 below) |
 | PG-C | First-loss refresh | not executed | needs causal labels A/B/E did not supply |
 | PG-D | Cut/resource sibling mining | not executed | needs a sound candidate fact with a proof sketch first |

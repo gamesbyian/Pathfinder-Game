@@ -1,9 +1,10 @@
 # Intervention-response residual atlas: retained-evidence feasibility (premise-generation lane B)
 
-> **Status:** inconclusive
+> **Status:** superseded
 > **Last evidence:** 2026-10-01 — pairwise overlap audit of the 11 frozen intervention-evaluation populations under `data/stress`.
 > **Decision:** the atlas is not buildable from repository-resident evidence alone: population overlap exists, but per-level treatment/control outcomes were found in the repo only for BC1; the rest would have to be recovered from GHA run artifacts (not checked). Do not run new solver sweeps to fill it. Lane B waits on one bounded artifact-recovery check.
-> **Remaining gate:** recover per-level outcome tables (`gha:fetch-result`) for the portal-coarse placement and mc-neighbor A/B runs on the 172-level overlap with `bc1-prune-ab-001`; proceed to the atlas only if at least 100 levels carry outcomes under both interventions, otherwise close the lane.
+> **Remaining gate:** none here (original gate: recover per-level outcome tables (`gha:fetch-result`) for the portal-coarse placement and mc-neighbor A/B runs on the 172-level overlap with `bc1-prune-ab-001`; proceed to the atlas only if at least 100 levels carry outcomes under both interventions, otherwise close the lane.)
+> **Superseded by:** [atlas result](2026-10-02-intervention-response-atlas-result-001.md): 25 retained `reports/stress/capability-runs/*/per-level-corpus2.json` runs already carry per-level outcomes for 1,700 levels.
 > **Evidence role:** forensic.
 > **Owner:** `docs/solver-optimization-workstreams.md`.
 
