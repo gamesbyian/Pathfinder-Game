@@ -59,3 +59,7 @@ Historical experiments whose primary artifacts have already expired remain histo
 Durable retention preserves reconstructability. It does not strengthen inferential scope.
 
 A residual-conditioned experiment remains residual-conditioned. A tested-form negative remains scoped to the tested form. A promotion negative does not erase retained capability. Exact-action participation and comparable dose still require the appropriate row-level evidence.
+
+## Retractions
+
+Retained bundles are immutable. If a bundle's conclusion is later retracted (for example an instrument-invalid run), add it to `retracted-bundles.json` with `bundleDir`, `retractedOn`, `reason` and `supersededBy`. A retracted bundle stays queryable as durable evidence (flagged with its retraction) but is skipped by research-block artifact discovery, because a research block id must name exactly one population. Reusing a block id for a different population is an error; give a re-run a new block id when its population identity changes.

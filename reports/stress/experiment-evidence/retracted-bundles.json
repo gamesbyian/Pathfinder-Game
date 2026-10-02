@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "note": "Retained bundles are immutable. This sidecar marks bundles whose conclusion was retracted so they stay visible as durable evidence but do not define a research block (a block id names one population).",
+  "bundles": [
+    {
+      "bundleDir": "reports/stress/experiment-evidence/36220112812__run-36220112812__attempt-1",
+      "retractedOn": "2026-10-01",
+      "reason": "Instrument-invalid: per-attempt workSpent absent (0/5,167 attempts) while every frozen signature requires cumulativeWorkBand >= 10m, so zero nominations was guaranteed (reports/2026-10-01-ws1-confirmation-instrument-validity-audit-001.md).",
+      "supersededBy": "reports/stress/experiment-evidence/36952383630__run-36952383630__attempt-1"
+    }
+  ]
+}
