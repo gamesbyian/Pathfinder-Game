@@ -1,9 +1,9 @@
 # Intervention-response residual atlas (premise-generation lane B)
 
 > **Status:** active
-> **Last evidence:** 2026-10-02 — retrospective atlas over 25 retained Corpus-2 capability runs (`data/stress/intervention-response-atlas-001.json`); prospective arms dispatched (GHA 37049775397 control, 37049784486 BC1-off, both current `main` 3d126d65).
+> **Last evidence:** 2026-10-02 — retrospective atlas over 25 retained Corpus-2 capability runs (`data/stress/intervention-response-atlas-001.json`); prospective arms dispatched (GHA 37049775397 control, 37049784486 BC1-off, both current `main` 3d126d65) and **cancelled by the maintainer before completion**; the predictions below remain registered and unscored.
 > **Decision:** the lane is buildable from retained evidence after all: the 2026-10-01 feasibility audit missed `reports/stress/capability-runs/*/per-level-corpus2.json` (25 runs × 1,700 levels). Retrospectively, BC1's residual gains are **not** enriched among levels that other interventions solve, so this evidence shows no shared "soft residual" regime. The trajectory-fragility contrast for losses is suggestive (OR 3.8) but underpowered (4 losses). Predictions below were registered before the prospective runs finished.
-> **Remaining gate:** once both runs are harvested, score predictions 3–4 with `--control=<BC1-off> --treatment=<control>` and predictions 1, 2, 5, 6 with `--control=<control> --treatment=<BC1-off>`. The second orientation prices the parked BC1-off dead-last retry.
+> **Remaining gate:** re-dispatch the two full-corpus arms (maintainer go-ahead needed after the 2026-10-02 cancellation); once both are harvested, score predictions 3–4 with `--control=<BC1-off> --treatment=<control>` and predictions 1, 2, 5, 6 with `--control=<control> --treatment=<BC1-off>`. The second orientation prices the parked BC1-off dead-last retry.
 > **Research question:** none
 > **Premise refs:** `P113`, `P145`, `P181`, `P199`
 > **Evidence role:** forensic
