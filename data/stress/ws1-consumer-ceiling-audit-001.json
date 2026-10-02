@@ -108,5 +108,69 @@
       "maxParentNominatedWorkShare": 0.20800933984134184,
       "parentsAbove10pctNominated": 7
     }
+  },
+  "nominatedByStage": {
+    "guidance-goal-distance-retry": {
+      "nominatedAttempts": 308,
+      "nominatedWork": 1059145618,
+      "nominatedNodes": 1536317019,
+      "solvedParents": 15,
+      "unsolvedParents": 20
+    },
+    "connectivity-axis-prune-disabled-retry": {
+      "nominatedAttempts": 432,
+      "nominatedWork": 442804969,
+      "nominatedNodes": 657532741,
+      "solvedParents": 20,
+      "unsolvedParents": 35
+    },
+    "must-cross-neighbor-prune-disabled-retry": {
+      "nominatedAttempts": 45,
+      "nominatedWork": 194239920,
+      "nominatedNodes": 231079805,
+      "solvedParents": 7,
+      "unsolvedParents": 13
+    },
+    "coarse-state-near-tie-retention-disabled-retry": {
+      "nominatedAttempts": 460,
+      "nominatedWork": 142651552,
+      "nominatedNodes": 198030717,
+      "solvedParents": 22,
+      "unsolvedParents": 35
+    },
+    "goal-attraction-disabled-retry": {
+      "nominatedAttempts": 560,
+      "nominatedWork": 0,
+      "nominatedNodes": 0,
+      "solvedParents": 31,
+      "unsolvedParents": 35
+    }
+  },
+  "winnerStages": {
+    "main-search": 38,
+    "goal-attraction-disabled-retry": 34,
+    "early-repair-search": 22,
+    "portal-coarse-state-merge-dead-last-retry": 12,
+    "coarse-state-near-tie-retention-disabled-retry": 7,
+    "late-repair-multiseed-retry": 5,
+    "admissible-order-alternate-tiebreak-retry": 2,
+    "guidance-goal-distance-retry": 2,
+    "admissible-order-fallback": 2,
+    "must-cross-neighbor-prune-disabled-retry": 1
+  },
+  "medianAttemptIndexByStage": {
+    "early-repair-search": 0,
+    "repair-fallback": 2,
+    "main-search": 4,
+    "goal-attraction-disabled-retry": 12,
+    "admissible-order-fallback": 16,
+    "coarse-state-near-tie-retention-disabled-retry": 25,
+    "admissible-order-alternate-tiebreak-retry": 30,
+    "connectivity-axis-prune-disabled-retry": 37,
+    "must-cross-neighbor-prune-disabled-retry": 44,
+    "late-repair-search": 46,
+    "guidance-goal-distance-retry": 55,
+    "late-repair-multiseed-retry": 62,
+    "portal-coarse-state-merge-dead-last-retry": 71
   }
 }

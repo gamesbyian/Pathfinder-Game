@@ -43,6 +43,23 @@ for (const r of dataset.rows) {
         g.perParent.set(r.levelId, p);
     }
 }
+// Stage-level view for the consumer seam audit: where the nominated work sits, and which stages produce the winners.
+const byStage = {};
+for (const r of dataset.rows) {
+    if (!allowed.has(keyOf(fn(r)))) continue;
+    const att = attemptsById.get(r.levelId)?.[r.boundaryIndex];
+    const g = byStage[r.nextStage] ??= { nominatedAttempts: 0, nominatedWork: 0, nominatedNodes: 0, solvedParents: new Set(), unsolvedParents: new Set() };
+    g.nominatedAttempts++; g.nominatedWork += r.nextAttemptWork; g.nominatedNodes += Number.isFinite(att?.nodesExpanded) ? att.nodesExpanded : 0;
+    (r.levelSolved ? g.solvedParents : g.unsolvedParents).add(r.levelId);
+}
+const winnerStages = {};
+for (const l of doc.levels) {
+    if (!l.ok) continue;
+    const a = l.attempts ?? []; const w = a.findIndex(x => x?.ok === true || x?.outcome === 'success' || x?.outcome === 'solved');
+    if (w >= 0) winnerStages[a[w].stageId] = (winnerStages[a[w].stageId] ?? 0) + 1;
+}
+const stageIndexMedian = {};
+for (const l of doc.levels) (l.attempts ?? []).forEach((a, i) => (stageIndexMedian[a.stageId] ??= []).push(i));
 const share = (a, b) => b > 0 ? a / b : null;
 const summarize = g => {
     const per = [...g.perParent.values()].map(p => share(p.nominatedWork, p.work) ?? 0).sort((a, b) => b - a);
@@ -54,6 +71,10 @@ const summarize = g => {
 };
 const result = { schemaVersion: 1, kind: 'pathfinder-ws1-consumer-ceiling-audit', input, model: modelPath,
     solved: Object.fromEntries(Object.entries(groups.solved).map(([k, g]) => [k, summarize(g)])),
-    unsolved: Object.fromEntries(Object.entries(groups.unsolved).map(([k, g]) => [k, summarize(g)])) };
+    unsolved: Object.fromEntries(Object.entries(groups.unsolved).map(([k, g]) => [k, summarize(g)])),
+    nominatedByStage: Object.fromEntries(Object.entries(byStage).sort((a, b) => b[1].nominatedWork - a[1].nominatedWork).map(([k, g]) => [k,
+        { nominatedAttempts: g.nominatedAttempts, nominatedWork: g.nominatedWork, nominatedNodes: g.nominatedNodes, solvedParents: g.solvedParents.size, unsolvedParents: g.unsolvedParents.size }])),
+    winnerStages: Object.fromEntries(Object.entries(winnerStages).sort((a, b) => b[1] - a[1])),
+    medianAttemptIndexByStage: Object.fromEntries(Object.entries(stageIndexMedian).map(([k, v]) => [k, v.sort((a, b) => a - b)[v.length >> 1]]).sort((a, b) => a[1] - b[1])) };
 if (out) writeFileSync(out, JSON.stringify(result, null, 2) + '\n');
 console.log(JSON.stringify(result, null, 2));

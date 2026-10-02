@@ -1095,7 +1095,7 @@
         "Stage A's 2026-09-25 opportunity-starved outcome does not license widening the frozen model, changing the development/validation split function, or drawing a second random block under new seeds to retry exposure; any further fresh-population confirmation attempt needs a new, separately reasoned acquisition plan.",
         "The 2026-09-26 N=160 run and the Stage A canary are instrument-invalid (no per-attempt workSpent) and must not be cited; the telemetry-corrected re-run is the confirmation of record. It confirms offline capture only: do not read it as scheduling value, and do not widen, retune or re-split the frozen 15-signature model. Any consumer needs its own work-matched falsifier."
       ],
-      "reopensOn": "Gate 1 (consumer ceiling audit) passed 2026-10-02; Gate 2 (attempt-scheduler seam audit, opt-in defer-to-end implementation, preregistered work-matched A/B on a fresh block) is the next step (reports/2026-10-02-ws1-consumer-ceiling-audit-result-001.md). Or a materially different signal/model. Do not retest this frozen model at another size.",
+      "reopensOn": "Gate 1 (ceiling audit) passed and the Gate 2 seam audit is done (reports/2026-10-02-ws1-consumer-seam-audit-001.md): next is Gate 2a, an opt-in static tier reorder with a preregistered work-matched A/B on a fresh block; the dynamic signature consumer (2b) only if 2a shows value. Or a materially different signal/model. Do not retest this frozen model at another size.",
       "premiseRefs": [],
       "measurementOpportunities": [],
       "acquisitionNeed": "fresh-independent-parents",
@@ -1105,7 +1105,8 @@
         "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md",
         "reports/2026-10-01-ws1-confirmation-instrument-validity-audit-001.md",
         "reports/2026-10-02-ws1-telemetry-corrected-confirmation-result-001.md",
-        "reports/2026-10-02-ws1-consumer-ceiling-audit-result-001.md"
+        "reports/2026-10-02-ws1-consumer-ceiling-audit-result-001.md",
+        "reports/2026-10-02-ws1-consumer-seam-audit-001.md"
       ],
       "decisionSupport": {
         "mode": "all",
