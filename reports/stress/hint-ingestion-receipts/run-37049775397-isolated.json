@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-hint-ingestion-receipt",
+  "source": {
+    "producer": "harvest-isolated-report-hints",
+    "runId": "37049775397",
+    "runAttempt": "1",
+    "workflow": "Stress refresh · normal · flags=control · shards=60",
+    "artifact": null
+  },
+  "scope": {
+    "corpus": [
+      "data/levels.json",
+      "data/stress/stress-levels-random.json",
+      "data/stress/stress-levels.json"
+    ]
+  },
+  "funnel": {
+    "candidateObservations": 37709,
+    "eligibleObservations": 37709,
+    "refereeAcceptedObservations": 37709,
+    "acceptedAlreadyRepresented": 7160,
+    "quarantinedObservations": 0,
+    "quarantineReasons": {}
+  },
+  "additions": {
+    "semanticRecordChanges": 30549,
+    "paths": null,
+    "provenanceEvents": null,
+    "occurrences": null
+  },
+  "physical": {
+    "filesChanged": null
+  },
+  "semantics": {
+    "successSelected": true,
+    "notAttemptedPopulation": true,
+    "candidateObservation": "a success-bearing row/artifact presented to this ingestion boundary",
+    "eligibleObservation": "a candidate with enough identity/path information to undergo canonical referee/merge handling",
+    "refereeAcceptedObservation": "an eligible observation whose exact path is valid against the target level revision",
+    "acceptedAlreadyRepresented": "referee-valid observation that produced no semantic store change",
+    "semanticRecordChange": "coarse producer-observed change when the current mutation API cannot distinguish path/event/occurrence units",
+    "nullAdditionUnit": "this producer cannot measure that addition unit exactly; null is unknown/not-observed, never zero",
+    "notes": "isolated/direct historical importer; detailed path/provenance/occurrence addition units are not measured by createHintCapture.recordHistorical()"
+  }
+}
