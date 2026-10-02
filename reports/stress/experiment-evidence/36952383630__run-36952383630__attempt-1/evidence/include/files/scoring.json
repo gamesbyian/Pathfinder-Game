@@ -1,0 +1,421 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-action-selection-frozen-model-challenge",
+  "modelPath": "reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json",
+  "inputMetadata": [
+    {
+      "source": "logs/ws1-late-continuation-single-001/combined.json",
+      "timestamp": null,
+      "commitSha": null,
+      "configurationHash": null,
+      "solved": null,
+      "observedLevels": 160,
+      "actionBoundaryDigest": "sha256:9797a437e987e39eae99bc4613397cb1977c882bc19522255ef560e0506b3993"
+    }
+  ],
+  "actionBoundaryDigest": "sha256:9797a437e987e39eae99bc4613397cb1977c882bc19522255ef560e0506b3993",
+  "attemptWorkCoverage": {
+    "complete": true,
+    "byInput": {
+      "logs/ws1-late-continuation-single-001/combined.json": {
+        "reachableAttempts": 4282,
+        "attemptsWithWork": 4282,
+        "share": 1,
+        "complete": true
+      }
+    }
+  },
+  "combined": {
+    "schemaVersion": 1,
+    "kind": "pathfinder-action-selection-frozen-legal-signal-evaluation",
+    "model": {
+      "kind": "pathfinder-action-selection-legal-signal-frozen-model",
+      "family": "prior-response+work+next-stage",
+      "minDevelopmentSupport": 100,
+      "signatureCount": 15,
+      "source": {
+        "workflowRunId": 35066677597,
+        "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+        "role": "development split of frozen C2 production boundary"
+      }
+    },
+    "validationSolvedLevels": 46,
+    "validationRows": 1717,
+    "preWinnerWork": 4529699364,
+    "nominatedPreWinnerWork": 381461219,
+    "nominatedPreWinnerLevels": 12,
+    "capturedPreWinnerWorkShare": 0.08421336348095883,
+    "endangeredWinnerLevels": 0,
+    "endangeredWinnerRate": 0,
+    "diagnostics": {
+      "nominatedSameStageContinuationWork": 373214763,
+      "nominatedSameStageContinuationWorkShare": 0.9783819282557266,
+      "baselineSameStageContinuationWorkShare": 0.4974454348798588,
+      "maxNominatedParentWorkShare": 0.1588630088239717,
+      "nominatedByLevel": [
+        {
+          "key": "U00057",
+          "work": 60600077,
+          "workShare": 0.1588630088239717,
+          "attempts": 29,
+          "levels": 1
+        },
+        {
+          "key": "U00015",
+          "work": 57487609,
+          "workShare": 0.15070367874014476,
+          "attempts": 30,
+          "levels": 1
+        },
+        {
+          "key": "U00123",
+          "work": 56081335,
+          "workShare": 0.1470171336080169,
+          "attempts": 27,
+          "levels": 1
+        },
+        {
+          "key": "U00154",
+          "work": 45833563,
+          "workShare": 0.12015261504210734,
+          "attempts": 75,
+          "levels": 1
+        },
+        {
+          "key": "U00132",
+          "work": 45117017,
+          "workShare": 0.11827419080312854,
+          "attempts": 74,
+          "levels": 1
+        },
+        {
+          "key": "U00081",
+          "work": 42775565,
+          "workShare": 0.11213607797965958,
+          "attempts": 25,
+          "levels": 1
+        },
+        {
+          "key": "U00065",
+          "work": 39180405,
+          "workShare": 0.10271137155884777,
+          "attempts": 35,
+          "levels": 1
+        },
+        {
+          "key": "U00144",
+          "work": 34385648,
+          "workShare": 0.09014192344412343,
+          "attempts": 25,
+          "levels": 1
+        },
+        {
+          "key": "U00016",
+          "work": 0,
+          "workShare": 0,
+          "attempts": 9,
+          "levels": 1
+        },
+        {
+          "key": "U00064",
+          "work": 0,
+          "workShare": 0,
+          "attempts": 7,
+          "levels": 1
+        },
+        {
+          "key": "U00133",
+          "work": 0,
+          "workShare": 0,
+          "attempts": 8,
+          "levels": 1
+        },
+        {
+          "key": "U00152",
+          "work": 0,
+          "workShare": 0,
+          "attempts": 9,
+          "levels": 1
+        }
+      ],
+      "nominatedByPriorOutcome": [
+        {
+          "key": "censored",
+          "work": 312734232,
+          "workShare": 0.8198323090872313,
+          "attempts": 328,
+          "levels": 12
+        },
+        {
+          "key": "exhausted",
+          "work": 68726987,
+          "workShare": 0.18016769091276877,
+          "attempts": 25,
+          "levels": 3
+        }
+      ],
+      "baselineByPriorOutcome": [
+        {
+          "key": "censored",
+          "work": 2508583617,
+          "workShare": 0.55380797165858,
+          "attempts": 590,
+          "levels": 31
+        },
+        {
+          "key": "start",
+          "work": 1427502007,
+          "workShare": 0.3151427704772506,
+          "attempts": 34,
+          "levels": 34
+        },
+        {
+          "key": "exhausted",
+          "work": 593613740,
+          "workShare": 0.13104925786416938,
+          "attempts": 200,
+          "levels": 18
+        }
+      ],
+      "nominatedByNextStage": [
+        {
+          "key": "guidance-goal-distance-retry",
+          "work": 217378318,
+          "workShare": 0.5698569269239399,
+          "attempts": 65,
+          "levels": 7
+        },
+        {
+          "key": "connectivity-axis-prune-disabled-retry",
+          "work": 94187527,
+          "workShare": 0.24691245743646617,
+          "attempts": 84,
+          "levels": 9
+        },
+        {
+          "key": "must-cross-neighbor-prune-disabled-retry",
+          "work": 39776233,
+          "workShare": 0.10427333374614943,
+          "attempts": 11,
+          "levels": 3
+        },
+        {
+          "key": "coarse-state-near-tie-retention-disabled-retry",
+          "work": 30119141,
+          "workShare": 0.07895728189344459,
+          "attempts": 81,
+          "levels": 9
+        },
+        {
+          "key": "goal-attraction-disabled-retry",
+          "work": 0,
+          "workShare": 0,
+          "attempts": 112,
+          "levels": 12
+        }
+      ]
+    },
+    "interpretation": {
+      "allowed": "apply an already-frozen legal-signal membership rule unchanged to retained validation action boundaries",
+      "forbidden": "refit signature membership/support on this challenge population or infer live scheduler counterfactual savings"
+    }
+  },
+  "bySource": {
+    "logs/ws1-late-continuation-single-001/combined.json": {
+      "schemaVersion": 1,
+      "kind": "pathfinder-action-selection-frozen-legal-signal-evaluation",
+      "model": {
+        "kind": "pathfinder-action-selection-legal-signal-frozen-model",
+        "family": "prior-response+work+next-stage",
+        "minDevelopmentSupport": 100,
+        "signatureCount": 15,
+        "source": {
+          "workflowRunId": 35066677597,
+          "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+          "role": "development split of frozen C2 production boundary"
+        }
+      },
+      "validationSolvedLevels": 46,
+      "validationRows": 1717,
+      "preWinnerWork": 4529699364,
+      "nominatedPreWinnerWork": 381461219,
+      "nominatedPreWinnerLevels": 12,
+      "capturedPreWinnerWorkShare": 0.08421336348095883,
+      "endangeredWinnerLevels": 0,
+      "endangeredWinnerRate": 0,
+      "diagnostics": {
+        "nominatedSameStageContinuationWork": 373214763,
+        "nominatedSameStageContinuationWorkShare": 0.9783819282557266,
+        "baselineSameStageContinuationWorkShare": 0.4974454348798588,
+        "maxNominatedParentWorkShare": 0.1588630088239717,
+        "nominatedByLevel": [
+          {
+            "key": "U00057",
+            "work": 60600077,
+            "workShare": 0.1588630088239717,
+            "attempts": 29,
+            "levels": 1
+          },
+          {
+            "key": "U00015",
+            "work": 57487609,
+            "workShare": 0.15070367874014476,
+            "attempts": 30,
+            "levels": 1
+          },
+          {
+            "key": "U00123",
+            "work": 56081335,
+            "workShare": 0.1470171336080169,
+            "attempts": 27,
+            "levels": 1
+          },
+          {
+            "key": "U00154",
+            "work": 45833563,
+            "workShare": 0.12015261504210734,
+            "attempts": 75,
+            "levels": 1
+          },
+          {
+            "key": "U00132",
+            "work": 45117017,
+            "workShare": 0.11827419080312854,
+            "attempts": 74,
+            "levels": 1
+          },
+          {
+            "key": "U00081",
+            "work": 42775565,
+            "workShare": 0.11213607797965958,
+            "attempts": 25,
+            "levels": 1
+          },
+          {
+            "key": "U00065",
+            "work": 39180405,
+            "workShare": 0.10271137155884777,
+            "attempts": 35,
+            "levels": 1
+          },
+          {
+            "key": "U00144",
+            "work": 34385648,
+            "workShare": 0.09014192344412343,
+            "attempts": 25,
+            "levels": 1
+          },
+          {
+            "key": "U00016",
+            "work": 0,
+            "workShare": 0,
+            "attempts": 9,
+            "levels": 1
+          },
+          {
+            "key": "U00064",
+            "work": 0,
+            "workShare": 0,
+            "attempts": 7,
+            "levels": 1
+          },
+          {
+            "key": "U00133",
+            "work": 0,
+            "workShare": 0,
+            "attempts": 8,
+            "levels": 1
+          },
+          {
+            "key": "U00152",
+            "work": 0,
+            "workShare": 0,
+            "attempts": 9,
+            "levels": 1
+          }
+        ],
+        "nominatedByPriorOutcome": [
+          {
+            "key": "censored",
+            "work": 312734232,
+            "workShare": 0.8198323090872313,
+            "attempts": 328,
+            "levels": 12
+          },
+          {
+            "key": "exhausted",
+            "work": 68726987,
+            "workShare": 0.18016769091276877,
+            "attempts": 25,
+            "levels": 3
+          }
+        ],
+        "baselineByPriorOutcome": [
+          {
+            "key": "censored",
+            "work": 2508583617,
+            "workShare": 0.55380797165858,
+            "attempts": 590,
+            "levels": 31
+          },
+          {
+            "key": "start",
+            "work": 1427502007,
+            "workShare": 0.3151427704772506,
+            "attempts": 34,
+            "levels": 34
+          },
+          {
+            "key": "exhausted",
+            "work": 593613740,
+            "workShare": 0.13104925786416938,
+            "attempts": 200,
+            "levels": 18
+          }
+        ],
+        "nominatedByNextStage": [
+          {
+            "key": "guidance-goal-distance-retry",
+            "work": 217378318,
+            "workShare": 0.5698569269239399,
+            "attempts": 65,
+            "levels": 7
+          },
+          {
+            "key": "connectivity-axis-prune-disabled-retry",
+            "work": 94187527,
+            "workShare": 0.24691245743646617,
+            "attempts": 84,
+            "levels": 9
+          },
+          {
+            "key": "must-cross-neighbor-prune-disabled-retry",
+            "work": 39776233,
+            "workShare": 0.10427333374614943,
+            "attempts": 11,
+            "levels": 3
+          },
+          {
+            "key": "coarse-state-near-tie-retention-disabled-retry",
+            "work": 30119141,
+            "workShare": 0.07895728189344459,
+            "attempts": 81,
+            "levels": 9
+          },
+          {
+            "key": "goal-attraction-disabled-retry",
+            "work": 0,
+            "workShare": 0,
+            "attempts": 112,
+            "levels": 12
+          }
+        ]
+      },
+      "interpretation": {
+        "allowed": "apply an already-frozen legal-signal membership rule unchanged to retained validation action boundaries",
+        "forbidden": "refit signature membership/support on this challenge population or infer live scheduler counterfactual savings"
+      },
+      "actionBoundaryDigest": "sha256:9797a437e987e39eae99bc4613397cb1977c882bc19522255ef560e0506b3993"
+    }
+  }
+}
