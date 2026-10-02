@@ -22,8 +22,8 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 ## Deferred plan closeouts
 
 - **Parity:** [preflight](solver-parity-phase-capacity-preflight.md).
-- **Exact projections:** cut balance active; siblings stay gated on novelty. [program](solver-small-exact-projections-program.md)
-- **Failure evidence:** Class-3 concluded; repair-deadline active; reserve repricing nominated; P7 awaits repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
+- **Exact projections:** BC1 cut-balance descendant promoted and closed 2026-10-01; siblings stay gated on novelty and explicit reopen conditions. [program](solver-small-exact-projections-program.md)
+- **Failure evidence:** Class-3 repair-deadline allocation promoted and closed 2026-09-26; reserve repricing has no current gate; P7 remains conditional on repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
 - **Search loss:** P8 needs recurring rich production; P9 explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
 
@@ -46,9 +46,9 @@ Use compact response first; never backfill pre-contract attempts. Try cheap join
 | Interpretable program synthesis | Parent-held-out exact contrasts support a tiny stable DSL; synthesized rules remain nominations until independently confirmed |
 | Heuristic-to-theorem subdomain audit | An active microscope finds a soft relation with an exact subdomain worth prune/lower-bound/forced-move/decomposition/exact-mode use |
 
-## Earned experiment designs
+## Historical earned experiment designs
 
-H3 allocation and admissible-order reserve repricing are **earned experiment designs**, not reopen hooks; precommitment lives in [workstreams](solver-optimization-workstreams.md).
+H3 allocation and admissible-order reserve repricing were previously earned experiment designs. Neither is a current execution gate; any revival must satisfy the current reopen conditions in [workstreams](solver-optimization-workstreams.md) rather than inheriting historical queue priority.
 
 ## Conditional composition/allocation
 

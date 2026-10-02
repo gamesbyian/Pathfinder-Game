@@ -2,7 +2,7 @@
 
 Current continuation/handoff: [2026-09-25 research execution-efficiency session handoff](../reports/2026-09-25-research-execution-efficiency-session-handoff-001.md). Cross-program follow-through: [cross-program convergence backlog](cross-program-convergence-backlog.md).
 
-> **Status:** active / implementation started.
+> **Status:** support-only / dormant while the solver-science queue is exhausted (2026-10-01).
 > **Created:** 2026-09-25.
 > **Authority boundary:** `docs/solver-optimization-workstreams.md` remains the scientific priority/next-gate authority. This plan owns research-execution cost, reproducibility, input topology, and harness-economics work that supports those gates without changing scientific priority.
 
@@ -172,19 +172,16 @@ Recovered branch `claude/solver-optimization-queue-ybpl88` contains a pre-finali
 
 ### Current scope
 
-Audit the harnesses serving the *current* queue rather than historical tests indiscriminately. The scope was refreshed after the September-25 queue reconciliation so closed experiments do not keep consuming optimization attention.
+There are **no current live solver-science gates** as of the 2026-10-01 queue-exhaustion reconciliation. Do not optimize historical harnesses merely because this phase once named them.
 
-Current live surfaces:
+The formerly live surfaces are closed:
+- WS2 repair-deadline matched-work confirmation — promoted/closed 2026-09-26;
+- CID-0027/CID-0028 capability-invention promotion — promoted/closed 2026-09-26;
+- WS2 BC1 later-disposition / fresh-connectivity line — promoted/closed 2026-10-01;
+- WS1 N=160 late-continuation confirmation — concluded-negative 2026-09-26;
+- WS6 replication/speed profiling — supporting and conditional, not queued.
 
-- WS2 repair-deadline **production-scale matched-work confirmation**, using the generic level-blind targeted-sweep path unless the promotion design earns a different harness;
-- WS2 capability-invention **promotion decision / any explicitly justified broader safety sample** for CID-0027 and CID-0028; do not manufacture another acquisition round merely to exercise this phase;
-- WS2 BC1 later-disposition shadow, still production-inert and bounded-compute;
-- WS1 **single-stage N=160 late-continuation confirmation**, replacing the closed underpowered 24/96-parent two-stage structure;
-- WS6 independent-parent replication/speed profiling when it becomes the immediate queue gate.
-
-Removed from the Phase-5 optimization scope because their scientific forms are closed: admissible-order reserve 0.35, forced-work capture economics, and the WS1A remaining-length bridge. Historical harnesses remain reproducible, but they are not current optimization targets.
-
-Initial live-harness audit: [search/plumbing audit](../reports/2026-09-25-live-solver-harness-search-plumbing-audit-001.md). The generic targeted sweep does not currently reproduce CI's strongest fixture-generation defect: real search is confined to the execution-family canary and scientific solve/recovery shards, while combine/integrity/contract/publication and WS1 frozen-model scoring are deterministic. Continue auditing BC1/WS6 only when they become immediate gates.
+Initial harness audit remains historical evidence: [search/plumbing audit](../reports/2026-09-25-live-solver-harness-search-plumbing-audit-001.md). Reactivate this phase only when a future scientific gate names a harness whose plumbing/search separation is decision-relevant.
 
 For each live surface, classify work as:
 
@@ -224,11 +221,11 @@ Extend existing research metadata/queryability with factual execution cost where
 
 Do **not** create an ROI score, winner ranking, or parallel queue. The purpose is to answer historical questions such as “which evidence families repeatedly buy expensive compute before the first discriminator?” and “which retained assets keep answering later gates cheaply?”
 
-## Phase 7 — transport CI's shadow-authority pattern to WS1 if confirmation earns it
+## Phase 7 — WS1 shadow-authority transport — NOT ACTIVATED
 
-This phase is conditional on WS1 independent confirmation.
+The independent WS1 confirmation concluded negative on 2026-09-26, so this phase's activation condition was not met. Preserve the ladder below as a reusable pattern only if a materially different future selector independently earns authority.
 
-Activation ladder:
+Historical activation ladder:
 
 1. frozen selector runs observationally while production portfolio remains unchanged;
 2. record exactly which work/actions it would suppress;
@@ -251,7 +248,7 @@ This plan is complete only when:
 - any sparse checkout activation has full-vs-sparse parity evidence and a declared input contract;
 - live harnesses have been checked for accidental expensive search in non-search assertions;
 - gate-cost facts can be queried without inventing a second priority system;
-- WS1 shadow-authority guidance is integrated if/when the scientific confirmation earns that stage;
+- WS1 shadow-authority guidance is retained as a non-activated pattern because the confirmation did not earn that stage;
 - negative experiments and exposed architecture defects are preserved in dated evidence;
 - documentation, workflow lifecycle/README, package reachability, research queryability, and any new guards/tests in the plan's splash zone are updated together.
 
@@ -264,5 +261,5 @@ This plan is complete only when:
 5. **ACTIVATED:** run 36187498364 proved byte-identical full-tree vs sparse-tree semantics for the live targeted-sweep planner + one real level-blind canary. The production targeted planner now sparse-checks out package manifests, scripts, modules, the default Corpus-2 file, and runtime telemetry. Caller-selected `corpus` and `ids_file` remain authoritative: the planner materializes those exact blobs from the dispatched immutable commit with `git show`, so sparse activation does not narrow the workflow's input contract.
 6. **ACTIVATED FOR ONE SHORT ORCHESTRATOR:** the targeted-sweep plan job now restores the exact CI-proven `node_modules` generation keyed by runner OS/arch + Node 22.23.2 + npm 10.9.8 + lockfile hash, skips npm-cache restore/`npm ci` on a hit, and preserves `npm ci` plus exact-cache save on a miss. Historical short-orchestration evidence showed roughly a minute of checkout/runtime/install before useful planner/canary work; the next real targeted dispatch supplies production hit/miss economics without changing solver semantics.
 7. **DONE — runtime classification:** the remaining helper workflows are no longer major-only. Harvester, cross-run combine, and evidence-integrity guard pin 22.23.2 because their deterministic transforms are already covered by permanent CI contracts on that runtime; solver diagnostics pins exact 20.20.2 because it executes real solver analysis and has not earned the cross-major move.
-8. **NEXT:** inspect the first real targeted-sweep hit/miss timing, then extend exact dependency-tree reuse only to other short planner/generator/combine jobs where bootstrap remains material. Long solve shards stay measurement-gated.
+8. **DORMANT:** inspect targeted-sweep hit/miss timing only when a future independently justified dispatch provides it; extend exact dependency-tree reuse only where bootstrap is then shown material. Do not dispatch solver work solely to complete this infrastructure measurement.
 9. Do not bulk-optimize long solver shards before their own semantics/economics justify it.
