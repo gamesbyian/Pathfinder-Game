@@ -91,6 +91,16 @@ const retrospective = [
     contrast('BC1 losses vs historical ever-lost (pre-BC1 solved)', popSolved, losses, x => history[x].lost > 0),
 ];
 
+function tierYields(runId) {
+    const file = 'reports/stress/solver-health-timeline.jsonl';
+    if (!existsSync(file)) return null;
+    const rec = readFileSync(file, 'utf8').trim().split('\n').map(l => JSON.parse(l)).find(r => String(r.runId) === String(runId));
+    const stages = rec?.stageParticipation?.['solver-corpus2-latest.json'];
+    if (!stages) return null;
+    return Object.fromEntries(Object.entries(stages).map(([k, v]) => [k, { solves: v.solves, workSpent: v.workSpent, solvesPerGWork: +(v.solves / (v.workSpent / 1e9)).toFixed(3) }])
+        .sort((a, b) => a[1].solvesPerGWork - b[1].solvesPerGWork));
+}
+
 let prospectiveResult = null;
 if (prospective) {
     const [ctl, trt] = prospective.map(loadRun);
@@ -112,6 +122,10 @@ if (prospective) {
             additiveWorkSpent: work(trt, ctlResidual),
             controlTotalWorkSpent: work(ctl, ids),
             workPerRecoveredSolve: g.size ? Math.round(work(trt, ctlResidual) / g.size) : null,
+            // Yield of each ladder tier on the control run (solves per 1e9 workSpent), from the health timeline. Tiers run
+            // in sequence, so a tier's solves are marginal to every earlier tier; the lowest tail-tier yield is the work
+            // a fixed-budget retry would have to displace.
+            controlTierYieldPerGWork: tierYields(ctl.runId),
             recoveredWinningStages: Object.entries([...g].reduce((m, x) => { const k = trt.byId[x].winningActionKey?.split('|')[0] ?? trt.byId[x].winningConfig ?? 'unknown'; m[k] = (m[k] ?? 0) + 1; return m; }, {})),
         },
         contrasts: [
