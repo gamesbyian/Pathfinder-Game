@@ -461,7 +461,8 @@ assert(idsFor({ query: 'admissible order', status: 'concluded-negative' })
     'reserve-starvation matched-work A/B is now concluded-negative (byte-identical solved set to control)');
 assert(idsFor({ query: 'full pool', status: 'closed' }).includes('WS2-CATEGORICAL-FULL-POOL'),
     'ordinary full-pool vocabulary must find the already-run categorical projection');
-assert.deepEqual(idsFor({ query: 'topology', status: 'active' }), [],
+// WS2-CUT-BALANCE-PROJECTION matches "topology" lexically and is active again for BC1-V (2026-10-02); it is not the microscope.
+assert.deepEqual(idsFor({ query: 'topology', status: 'active' }).filter(id => id !== 'WS2-CUT-BALANCE-PROJECTION'), [],
     'the topology microscope is no longer active after the F3 descriptor/expansion closeout');
 {
     const mixedTopology = idsFor({ query: 'topology', status: 'mixed' });
