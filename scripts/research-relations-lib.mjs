@@ -123,7 +123,8 @@ export function readRetractedBundles(root = process.cwd()) {
             if (typeof row?.[field] !== 'string' || !row[field]) throw new Error(`${RETRACTED_BUNDLES_PATH}: each retraction requires ${field}`);
         }
         const dir = row.bundleDir.replace(/\/+$/u, '');
-        if (!existsSync(path.join(root, dir, 'bundle.json'))) throw new Error(`${RETRACTED_BUNDLES_PATH}: unknown bundle ${dir}`);
+        // Sparse CI checkouts keep each bundle's manifest.json but not bundle.json, so only require the directory.
+        if (!existsSync(path.join(root, dir))) throw new Error(`${RETRACTED_BUNDLES_PATH}: unknown bundle ${dir}`);
         out.set(dir, row);
     }
     return out;
