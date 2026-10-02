@@ -64,6 +64,12 @@ Cumulative raw-beam effect versus the production BC1-only beam: 42 → 51 on the
 
 **Mandatory form tested and not adopted.** The same no-free-intersection argument also kills a state whose pending must-pass/must-cross cell lies behind a non-revisitable cut vertex (BC1's own consequence carried to cut vertices). It is sound: the witness harness checks it too, with 0 alarms on 861k states. But adding it as a reject on top of volume-only BC1-VX gave 42 → 50 (11 gains / 3 losses; `reports/stress/bc1vx-mandatory-prune-ab-001-shard{0,1,2}.json`) against 51 without it. It adds no net solves and only perturbs trajectories, so the consumer computes it (`vertexConflict`) but does not act on it.
 
+## Production ladder on the raw-beam gain/loss ids (local, 50M nodes / 67M work)
+
+`level-blind-capability-sweep.mjs` on the 8 BC1-V raw-beam gain/loss ids (R02357 R00712 R02293 R02046 R02666 R02698 R01157 R02099), control vs `--enable-flags=STRATEGY_BC1_VERTEX_VOLUME_PRUNE`. Rows: `reports/stress/bc1vx-ladder-gain-loss-8-{control,treatment}.json`.
+
+Both arms solve **8/8** through the same winning tier on every level, with total `workSpent` 261.2M vs 260.7M (−0.2%). As with BC1, the raw-beam gains are levels the wider ladder already solves. Any cold-solve value has to come from the ladder residual, which only the representative production arm can show.
+
 ## What this does not establish
 
 Production-ladder value is not yet measured. The A/B above is one raw configuration on one population.
