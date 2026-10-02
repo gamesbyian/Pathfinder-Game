@@ -1,10 +1,10 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Program state:** **QUEUE EXHAUSTED.** There is no earned immediate solver-science execution gate on current evidence. Closed/promoted/negative rows stay closed; supporting/service rows activate only when a named reopen condition or external need is satisfied.
-> **Reconciled:** 2026-10-01.
+> **Program state:** **SOLVER-TREATMENT QUEUE EXHAUSTED; PREMISE-DISCOVERY LANE EXECUTED.** There is no earned immediate solver-treatment experiment on current evidence. Closed/promoted/negative rows stay closed; supporting/service rows activate only on a named reopen condition or external need. The 2026-10-02 premise-discovery pass produced no treatment gate (table below); the one open item is a WS1 consumer-design decision that is not queued.
+> **Reconciled:** 2026-10-02.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
-> **Historical snapshot:** [pre-compaction queue](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md).
+> **Historical snapshots:** [2026-09-25](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md) · [2026-10-02](../reports/2026-10-02-solver-optimization-workstreams-precompaction-snapshot-002.md) (full closed-record narratives, including the retracted WS1 negative).
 
 Method: [operating model](solver-research-operating-model.md) · [scheduling](solver-scheduling-policy.md) · [evidence](solver-evaluation-evidence.md) · [atlas](solver-reasoning-capability-atlas.md) · [invention](solver-capability-invention-program.md) · [future work](solver-future-work.md).
 
@@ -12,115 +12,36 @@ Method: [operating model](solver-research-operating-model.md) · [scheduling](so
 
 C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts, never historical outcomes/identity/hints. Negatives close only tested claims.
 
-## Current execution priority
+## Premise-discovery lanes (executed 2026-10-02)
 
-### 1. WS2 repair-deadline allocation — CLOSED, PROMOTED
+The [post-exhaustion premise refresh](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md) (148 v2 premises, no new IDs; overlay: [post-exhaustion status](solver-premise-map-post-exhaustion-status-2026-10-01.json)) nominated six retained-evidence lanes. They are discovery gates, never treatment authority: they may produce reports, relation updates or premise specializations, and may not create a treatment, flag, broad acquisition or architecture build without the ordinary promotion contract.
 
-**State:** CONCLUDED-POSITIVE. Production constants raised.
+| ID | Lane | Outcome | Result |
+|---:|---|---|---|
+| PG-A | BC1 perturbation microscope | closed | gains reflect early dead-state occupancy displacing winner lineages; nothing beyond what production BC1 removes ([result](../reports/2026-10-01-bc1-perturbation-microscope-result-001.md)) |
+| PG-B | Intervention-response atlas | inconclusive | per-level outcomes repo-resident only for BC1; needs GHA artifact recovery first ([feasibility](../reports/2026-10-01-intervention-response-atlas-feasibility-001.md)) |
+| PG-E | WS1 transfer-failure analysis | withdrawn | the failure was an instrument defect; corrected re-run is positive (WS1 below) |
+| PG-C | First-loss refresh | not executed | needs causal labels A/B/E did not supply |
+| PG-D | Cut/resource sibling mining | not executed | needs a sound candidate fact with a proof sketch first |
+| PG-F | Local-forcedness descriptor | closed | null on 42 solved levels ([result](../reports/2026-10-01-forcedness-winner-descriptor-result-001.md)) |
 
-The frozen 53-parent matched-work A/B produced **7 treatment-only gains and 0 losses**. A follow-up disjoint 150-level solved-control confirmation (180/180 combined, zero regressions) closed the regression-safety leg cleanly, and economics/concentration are already closed positive. Flipping the production constants (`EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET` 2M->21M, `EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET` 6M->38M) surfaced a real, previously-unchecked interaction: `EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP` (a 20-minute per-attempt wall-clock trip-wire, sized for the *old* 6M worst case) would need to cover a much larger worst case at the same conservative contended-throughput floor. Tracing the full resolution path (`disableExtraBudgetPasses: true`, set by both interactive production callers, zeroes `repairAdditiveBudgetMultiplier`, which makes the probe's own call-site gate false) showed the interactive path never runs this probe regardless of MS_CAP's value — only the batch/research path (the same population this promotion's evidence was measured against) can ever hit it. MS_CAP raised proportionally (1.2M->7.6M ms) to preserve the original safety margin, with no interactive-UX cost and no caller-differentiated cap needed.
+## Closed solver-treatment record
 
-Question: `WS2-REPAIR-DEADLINE-ALLOCATION` — closed.
+One entry per closed question; narratives, tables and evidence trails live in the dated reports and the [2026-10-02 snapshot](../reports/2026-10-02-solver-optimization-workstreams-precompaction-snapshot-002.md).
 
-Evidence: [promotion result](../reports/2026-09-26-ws2-repair-deadline-ms-cap-resolution-and-promotion-result-001.md) · [confirmation result](../reports/2026-09-26-ws2-repair-deadline-solved-control-confirmation-result-001.md) · [nomination result](../reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md) · [preflight](../reports/2026-09-25-ws2-repair-deadline-allocation-node-cap-seam-and-ab-preflight-001.md).
+- **WS2 repair-deadline allocation** (`WS2-REPAIR-DEADLINE-ALLOCATION`) — CLOSED, PROMOTED 2026-09-26: 7 gains / 0 losses nomination, 180/180 zero-regression confirmation; MS_CAP raised proportionally (the interactive path never runs the probe). [Promotion result](../reports/2026-09-26-ws2-repair-deadline-ms-cap-resolution-and-promotion-result-001.md).
+- **WS2 capability invention** (`WS2-CAPABILITY-INVENTION-DEMAND`) — CLOSED, PROMOTED 2026-09-26: CID-0027 and CID-0028 default-ON; 10 referee-valid solves (8 new), 0 regressions. [Residual-unsolved result](../reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md).
+- **WS1 automatic action selection** (`WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`) — CONFIRMATION POSITIVE (offline capture), consumer not earned. The 2026-09-26 "negative" was instrument-invalid (no per-attempt `workSpent`; every frozen signature needs cumulative work `>=10m`; [audit](../reports/2026-10-01-ws1-confirmation-instrument-validity-audit-001.md)). The telemetry-corrected re-run of the identical protocol (run 36952383630, seed `2026092591`) passed every criterion: 8.42% captured pre-winner work, 12 independently nominated parents, 0/46 validation winners endangered, max parent share 15.9%, same-stage 97.8%, work coverage 4,282/4,282 ([result](../reports/2026-10-02-ws1-telemetry-corrected-confirmation-result-001.md)). Offline capture only: no scheduling value is shown. The consumer is designed ([design](../reports/2026-10-02-ws1-late-continuation-consumer-design-001.md)): lossless defer-to-end reorder; the Gate 1 ceiling audit passed ([audit](../reports/2026-10-02-ws1-consumer-ceiling-audit-result-001.md)); Gate 2 (seam audit, opt-in implementation, preregistered work-matched A/B) is next. Do not retune, re-split or retest the frozen model at another size. The scorer and the confirmation workflow now refuse work-less inputs.
+- **BC1 fresh-connectivity prune** (`WS2-CUT-BALANCE-PROJECTION`) — CLOSED, PROMOTED 2026-10-01, default-ON: random-300 production A/B 206 -> 225 solved (23 gains / 4 losses), regression gate 160/160. Closed forms: unconditional per-candidate checking, pipeline-wide BC1 (0/72), goal-terminal BC1-G (research-only), every-phase checking. Parked: BC1-off dead-last whole-ladder retry ([future work](solver-future-work.md)). [A/B result](../reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md).
+- **WS6 repair reachability / speed** (`WS6-DEPENDENCY-CONDITIONED-REPAIR`) — DORMANT: independent-parent replication could not reach its 12-parent minimum (2/24 eligible); reopen only on an independently acquired exact matched-pair population. [Result](../reports/2026-10-01-ws6-independent-parent-replication-result-001.md).
 
-### 2. WS2 capability-invention promotion — CLOSED, PROMOTED
+## Supporting infrastructure
 
-**State:** CONCLUDED-POSITIVE. Both flags default-ON.
-
-CID-0027 (`STRATEGY_NEAR_HAMILTONIAN_INTERSECTION_HARVEST_MECHANIC_BUCKET_EXPOSURE`) and CID-0028 (`STRATEGY_VERY_HIGH_INT_WIDTH2000_HARVEST_KNOT_MUSTCROSS_EXPOSURE`) cleared pilot + confirmation + a full residual-unsolved sweep of both branches:
-- 7 referee-valid solves for CID-0027 (target `R00118` + 6 new), 3 for CID-0028 (target `R02696` + 2 new) — 10 total, 8 new;
-- 0 regressions across every tested row in both branches (156/196 = 79.6% and 148/335 = 44.2% branch coverage; the untested CID-0028 remainder is exclusively already-solved regression-safety exposure, since every unsolved branch row was tested);
-- promoted to production default-ON 2026-09-26 (removed from `OPT_IN_FEATURES`); both `attempts.ts` read sites also fixed from `cfg && cfg.FLAG === true` to `!cfg || cfg.FLAG === true` (the same silent-no-op gotcha every other default-on flag promotion in this ledger has needed).
-
-Question: `WS2-CAPABILITY-INVENTION-DEMAND` — closed.
-
-Evidence: [residual-unsolved result](../reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md) · [confirmation](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-confirmation-ab-result-001.md) · [pilot](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-pilot-ab-result-001.md).
-
-### 3. WS1 automatic action selection — CLOSED, CONFIRMATION NEGATIVE
-
-**State:** CONCLUDED-NEGATIVE.
-
-The properly-powered N=160 single-stage confirmation (seed `2026092591`, dispatched exactly once from merged main after #2122/#2124 CI fixes) came back decisively negative: **0 nominated pre-winner boundaries across all 44 solved validation-split levels**, `preWinnerWork: 0` before any nomination filtering — not a near-miss of the `>=3` floor, a clean zero, at a sizing where ~11 nominations were expected if the historical mechanism transferred. This closes the fresh-acquisition confirmation line for the frozen 15-signature model in this tested form. The retained-evidence historical-population result (6.93-9.91% capture across three C2 regimes) is not overturned on its own population, but is not production-consumable without transfer this model does not show.
-
-Question: `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` — closed. Reopen only with a materially different signal/model design, not a retest of this exact frozen model at any size.
-
-Evidence: [confirmation result](../reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md) · [plan](../reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md) · [recovery](../reports/2026-09-25-ws1-precommitment-overlap-recovery-001.md) · [Stage A](../reports/2026-09-25-ws1-late-continuation-stage-a-opportunity-canary-result-001.md).
-
-### 4. BC1 fresh-connectivity prune — CLOSED, PROMOTED
-
-**State:** CONCLUDED-POSITIVE. `STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE` default-ON (2026-10-01).
-
-Theorem BC1 (bridge excursion) prunes beam candidates only where ordinary connectivity just ran (reused flood, zero canonical work; typed-array `bc1HasConflictFast`). Random-300 production A/B at 50M: **206 -> 225 solved, 23 gains / 4 losses** (19/23 gains and all losses intersection-heavy); 21 gain/loss ids 21/21 vs 20/21 at -15.9% work; solved-control 150: 1 loss; regression gate 160/160. Losses are trajectory perturbations of single late retry beams, not soundness failures. Closed forms: unconditional per-candidate checking (lineage-inflated economics), pipeline-wide DFS/repair/admissible-order BC1 (0/72), the strengthened goal-terminal form BC1-G (sound over 664,514 valid-solution states but only +2.7% roots; research-only), every-phase checking and higher-budget probes. Parked: BC1-off dead-last whole-ladder retry ([future work](solver-future-work.md)).
-
-Question: `WS2-CUT-BALANCE-PROJECTION` — closed. Reopen only with a different fact family that has its own proof and perturbation matrix.
-
-Evidence: [A/B result](../reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md) · [BC1-G](../reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md) · [fresh-only](../reports/2026-09-30-bc1-fresh-only-prefilter-result-001.md) · [lineage cost](../reports/2026-09-30-bc1-lineage-aware-cost-result-001.md) · [cost reduction](../reports/2026-09-30-bc1-shadow-construction-cost-reduction-result-001.md) · [pilot](../reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md) · [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md).
-
-### 5. WS6 repair reachability / speed
-
-**State:** DORMANT (replication inconclusive, 2026-10-01).
-
-The frozen independent-parent replication of the R03147 path-resource / relational-bound interface could not reach its pre-registered 12-parent minimum from retained evidence: 2/24 parents eligible (60/69 exact queries abstain at 60 s; 4/9 resolvable exact-dead divergences are already explained by existing prunes). Per the standing rule, no broad new exact truth is generated for this nomination. Reopen only if an independent-parent matched-pair population with exact point-of-no-return labels is acquired for another reason; fresh speed profiling stays on-demand. [Result](../reports/2026-10-01-ws6-independent-parent-replication-result-001.md).
-
-Question: `WS6-DEPENDENCY-CONDITIONED-REPAIR` — dormant, not queued for execution.
-
-## Supporting infrastructure — research execution efficiency
-
-Scientific priority remains owned by this queue.
-
-Current facts:
-- maintained research workflows use exact Node runtimes;
-- parity-rehearsed scientific producers and deterministic helper/harvest/integrity workflows use 22.23.2;
-- solver diagnostics remains on exact 20.20.2 pending diagnostics-specific cross-major parity;
-- targeted-sweep planning uses sparse materialization plus exact dependency-tree reuse with safe `npm ci` fallback;
-- canonical Hint persistence remains owned by `harvest-solver-evidence.yml`;
-- live search-vs-plumbing audit found no accidental solver-as-fixture defect in generic targeted sweep or WS1 frozen scoring.
-
-Dormant infrastructure continuation:
-- obtain real production hit/miss timing only from a targeted dispatch that is independently justified;
-- extend dependency-tree reuse only to short jobs where bootstrap is material;
-- audit WS6 search-vs-plumbing only if WS6 becomes an immediate scientific gate;
-- do not optimize closed historical harnesses merely to keep this program active.
-
-Plan: [execution efficiency](solver-research-execution-efficiency-plan.md) · [handoff](../reports/2026-09-25-research-execution-efficiency-session-handoff-001.md) · [topology census](../reports/2026-09-25-solver-research-execution-topology-starting-census-001.md).
-
-## Cross-program convergence follow-through
-
-The September 20–25 retrospective found several lessons not yet fully propagated across CI/research/evidence systems. They are now tracked in the [cross-program convergence backlog](cross-program-convergence-backlog.md), with a machine-readable quality contract.
-
-Near-term order:
-1. ~~finish #2122 / WS1 confirmation~~ — done 2026-09-26, concluded-negative;
-2. ~~close the remaining live WS2/BC1 gates~~ — repair-deadline allocation and capability-invention promoted 2026-09-26; BC1 promoted and closed 2026-10-01;
-3. solver science is now queue-exhausted; convergence audits may continue only as independently justified repository/infrastructure work and must not be mistaken for a scientific queue.
-
-Backlog themes:
-- research evidence cadence/claim ownership;
-- semantic freshness/invalidation pilots;
-- proof-owner / duplicate-proof census;
-- derived-resource generation ownership;
-- governance-check historical value;
-- bounded phase-local hostile sampling;
-- factual cost-of-knowing queryability;
-- evidence-gated remaining CI structural work.
+Scientific priority is owned by this queue; infrastructure stays subordinate to earned gates. Maintained research workflows use exact Node runtimes (scientific producers and helper/harvest workflows 22.23.2; solver diagnostics 20.20.2 pending cross-major parity); targeted-sweep planning uses sparse materialization with dependency-tree reuse; canonical Hint persistence is owned by `harvest-solver-evidence.yml`. Dormant continuations: real production hit/miss timing only from an independently justified dispatch; do not optimize closed harnesses to keep the program active. Plan: [execution efficiency](solver-research-execution-efficiency-plan.md). Cross-program lessons are tracked in the [convergence backlog](cross-program-convergence-backlog.md); audits there proceed only when independently justified.
 
 ## Closed / reopen-only summary
 
-These tested forms are closed and should not consume execution priority unless their named premise changes:
-- admissible-order reserve fraction 0.35;
-- forced-work global compression and remaining post-recognition numerators;
-- parity phase-distance static form;
-- checkerboard-capacity static form;
-- parity response static form;
-- remaining-length intra-solve bridge;
-- separator/decomposition frozen forms;
-- typed reuse phase-0;
-- tested relational-feasibility ranking consumer;
-- causal-revision form;
-- complete-path LNS at tested doses;
-- class-3 dose form.
-
-Detailed closeout evidence and reopen conditions are preserved in the [pre-compaction queue snapshot](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md) and [solver future work](solver-future-work.md).
+Tested forms closed unless their named premise changes: admissible-order reserve fraction 0.35; forced-work global compression and post-recognition numerators; parity phase-distance, checkerboard-capacity and parity-response static forms; remaining-length intra-solve bridge; separator/decomposition frozen forms; typed reuse phase-0; tested relational-feasibility ranking consumer; causal-revision form; complete-path LNS at tested doses; class-3 dose form. Closeout evidence and reopen conditions: the snapshots above and [solver future work](solver-future-work.md).
 
 ## Workstream state
 
@@ -128,7 +49,7 @@ Detailed closeout evidence and reopen conditions are preserved in the [pre-compa
 |---:|---|---|---|---|---|---|
 | 2 | Repair-deadline allocation | `closed` | `reopen-only` | PROMOTED 2026-09-26: 7 gains/0 losses nomination + 180/180 zero-regression confirmation both positive; MS_CAP interaction resolved (interactive path never runs the probe regardless of its value) | none; reopen only for a materially different dose/premise | `WS2-REPAIR-DEADLINE-ALLOCATION` |
 | 2I | Capability invention | `closed` | `reopen-only` | PROMOTED 2026-09-26: both flags default-ON, 10 referee-valid solves (8 new), 0 regressions across every tested branch row | none; reopen only for a materially different exposure form | `WS2-CAPABILITY-INVENTION-DEMAND` |
-| 1 | Automatic action selection | `closed` | `reopen-only` | CONCLUDED-NEGATIVE: N=160 confirmation found 0/44 nominated validation levels, well below the well-powered expectation | reopen only with a materially different signal/model design | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
+| 1 | Automatic action selection | `on-demand` | `design` | confirmed offline 2026-10-02 (8.42% capture, 12 parents, 0/46 winners endangered); consumer designed and Gate 1 ceiling audit PASSED (6.73% of solved-parent work, 18.9% of unsolved-parent nodes nominated; [design](../reports/2026-10-02-ws1-late-continuation-consumer-design-001.md), [audit](../reports/2026-10-02-ws1-consumer-ceiling-audit-result-001.md)) | Gate 2: attempt-scheduler seam audit + opt-in defer-to-end implementation + preregistered work-matched A/B on a fresh block | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
 | 2X | Small exact projections | `closed` | `reopen-only` | BC1 fresh-connectivity prune PROMOTED 2026-10-01; unconditional/every-phase/pipeline-wide forms and BC1-G production use closed; BC1-off dead-last retry parked conditionally in future work | none; reopen only for a materially different fact family or an explicitly justified conditional descendant | `WS2-CUT-BALANCE-PROJECTION` |
 | 2F | Forced-work capture economics | `closed` | `reopen-only` | tested global-compression/post-recognition forms closed; broader question identity retained | reopen only for a materially different sound recognizer | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
 | 2R | Parity response signature | `on-demand` | `reopen-only` | static parity form closed; dormant conditional lane retained for materially different mechanism evidence | reopen only on materially different parity opportunity structure | `WS2-PARITY-RESPONSE-SIGNATURE` |
@@ -136,7 +57,7 @@ Detailed closeout evidence and reopen conditions are preserved in the [pre-compa
 | 5 | Exact/reference service | `on-demand` | `service` | exact/reference truth service for microscopes | use only when a live discriminator requires it | — |
 | 3 | Generalization method | `method-complete` | `method` | independent-unit / selection-pressure methodology established | preserve method in future confirmations | — |
 
-There are **no active immediate-execution solver-science rows**. All tested forms are closed/reopen-only/subsumed, while supporting/service rows are conditional resources rather than queued experiments. See the historical snapshot and future-work authority for exact reopen conditions.
+There are **no active immediate-execution solver-treatment rows**; the WS1 row is an on-demand design gate (Gate 2 preparation). All tested treatment forms are closed/reopen-only/subsumed, while supporting/service rows are conditional resources. The 2026-10-02 premise-discovery pass is complete (table above); remaining items are WS1 Gate 2 preparation and PG-B (whose artifacts are now retained by the harvester where decision-bearing). See the snapshots and future-work authority for exact reopen conditions.
 
 ## Queue-transition closure
 
@@ -155,7 +76,7 @@ At minimum, inspect the corresponding record in `solver-research-question-relati
 - Hard consumers require soundness; correlation/signatures are not proofs.
 - Classify proposed solver work as **HARVEST / EXTENSION / INVENTION** before implementation.
 - No generic engine from an open gap: **positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned**.
-- Keep execution/infrastructure work subordinate to the live scientific queue.
+- Keep treatment execution/infrastructure work subordinate to earned treatment gates; premise-discovery work may remain active while the treatment queue is empty, but cannot bypass promotion requirements.
 
 ## Cheap evidence routing
 

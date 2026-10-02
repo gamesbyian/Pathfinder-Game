@@ -164,15 +164,16 @@ Register promoted questions in the ordinary question authority. Workstreams owns
 
 ## Re-entry conditions
 
-There is no near-term execution authorized by this file while the canonical workstream queue is exhausted.
+There is no near-term **solver-treatment** execution authorized by this file while that queue is exhausted. Premise acquisition is active through the retained-evidence discovery lanes in [workstreams](solver-optimization-workstreams.md).
 
-On future fresh residual evidence or a materially changed solver/corpus:
-1. sample first-loss demand from existing evidence before buying new telemetry;
-2. use preserved technique/decision contrasts for response-guided premise discovery;
-3. check whether the observation is already explained by a closed HARVEST/exposure/allocation form;
-4. promote only recurring, decision-bearing semantic gaps with cheap falsifiers through the ordinary workstream authority.
+Current rule:
+1. start with the [post-exhaustion premise overlay](solver-premise-map-post-exhaustion-status-2026-10-01.json) and retained intervention/contrast evidence;
+2. run BC1 perturbation, intervention-response, WS1 transfer-failure, first-loss, cut/resource-sibling or local-forcedness discovery only through their declared workstream gates;
+3. buy new telemetry/acquisition only when a lane identifies one specifically missing observable that retained evidence cannot answer;
+4. check whether any apparent gap is already explained by a closed HARVEST/exposure/allocation form;
+5. promote only recurring, decision-bearing semantic gaps with cheap falsifiers through the ordinary question/workstream authority.
 
-BC1's earned consumer was completed and promoted on 2026-10-01; the older 2K/5K and CW/CCW suggestions are not inherited queue obligations.
+BC1's earned consumer was completed and promoted on 2026-10-01; BC1 is now valuable as a causal microscope, not as permission to keep strengthening the same treatment. The older 2K/5K and CW/CCW suggestions are not inherited queue obligations.
 
 The standing empirical question remains:
 
