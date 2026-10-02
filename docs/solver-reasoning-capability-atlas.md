@@ -183,7 +183,7 @@ The semantic premise is "a bounded exact answer can save more heuristic work or 
 
 Parity demonstrates a broader acquisition pattern: compress the residual problem into a small exact consequence that production does not currently derive. Keep four proof families distinct: **transition/conservation invariants**, **necessary-condition relaxations**, **partial orders/dominance**, and **exact quotients/equivalences**. They have different soundness burdens even when all reduce state.
 
-The method spans joint feasibility, topology and decomposition rather than creating another architecture category. The first live successor is `WS2-CUT-BALANCE-PROJECTION`, now framed as cut/region-flow conservation; matching, dominance, planar/cycle-space consequences, commutativity, finite-state residues and exact symmetry stay candidate families until separately earned. See [small exact projections](solver-small-exact-projections-program.md).
+The method spans joint feasibility, topology and decomposition rather than creating another architecture category. The former first live successor, `WS2-CUT-BALANCE-PROJECTION`, produced the promoted BC1 fresh-connectivity prune and is now closed/reopen-only as a treatment line. Matching, dominance, planar/cycle-space consequences, commutativity, finite-state residues and exact symmetry remain candidate families only when a premise-discovery lane separately earns them. See [small exact projections](solver-small-exact-projections-program.md).
 
 ## Areas that are not major missing-capability premises
 
@@ -198,18 +198,34 @@ The atlas deliberately demotes several tempting categories.
 
 ## Overlay with current evidence
 
-Only after deriving the architecture/problem map should residual evidence be overlaid.
+Only after deriving the architecture/problem map should residual evidence be overlaid. The frozen v2 map is supplemented by the [2026-10-01 post-exhaustion status overlay](solver-premise-map-post-exhaustion-status-2026-10-01.json); current execution priority remains in workstreams.
 
-Current evidence strengthens these intersections:
+Current evidence strengthens or narrows these intersections:
 
-- Class-5/no-known-candidate concentration supports capability acquisition rather than further composition alone.
-- controlled topology forks directly support the path-history-topology gap;
-- the DEAD-core pilot keeps causal-conflict learning open but population-limited; the fresh 75-state/25-parent sibling harvest resolves the population limit but exposes a separate construction-method gap (no LIVE contrast yet reachable) -- see `solver-fresh-dead-sibling-harvest-preflight.md`;
-- H1 closed one compact event-feasibility vocabulary, narrowing rather than erasing joint-feasibility reasoning;
-- behavioral-state quotient work warns that low-dimensional state abstractions can mix LIVE/DEAD behavior while still leaving a weaker cross-parent Card-E signal;
-- the separator/decomposition census landed a bounded positive (121/390 Class-5 levels, width<=4 interfaces) -- the decomposition gap's next question is interface-contract state size, not prevalence, per `solver-separator-decomposition-census-preflight.md`;
-- Class-3 dose ambiguity is an **EXPOSURE** question, concluded as an evidence gap (no cheap per-technique dose telemetry), not evidence of missing semantic capability;
-- the promoted portal coarse-state dead-last retry is **composition/allocation of existing capability**, not acquisition of a new reasoning primitive.
+- BC1 is a production-positive example of path-conditioned topology: a sound cut consequence creates substantial solve gains when evaluated at an existing connectivity seam;
+- BC1 also creates reproducible losses solely through frontier trajectory perturbation, materially strengthening the set-level/option-value and non-monotone-capability premises P141/P175/P184/P187;
+- BC1-G is sound but too low-incidence to justify a production consumer, separating theorem strength from decision value;
+- controlled topology forks and WS6 exact divergence pairs keep path-history/resource-interface premises open, while WS6 remains one-parent development evidence rather than a transferable repair interface;
+- Lane A C2 closes the tested compact separator-interface form as representation-explosive: outcome purity was obtained only after repeated-signature support fell to 7.14%; decomposition remains open under a materially different interface representation;
+- exact relational viability was real but produced zero value at the tested D1 beam-retention seam, narrowing one consumer rather than the semantic parent;
+- static parity phase-distance/checkerboard-capacity forms closed on negligible incremental incidence; they do not close broader joint-resource or topology consequences;
+- local one-successor forcedness is common, but global singleton-phase compression has negligible economics; local forcedness is now a descriptor/handoff premise rather than an earned compression treatment;
+- WS1's historical legal-signal capture failed completely on the powered fresh-independent-parent confirmation, strengthening population/generalization-unit premises rather than inviting retuning;
+- repair-deadline and CID exposure promotions confirm **EXPOSURE/POWER/PLACEMENT** as real solve sources without implying missing semantic capability;
+- the promoted portal coarse-state dead-last retry remains **composition/allocation of existing capability**, not acquisition of a new reasoning primitive.
+
+## Current premise-generation re-entry
+
+The solver-treatment queue is exhausted, but premise discovery is active. The current retained-evidence order is:
+
+1. BC1 gain/loss perturbation microscope;
+2. intervention-response residual atlas across independent treatments;
+3. WS1 historical-to-fresh generalization-unit failure analysis;
+4. counterfactual first-loss synthesis after those lanes add causal labels;
+5. materially different cut/resource siblings only if retained topology evidence nominates them;
+6. local-forcedness reinterpretation only as a distinct descriptor/handoff question.
+
+See [workstreams](solver-optimization-workstreams.md) for gates and the [post-exhaustion refresh](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md) for evidence-state reconciliation.
 
 ## Premise-generation protocol
 

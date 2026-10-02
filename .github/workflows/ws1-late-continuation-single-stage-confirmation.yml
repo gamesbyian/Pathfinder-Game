@@ -1,6 +1,6 @@
 name: WS1 late-continuation single-stage confirmation
 
-run-name: WS1 late continuation · N=160 · seed 2026092591 · ${{ github.sha }}
+run-name: WS1 late continuation (telemetry-corrected) · N=160 · seed 2026092591 · ${{ github.sha }}
 
 on:
   workflow_dispatch:
@@ -121,7 +121,7 @@ jobs:
           set -euo pipefail
           mkdir -p logs/ws1-late-continuation-single-001
           corpus=tmp/ws1-late-continuation-single-001/corpus.json
-          timeout -k 30s --preserve-status "${{ matrix.shard.jobTimeoutMinutes }}m"             node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs --               --corpus="$corpus"               --levels="${{ matrix.shard.levels }}"               --scheduler-mode=production               --node-budget=50000000               --work-budget=67000000               --budget-ms=86400000               --workers=4               --out="logs/ws1-late-continuation-single-001/batch-${{ matrix.shard.idx }}.json"               --summary-out="logs/ws1-late-continuation-single-001/batch-${{ matrix.shard.idx }}-summary.md"
+          timeout -k 30s --preserve-status "${{ matrix.shard.jobTimeoutMinutes }}m"             node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs --               --corpus="$corpus"               --levels="${{ matrix.shard.levels }}"               --scheduler-mode=production               --attempt-budget-telemetry               --node-budget=50000000               --work-budget=67000000               --budget-ms=86400000               --workers=4               --out="logs/ws1-late-continuation-single-001/batch-${{ matrix.shard.idx }}.json"               --summary-out="logs/ws1-late-continuation-single-001/batch-${{ matrix.shard.idx }}-summary.md"
 
       - name: Upload shard evidence
         if: always()
@@ -199,6 +199,19 @@ jobs:
           if (d.summary?.nodeBudget !== 50000000) throw new Error(`node budget drifted: ${d.summary?.nodeBudget}`);
           if (d.summary?.workBudget !== 67000000) throw new Error(`work budget drifted: ${d.summary?.workBudget}`);
           if (d.summary?.budgetMs !== 86400000) throw new Error(`wall safety deadline drifted: ${d.summary?.budgetMs}`);
+          // 2026-10-01 instrument correction (reports/2026-10-01-ws1-confirmation-instrument-validity-audit-001.md):
+          // the work-banded frozen signatures need per-attempt workSpent on every reachable attempt.
+          {
+            const winnerIdx=a=>a.findIndex(x=>x?.ok === true || x?.outcome === 'success' || x?.outcome === 'solved' || x?.status === 'success');
+            let reachable=0, withWork=0;
+            for (const row of d.levels) {
+              const a=Array.isArray(row?.attempts) ? row.attempts : [];
+              const w=winnerIdx(a);
+              const n=w >= 0 ? w+1 : a.length;
+              for (let i=0;i<n;i++) { reachable++; if (Number.isFinite(a[i]?.workSpent)) withWork++; }
+            }
+            if (reachable === 0 || withWork !== reachable) throw new Error(`per-attempt workSpent coverage incomplete: ${withWork}/${reachable} reachable attempts`);
+          }
           const request=d.summary?.solverRequestProjection;
           if (!request || request.scheduler?.mode !== 'production') throw new Error('canonical solver request is missing production scheduler identity');
           if (request.resourceEnvelope?.nodeBudget !== 50000000) throw new Error('canonical request node budget drifted');
@@ -241,6 +254,7 @@ jobs:
               workBudget:67000000,
               budgetMs:86400000,
               workersPerShard:4,
+              attemptBudgetTelemetry:true,
             },
             configurationHash:combined.summary.configurationHash,
             workflowFamily:'ws1-late-continuation-single-stage-confirmation',

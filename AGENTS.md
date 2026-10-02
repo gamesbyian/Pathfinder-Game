@@ -15,6 +15,7 @@ Compact router. Load task-specific material, not history. [`DEVELOPER_REFERENCE.
 | Solver implementation | [`docs/solver-architecture.md`](docs/solver-architecture.md), [`modules/solver/README.md`](modules/solver/README.md), [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md) |
 | Solver correctness/cache/prune | [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md), [`docs/solver-architecture.md`](docs/solver-architecture.md) |
 | Solver optimization/research | [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md), then [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md) and the specialist doc for the current gate |
+| Solver premise generation / empty treatment queue | Start at the **Current premise-discovery priority** in [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md), then [`docs/solver-premise-map-post-exhaustion-status-2026-10-01.json`](docs/solver-premise-map-post-exhaustion-status-2026-10-01.json) and [the refresh report](reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md); do not mint a treatment from a descriptive premise |
 | Solver workflow/evidence maintenance | [`docs/solver-evaluation-evidence.md`](docs/solver-evaluation-evidence.md), [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md), then changed workflow/scripts |
 | Solver experiment population / sample sizing | [`docs/solver-experiment-opportunity-sizing.md`](docs/solver-experiment-opportunity-sizing.md); use `experiment-opportunity-audit.mjs`; for repeated states/variants declare the parent/family `--independent-unit-field` and size between-unit claims on independent units |
 | New/unregistered research question | [`docs/research-question-intake.md`](docs/research-question-intake.md); contextualize before minting an ID. Solver questions use `research-status-index --compact --query=<term>`; research-system questions route through existing method/hygiene/architecture owners |
@@ -50,7 +51,7 @@ Use [`docs/solver-research-post-naming-resumption.md`](docs/solver-research-post
 
 ## Solver research invariants
 
-- [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md) owns priority/state/gates. Specialist docs/reports refine a gate but do not reprioritize it.
+- [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md) owns priority/state/gates, including premise-discovery priority when the solver-treatment queue is empty. Specialist docs/reports refine a gate but do not reprioritize it.
 - Use the smallest evidence that can decide the next gate. A clear negative closes the tested form unless materially new evidence changes the premise.
 - Inventory existing provenance/capability/profile/variant/trace/manifest/exact evidence before generating more; searched joins add selection pressure.
 - Before broad/sharded decision work, define the **opportunity population**, estimate its control-side rate, and size N from informative rows. Benefit-enriched and representative no-harm populations are separate.

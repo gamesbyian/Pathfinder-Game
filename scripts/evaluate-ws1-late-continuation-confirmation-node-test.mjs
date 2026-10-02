@@ -86,6 +86,20 @@ const halfSameStage=run('half-same-stage',{
 assert.equal(halfSameStage.verdict,'negative');
 assert.equal(halfSameStage.criteria.find(row=>row.id==='same-stage-majority').pass,false);
 
+// An input whose attempts lack workSpent cannot yield a verdict: zero nominations would be an instrument artifact.
+const invalidInput=path.join(dir,'invalid-instrument-scoring.json');
+writeFileSync(invalidInput,JSON.stringify({
+  schemaVersion:1,
+  kind:'pathfinder-action-selection-frozen-model-challenge',
+  attemptWorkCoverage:{complete:false,byInput:{}},
+  combined:{
+    kind:'pathfinder-action-selection-frozen-legal-signal-evaluation',
+    endangeredWinnerLevels:0,nominatedPreWinnerLevels:0,capturedPreWinnerWorkShare:null,diagnostics:{},
+  },
+}));
+assert.throws(()=>execFileSync(process.execPath,[script,`--input=${invalidInput}`,`--out=${path.join(dir,'invalid-verdict.json')}`],{stdio:'pipe'}),
+  error=>error.status===2 && /instrument-invalid/.test(String(error.stderr)));
+
 rmSync(dir,{recursive:true,force:true});
 
 console.log('WS1 late-continuation confirmation evaluator: ok');

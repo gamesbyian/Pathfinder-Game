@@ -41,6 +41,30 @@ function workBand(work) {
   return '>=10m';
 }
 
+/**
+ * Instrument-validity check for the work-banded signature families: every reachable attempt (through the
+ * recorded winner) must carry a finite per-attempt `workSpent`. `num()` silently maps a missing value to 0, so an
+ * input whose producer omitted attempt telemetry scores as zero work -- zero pre-winner work, an always-'0'
+ * cumulative band, and therefore no signature match -- indistinguishable from a genuine negative.
+ * The telemetry is emitted only under --lifecycle-telemetry / --attempt-budget-telemetry / strict work budgets.
+ */
+export function attemptWorkCoverage(document) {
+  const levels = Array.isArray(document) ? document : (document?.levels ?? document?.data?.levels ?? []);
+  let reachableAttempts = 0, withWork = 0;
+  for (const level of levels) {
+    const attempts = Array.isArray(level?.attempts) ? level.attempts : [];
+    const winnerIndex = attempts.findIndex(success);
+    const reachable = winnerIndex >= 0 ? winnerIndex + 1 : attempts.length;
+    for (let i = 0; i < reachable; i++) {
+      reachableAttempts++;
+      const w = attempts[i]?.workSpent;
+      if (w !== null && w !== undefined && Number.isFinite(Number(w))) withWork++;
+    }
+  }
+  return { reachableAttempts, attemptsWithWork: withWork, share: reachableAttempts ? withWork / reachableAttempts : null,
+    complete: reachableAttempts > 0 && withWork === reachableAttempts };
+}
+
 export function buildActionBoundaryDataset(document, { source='input' }={}) {
   const levels = Array.isArray(document) ? document : (document?.levels ?? document?.data?.levels ?? []);
   const rows=[];

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { actionBoundaryDigest, buildActionBoundaryDataset, applyFrozenLegalSignalModel } from './analyze-action-selection-legal-signals.mjs';
+import { actionBoundaryDigest, attemptWorkCoverage, buildActionBoundaryDataset, applyFrozenLegalSignalModel } from './analyze-action-selection-legal-signals.mjs';
 
 const argv=process.argv.slice(2);
 const arg=n=>argv.find(v=>v.startsWith(`--${n}=`))?.slice(n.length+3) ?? null;
@@ -12,11 +12,14 @@ if (!inputs.length || !modelPath || !out) {
   throw new Error('--inputs=<a.json,b.json> --model=<frozen-model.json> --out=<result.json> are required');
 }
 
+const allowMissingWork=argv.includes('--allow-missing-work');
 const model=JSON.parse(readFileSync(modelPath,'utf8'));
 const merged={schemaVersion:1,kind:'pathfinder-action-boundary-retained-evidence',rows:[]};
 const inputMetadata=[];
+const coverageByInput={};
 for (const input of inputs) {
   const doc=JSON.parse(readFileSync(input,'utf8'));
+  coverageByInput[input]=attemptWorkCoverage(doc);
   const ds=buildActionBoundaryDataset(doc,{source:input});
   merged.rows.push(...ds.rows);
   inputMetadata.push({
@@ -36,6 +39,7 @@ const result={
   modelPath,
   inputMetadata,
   actionBoundaryDigest:actionBoundaryDigest(merged),
+  attemptWorkCoverage:{ complete:Object.values(coverageByInput).every(c=>c.complete), byInput:coverageByInput },
   combined:applyFrozenLegalSignalModel(merged,model),
   bySource:Object.fromEntries(
     sources.map(source=>[
@@ -47,3 +51,9 @@ const result={
 mkdirSync(path.dirname(path.resolve(out)),{recursive:true});
 writeFileSync(out,`${JSON.stringify(result,null,2)}\n`);
 console.log(JSON.stringify(result,null,2));
+if (!result.attemptWorkCoverage.complete && !allowMissingWork) {
+  console.error('apply-action-selection-legal-signal-model: INSTRUMENT INVALID -- not every reachable attempt carries workSpent (see attemptWorkCoverage). '
+    + 'The work-banded signatures cannot match without it; a zero-nomination result is not a transfer result. '
+    + 'Re-produce the input with --lifecycle-telemetry (level-blind-capability-sweep) or pass --allow-missing-work for exploratory use only.');
+  process.exit(3);
+}
