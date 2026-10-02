@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 2,
+  "kind": "pathfinder-durable-experiment-evidence-bundle",
+  "experimentId": "36952383630",
+  "workflowFamily": "ws1-late-continuation-single-stage-confirmation",
+  "workflowRunId": "36952383630",
+  "workflowRunAttempt": "1",
+  "resolvedSha": "326935d3834ab0416f984eeccbd9cdae8c31df6c",
+  "configurationHash": "sha256:0f2d4b6fd800d49f8eca85f59fceabd5428bef75bda4f4e8d0dc2813221b0347",
+  "populationIdentityHash": "sha256:fcb8dde648d9f83e8aa0bc2762fbc2fdb09ccf239341d9e51c46cf4fec9a01e6",
+  "researchQuestion": {
+    "questionId": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
+    "liveAmbiguity": "Whether the frozen late-continuation signal transfers to fresh independent current-production parents with material pre-winner work capture and no recorded winner endangerment.",
+    "discriminatingObservable": "On the frozen 160-parent block, apply the unchanged legal-signal model and measure winner endangerment, captured pre-winner work share, independent nominated-parent breadth, per-parent nominated-work concentration, and same-stage continuation share.",
+    "outcomeInterpretation": {
+      "positive": "All frozen safety, magnitude, breadth, concentration, same-stage, and integrity criteria pass.",
+      "negative": "Any frozen scientific criterion fails after complete decision-valid execution; do not retune the seed, model, threshold, source, or producer to rescue the result."
+    }
+  },
+  "researchBlock": {
+    "blockId": "ws1-late-continuation-single-001",
+    "questionId": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
+    "evidenceRole": "confirmation",
+    "independentUnit": "parent-level"
+  },
+  "researchOutcome": {
+    "schemaVersion": 1,
+    "outcome": "completed-positive",
+    "reason": "Frozen WS1 late-continuation confirmation passed every preregistered criterion.",
+    "binding": {
+      "populationIdentityHash": "sha256:fcb8dde648d9f83e8aa0bc2762fbc2fdb09ccf239341d9e51c46cf4fec9a01e6",
+      "resultResolvedShas": [
+        "326935d3834ab0416f984eeccbd9cdae8c31df6c"
+      ],
+      "resultContentHashes": [
+        "sha256:af6c30d8e40ec0c91d6110df1f7da33458dec6cf0011f74e3aa3af5728646f66"
+      ]
+    }
+  },
+  "sourceArtifact": "ws1-late-continuation-single-stage-confirmation",
+  "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36952383630",
+  "decisionBearing": true,
+  "manifestStoredPath": "manifest.json",
+  "files": [
+    {
+      "source": "manifest.json",
+      "stored": "manifest.json",
+      "bytes": 31625,
+      "sha256": "sha256:620662c959d69c99381d6cfb747b9f2ea9f42acc5021dbd3f8822f3273638f35",
+      "compression": "none"
+    },
+    {
+      "source": "result.json",
+      "stored": "evidence/primary/result.json",
+      "bytes": 3401557,
+      "sha256": "sha256:af6c30d8e40ec0c91d6110df1f7da33458dec6cf0011f74e3aa3af5728646f66",
+      "compression": "none"
+    },
+    {
+      "source": "files/scoring.json",
+      "stored": "evidence/include/files/scoring.json",
+      "bytes": 11997,
+      "sha256": "sha256:e7bfd8544c6fb96ef9df627fe803a6a4750d78000e2fba5b64a3ca8f22ce783e",
+      "compression": "none"
+    },
+    {
+      "source": "files/verdict.json",
+      "stored": "evidence/include/files/verdict.json",
+      "bytes": 1540,
+      "sha256": "sha256:9acef4e65f4c12dabcd349a924b7ec5306426737156311b7efa6e945ddf475bf",
+      "compression": "none"
+    },
+    {
+      "source": "files/generation-manifest.json",
+      "stored": "evidence/include/files/generation-manifest.json",
+      "bytes": 2173,
+      "sha256": "sha256:7b0fb3b5a2c08462022527a3cd025cac7357caebe470500e2c8c97184f938218",
+      "compression": "none"
+    },
+    {
+      "source": "files/shard-plan.json",
+      "stored": "evidence/include/files/shard-plan.json",
+      "bytes": 24426,
+      "sha256": "sha256:8cd0c3450fe6fa3c8f2007f737b12a8287e4dbc7910f4aa191b151ba1e9ece8b",
+      "compression": "none"
+    },
+    {
+      "source": "failure-response/compact.json",
+      "stored": "evidence/compact-failure-response/failure-response/compact.json",
+      "bytes": 2510096,
+      "sha256": "sha256:3d0a43444c26433b94a13fd4e1a60c93186535774173f7025fa5bd58f29e462f",
+      "compression": "none"
+    }
+  ]
+}
