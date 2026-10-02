@@ -16,6 +16,7 @@ const levelsFile = args.get('--levels') ?? 'data/stress/stress-levels-random.jso
 const maxLevels = Number(args.get('--max-levels') ?? 1000000);
 const maxPathsPerLevel = Number(args.get('--max-paths') ?? 3);
 const outFile = args.get('--out') ?? 'reports/stress/bc1v-witness-soundness.json';
+const vertexCuts = args.get('--vertex-cuts') === 'true'; // BC1-VX: also strand goal-free blocks behind non-revisitable cut vertices
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const Solver = createSolver();
@@ -38,7 +39,7 @@ for (const raw of levels) {
             if (!isJump) realLen++;
             undos.push(api.applyMove(next, state, level, prep, isJump));
             if (!api.isConnected(next, state, level, prep)) continue; // production precondition
-            const v = api.bc1StrandedFreshVolume(next, state, level);
+            const v = api.bc1StrandedFreshVolume(next, state, level, vertexCuts);
             if (!v) { nullStates++; continue; }
             states++;
             const rSteps = level.requiredLength - realLen;
@@ -53,7 +54,7 @@ for (const raw of levels) {
     }
     levelsDone++;
 }
-const doc = { kind: 'pathfinder-bc1v-witness-soundness', levelsFile, levelsDone, pathsReplayed, states, strandedStates, nullStates, volumeMismatch, minSlack, alarmCount: alarms.length, alarms: alarms.slice(0, 50) };
+const doc = { kind: 'pathfinder-bc1v-witness-soundness', levelsFile, vertexCuts, levelsDone, pathsReplayed, states, strandedStates, nullStates, volumeMismatch, minSlack, alarmCount: alarms.length, alarms: alarms.slice(0, 50) };
 mkdirSync(path.dirname(outFile), { recursive: true });
 writeFileSync(outFile, JSON.stringify(doc, null, 2) + '\n');
 console.log(JSON.stringify({ ...doc, alarms: alarms.length }));

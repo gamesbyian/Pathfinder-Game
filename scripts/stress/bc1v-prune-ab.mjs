@@ -16,6 +16,9 @@ const beamWidth = Number(args.get('--beam-width') ?? 500);
 const nodeBudget = Number(args.get('--node-budget') ?? 3000000);
 const budgetMs = Number(args.get('--budget-ms') ?? 300000);
 const outFile = args.get('--out') ?? 'reports/stress/bc1v-prune-ab.json';
+// Defaults reproduce the BC1-V A/B; --treatment-flag/--base-flags test increments (e.g. BC1-VX over BC1-V).
+const treatmentFlag = args.get('--treatment-flag') ?? 'STRATEGY_BC1_VOLUME_PRUNE';
+const baseFlags = (args.get('--base-flags') ?? '').split(',').filter(Boolean);
 const ids = (args.get('--level-ids') ?? '').split(',').map(x => x.trim()).filter(Boolean);
 if (!ids.length) throw new Error('--level-ids required');
 const solverRef = process.env.GITHUB_SHA ?? execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
@@ -29,7 +32,7 @@ const byId = new Map(readLevelCorpusDocumentWithHints(levelsFile).levels.map(l =
 
 async function arm(level, flag) {
     const prep = api.prepLevel(level);
-    prep._cfg = { ...defaultConfig(), STRATEGY_BC1_VOLUME_PRUNE: flag };
+    prep._cfg = { ...defaultConfig(), ...Object.fromEntries(baseFlags.map(f => [f, true])), [treatmentFlag]: flag };
     const c0 = { ...bc1VolumeCounters };
     prep._metrics = { nodesExpanded: 0 };
     const t0 = Date.now();
@@ -48,7 +51,7 @@ for (const id of ids) {
     rows.push({ levelId: id, control, treatment });
     console.error(`${id}: ctl solved=${control.solved} work=${control.workSpent} | trt solved=${treatment.solved} work=${treatment.workSpent}`);
 }
-const doc = { schemaVersion: 1, kind: 'pathfinder-bc1v-prune-ab', solverRef, generatedAt: new Date().toISOString(), levelsFile, beamWidth, nodeBudget, budgetMs, rows,
+const doc = { schemaVersion: 1, kind: 'pathfinder-bc1v-prune-ab', treatmentFlag, baseFlags, solverRef, generatedAt: new Date().toISOString(), levelsFile, beamWidth, nodeBudget, budgetMs, rows,
     summary: { levels: rows.length, controlSolved: rows.filter(r => r.control.solved).length, treatmentSolved: rows.filter(r => r.treatment.solved).length,
         gains: rows.filter(r => !r.control.solved && r.treatment.solved).length, losses: rows.filter(r => r.control.solved && !r.treatment.solved).length,
         controlWork: rows.reduce((n, r) => n + r.control.workSpent, 0), treatmentWork: rows.reduce((n, r) => n + r.treatment.workSpent, 0),

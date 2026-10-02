@@ -67,14 +67,15 @@ export function bc1FreshConnectivityPrunes(next: number, ws: SolverSearchState, 
 export const bc1VolumeCounters = { evaluated: 0, rejected: 0, strandedPositive: 0 };
 
 /**
- * STRATEGY_BC1_VOLUME_PRUNE consumer (opt-in, research): same freshness precondition as
+ * STRATEGY_BC1_VOLUME_PRUNE / STRATEGY_BC1_VERTEX_VOLUME_PRUNE consumer (opt-in, research; the vertex flag adds
+ * goal-free blocks behind non-revisitable cut vertices once no free intersection remains): same freshness precondition as
  * `bc1FreshConnectivityPrunes`. Rejects when the fresh cells left after removing goal-free bridge
  * sides cannot cover the remaining counted steps (`bc1StrandedFreshVolume`). Mirrors isConnected's
  * portal-volume gate so it never evaluates where the ordinary volume check is disabled.
  */
 export function bc1VolumePrunes(next: number, ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, rSteps: number): boolean {
     if (level.portalMap.size > 0 && prep._cfg?.PRUNE_CONNECTIVITY_VOLUME_PORTAL === false) return false;
-    const v = bc1StrandedFreshVolume(next, ws, level);
+    const v = bc1StrandedFreshVolume(next, ws, level, prep._cfg?.STRATEGY_BC1_VERTEX_VOLUME_PRUNE === true);
     if (!v) return false;
     bc1VolumeCounters.evaluated++;
     if (v.strandedFresh === 0) return false;

@@ -1261,6 +1261,15 @@ export function bc1HasConflictFast(pos: number, state: SolverSearchState, level:
     return false;
 }
 
+function _bc1PendingMustCross(cell: number, w: number, state: SolverSearchState, level: NormalizedLevel): boolean {
+    if (state.mustCrossMask === 0) return false;
+    const key = ((cell / w | 0) << 16) | (cell % w);
+    for (let i = 0; i < level.mustCrossKeys.length; i++) {
+        if ((state.mustCrossMask & (1 << i)) !== 0 && level.mustCrossKeys[i] === key) return true;
+    }
+    return false;
+}
+
 /**
  * BC1-V (volume consequence of theorem BC1; opt-in `STRATEGY_BC1_VOLUME_PRUNE`). Same exact-transition
  * multigraph and DFS as `bc1HasConflictFast`: every cardinal edge and portal edge is a single-use
@@ -1274,7 +1283,7 @@ export function bc1HasConflictFast(pos: number, state: SolverSearchState, level:
  * `isConnected` counts it (pos counts 1) and the number of fresh cells stranded behind goal-free
  * bridges, or null when the typed-array path is unsupported.
  */
-export function bc1StrandedFreshVolume(pos: number, state: SolverSearchState, level: NormalizedLevel): { freshVolume: number; strandedFresh: number } | null {
+export function bc1StrandedFreshVolume(pos: number, state: SolverSearchState, level: NormalizedLevel, vertexCuts = false): { freshVolume: number; strandedFresh: number } | null {
     const { w, h } = level.grid;
     if (w > MAX_BITROW_DIM || h > MAX_BITROW_DIM) return null;
     const partner = _bc1PortalPartners(level);
@@ -1313,6 +1322,11 @@ export function bc1StrandedFreshVolume(pos: number, state: SolverSearchState, le
         _bc1Stack[sp++] = u; _bc1Order[orderLen++] = u;
     }
     if (_bc1Tin[goal] === -1) return null; // ordinary connectivity failure; not BC1-V's job
+    // Vertex-cut extension (BC1-VX, research): when no free intersection remains (every outstanding intersection is
+    // reserved for a pending must-cross crossing), no ordinary cell can be entered twice. A goal-free DFS subtree
+    // separated by the cut vertex p (low[v] >= tin[p]) can only be entered and left through p, which needs a second
+    // visit to p; it is unusable unless p itself is a pending must-cross cell (whose second crossing is still allowed).
+    const freeIntZero = vertexCuts && level.requiredIntersections - state.ints - popcount(state.mustCrossMask) <= 0;
     // Discovery order puts parents first, so one forward pass marks every cell inside a goal-free bridge subtree.
     const stranded = _bc1Mark;
     stranded[start] = 0;
@@ -1322,7 +1336,10 @@ export function bc1StrandedFreshVolume(pos: number, state: SolverSearchState, le
         const v = _bc1Order[i];
         const p = _bc1Parent[v];
         let s = stranded[p];
-        if (s === 0 && _bc1Low[v] > _bc1Tin[p] && (goalTin < _bc1Tin[v] || goalTin > _bc1Tout[v])) s = 1;
+        if (s === 0 && (goalTin < _bc1Tin[v] || goalTin > _bc1Tout[v])) {
+            if (_bc1Low[v] > _bc1Tin[p]) s = 1;
+            else if (freeIntZero && _bc1Low[v] >= _bc1Tin[p] && !_bc1PendingMustCross(p, w, state, level)) s = 1;
+        }
         stranded[v] = s;
         const vKey = ((v / w | 0) << 16) | (v % w);
         if (state.visited[vKey] === 0) { freshVolume++; if (s) strandedFresh++; }
