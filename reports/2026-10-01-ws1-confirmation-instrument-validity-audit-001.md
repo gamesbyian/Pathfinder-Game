@@ -2,8 +2,8 @@
 
 > **Status:** concluded-positive
 > **Last evidence:** 2026-10-01 — audit of the retained evidence bundle for run 36220112812 plus code-path and local-repro checks.
-> **Decision:** the N=160 single-stage confirmation (and, by the same producer, the Stage A canary) could not have nominated any boundary: its input rows carry no per-attempt `workSpent`, and every frozen signature requires a cumulative work band of `>=10m`. The "decisively negative" conclusion is retracted as uninformative about transfer; the question returns to `deferred-reopen`. No claim is made that the frozen model would transfer.
-> **Remaining gate:** a user decision on whether to re-dispatch the identical preregistered protocol (same seed `2026092591`, same frozen model, same split) with a producer that emits per-attempt work; the scorer now refuses work-less inputs.
+> **Decision:** the N=160 single-stage confirmation (and, by the same producer, the Stage A canary) could not have nominated any boundary: its input rows carry no per-attempt `workSpent`, and every frozen signature requires a cumulative work band of `>=10m`. The "decisively negative" conclusion is retracted as uninformative about transfer; the question returned to `deferred-reopen` pending a re-run. (Resolved 2026-10-02: the corrected re-run is positive.)
+> **Remaining gate:** none — the identical protocol was re-dispatched with per-attempt work telemetry and passed every criterion (`reports/2026-10-02-ws1-telemetry-corrected-confirmation-result-001.md`).
 > **Evidence role:** forensic.
 > **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
 > **Owner:** `docs/solver-optimization-workstreams.md`.

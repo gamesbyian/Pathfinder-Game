@@ -76,7 +76,7 @@ Skipping any arrow manufactures false promise.
 
 ### 4. Population transfer became an empirical failure mode, not just a methodological warning
 
-> **Withdrawn 2026-10-01** (see lane E note): the WS1 zero-nomination result is instrument-invalid, not evidence of population transfer failure. The paragraph below is the original text.
+> **Withdrawn 2026-10-01, reversed 2026-10-02** (see lane E note): the WS1 zero-nomination result was instrument-invalid; the corrected re-run shows transfer. The paragraph below is the original text.
 
 The frozen WS1 legal-signal model repeatedly captured 6.93–9.91% of historical C2 pre-winner work, then produced **zero nominated pre-winner boundaries** on the properly powered N=160 fresh-independent-parent confirmation.
 
@@ -202,7 +202,7 @@ This is explicitly **not** “make BC1 stronger.”
 
 ### E. Generalization-unit failure analysis — P112/P181/P199/P206
 
-> **Premise withdrawn 2026-10-01:** `reports/2026-10-01-ws1-confirmation-instrument-validity-audit-001.md` — the WS1 N=160 'transfer failure' was an instrument failure (no per-attempt `workSpent`; every frozen signature needs cumulative work `>=10m`). There is no clean historical/fresh contrast to analyse; lane E has no evidence until the confirmation is re-run with telemetry (a user decision). The paragraph below is the original framing.
+> **Premise withdrawn 2026-10-01 and resolved 2026-10-02:** the WS1 N=160 'transfer failure' was an instrument failure (`reports/2026-10-01-ws1-confirmation-instrument-validity-audit-001.md`). The telemetry-corrected re-run (`reports/2026-10-02-ws1-telemetry-corrected-confirmation-result-001.md`) is POSITIVE: the frozen signal transfers (8.42% capture, 0/46 winners endangered). There is therefore no historical/fresh failure to analyse; lane E is closed with no failure to explain. The paragraph below is the original framing.
 
 WS1 gives a rare clean transfer failure: robust historical capture, zero fresh nominations.
 
