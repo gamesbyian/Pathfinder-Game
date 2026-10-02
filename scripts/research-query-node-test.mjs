@@ -141,8 +141,8 @@ const boundedComputeFixture = {
 };
 assert.ok(buildAnswerabilityView(boundedComputeFixture).boundedCompute.some(row => row.workstreamId === '2X'),
   'bounded-compute gate should be explicitly classified as bounded compute');
-assert.ok(answerability.dormantOrConditional.some(row => row.workstreamId === '2X'),
-  'closed small exact projections BC1 gate should appear as reopen-only rather than active compute');
+assert.ok(answerability.boundedCompute.some(row => row.workstreamId === '2X'),
+  'reopened small exact projections BC1-V production A/B should appear as active bounded compute');
 assert.ok(answerability.dormantOrConditional.some(row => row.workstreamId === '2R'),
   'reopen-only parity lane should not appear as an active execution gate');
 assert.equal(answerability.unclassified.length, 0,
