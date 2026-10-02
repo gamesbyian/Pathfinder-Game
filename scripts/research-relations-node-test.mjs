@@ -7,6 +7,7 @@ import path from 'node:path';
 import {
     buildResearchRelations,
     discoverResearchArtifactPaths,
+    readRetractedBundles,
     exactPathIntegrityRecords,
     indexBy,
     leftJoin,
@@ -325,6 +326,34 @@ assert.ok(real.relations.experiments.some(row =>
 assert.ok(real.relations.experiments.some(row =>
     row.experimentId === 'STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_WORK_CAP_ENFORCEMENT'
     && row.questionRef === 'WS2-ADMISSIBLE-ORDER-RETRY-REPRICING'));
+// A retracted bundle stays visible as durable evidence (flagged) but must not define a research block.
+{
+    const retractedDir = 'reports/stress/experiment-evidence/36220112812__run-36220112812__attempt-1';
+    const retractedRow = real.relations.durableEvidence.find(row => row.bundlePath === `${retractedDir}/bundle.json`);
+    assert.ok(retractedRow?.retraction?.supersededBy, 'retracted bundle should remain queryable with its retraction record');
+    assert.ok(!discoverResearchArtifactPaths(process.cwd()).some(file => file.startsWith(`${retractedDir}/`)),
+        'retracted bundles must not be discovered as research-block artifacts');
+    const successor = real.relations.durableEvidence.find(row => row.bundlePath.startsWith(retractedRow.retraction.supersededBy));
+    assert.ok(successor && !successor.retraction, 'the superseding bundle must exist and not itself be retracted');
+}
+{
+    const dir = mkdtempSync(path.join(tmpdir(), 'retracted-bundles-'));
+    try {
+        const evidence = path.join(dir, 'reports/stress/experiment-evidence');
+        mkdirSync(path.join(evidence, 'b1'), { recursive: true });
+        writeFileSync(path.join(evidence, 'b1/bundle.json'), '{}');
+        assert.equal(readRetractedBundles(dir).size, 0, 'no sidecar means nothing is retracted');
+        const write = bundles => writeFileSync(path.join(evidence, 'retracted-bundles.json'), JSON.stringify({ bundles }));
+        write([{ bundleDir: 'reports/stress/experiment-evidence/b1', retractedOn: '2026-10-01', reason: 'x', supersededBy: 'y' }]);
+        assert.equal(readRetractedBundles(dir).size, 1);
+        write([{ bundleDir: 'reports/stress/experiment-evidence/b1', retractedOn: '2026-10-01', reason: 'x' }]);
+        assert.throws(() => readRetractedBundles(dir), /requires supersededBy/);
+        write([{ bundleDir: 'reports/stress/experiment-evidence/missing', retractedOn: '2026-10-01', reason: 'x', supersededBy: 'y' }]);
+        assert.throws(() => readRetractedBundles(dir), /unknown bundle/);
+    } finally {
+        rmSync(dir, { recursive: true, force: true });
+    }
+}
 for (const bundle of real.relations.durableEvidence) {
     const source = JSON.parse(readFileSync(bundle.bundlePath, 'utf8'));
     assert.ok(source.manifestStoredPath || (source.files ?? []).some(file => file.source === 'manifest.json'),

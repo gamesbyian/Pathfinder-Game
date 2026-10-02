@@ -3,7 +3,7 @@
 > **Status:** active
 > **Last evidence:** 2026-10-02 — design from the confirmed offline capture (`reports/2026-10-02-ws1-telemetry-corrected-confirmation-result-001.md`); no solver execution.
 > **Decision:** the smallest consumer is a lossless **defer-to-end** reorder of attempts matching the frozen signatures (never a skip), judged on machine-independent work at equal solves. Its first gate is a retained-evidence ceiling audit that can close the lane cheaply; only a passing audit earns a work-matched A/B on a fresh block.
-> **Remaining gate:** the ceiling audit below, which needs the corrected run's per-attempt rows retained into the repository (see Prerequisite); the workstream row is therefore `on-demand`.
+> **Remaining gate:** Gate 1 passed (`reports/2026-10-02-ws1-consumer-ceiling-audit-result-001.md`); Gate 2 needs a preregistration, an attempt-scheduler seam audit and an opt-in implementation before any run.
 > **Evidence role:** design.
 > **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
 > **Owner:** `docs/solver-optimization-workstreams.md`.
@@ -35,7 +35,7 @@ Using the corrected run's per-attempt rows (160 parents, including attempts afte
 
 **Close the consumer lane** if the work-reduction ceiling is below 3% of total solved-parent work and no unsolved parent has an unexhausted ladder with nominated work above 10%. Otherwise proceed to Gate 2.
 
-Prerequisite: the run's `scoring.json`/`combined.json` live in GHA artifact 11206065826 (expires 2026-12-31). The artifact host (`productionresultssa15.blob.core.windows.net`) is denied by this session's egress policy, so the data must be retained into the repository through the central harvester or fetched from outside this session. This is the one concrete blocker.
+Prerequisite resolved: the central harvester retained the run under `reports/stress/experiment-evidence/36952383630__run-36952383630__attempt-1`. **Result: Gate 1 passed** (6.73% of solved-parent work and 18.9% of unsolved-parent nodes nominated; `reports/2026-10-02-ws1-consumer-ceiling-audit-result-001.md`). Note that unsolved parents end node-capped (50M cumulative nodes), so the resource to count for the solve objective is nodes, not only work.
 
 ## Gate 2: work-matched A/B (only if Gate 1 passes)
 
