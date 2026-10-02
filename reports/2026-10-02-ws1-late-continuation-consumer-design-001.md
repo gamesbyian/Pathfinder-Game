@@ -1,9 +1,9 @@
 # WS1 late-continuation consumer design
 
-> **Status:** active
+> **Status:** concluded-positive
 > **Last evidence:** 2026-10-02 — design from the confirmed offline capture (`reports/2026-10-02-ws1-telemetry-corrected-confirmation-result-001.md`); no solver execution.
-> **Decision:** the smallest consumer is a lossless **defer-to-end** reorder of attempts matching the frozen signatures (never a skip), judged on machine-independent work at equal solves. Its first gate is a retained-evidence ceiling audit that can close the lane cheaply; only a passing audit earns a work-matched A/B on a fresh block.
-> **Remaining gate:** Gate 1 passed (`reports/2026-10-02-ws1-consumer-ceiling-audit-result-001.md`) and the seam audit is done (`reports/2026-10-02-ws1-consumer-seam-audit-001.md`, which re-stages Gate 2: a static tier reorder first, the dynamic consumer only if it shows value); implementation and a preregistration are needed before any run.
+> **Decision:** the smallest consumer is a lossless reorder of late additive tiers, judged on machine-independent work at equal solves. Gate 1 passed; the seam audit then showed it cannot add cold solves (no unsolved parent was tier-starved) and is worth roughly 8-9% of solved-parent work, so it is parked as a work-only option rather than queued.
+> **Remaining gate:** none queued. Gate 1 passed and the seam audit (`reports/2026-10-02-ws1-consumer-seam-audit-001.md`) found the consumer is work-only (about 8-9% net of solved-parent work, no cold-solve upside), so implementation is parked.
 > **Evidence role:** design.
 > **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
 > **Owner:** `docs/solver-optimization-workstreams.md`.
