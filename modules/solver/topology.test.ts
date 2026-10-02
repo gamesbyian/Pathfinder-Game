@@ -8,7 +8,7 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { prepLevel } from './prep.js';
 import { createState, applyMove } from './search-state.js';
-import { __setReachGenerationForTests, computeBc1ShadowConflicts, connectivityResearchSnapshot, isConnected, isConnectedForFalseGoalTriggerSearch } from './topology.js';
+import { __setReachGenerationForTests, bc1StrandedFreshVolume, computeBc1ShadowConflicts, connectivityResearchSnapshot, isConnected, isConnectedForFalseGoalTriggerSearch } from './topology.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import type { PruneDiagnostics } from './hard-prune-pipeline.js';
 
@@ -89,6 +89,30 @@ test('computeBc1ShadowConflicts reuses an already-fresh connectivity result at z
     const reused = computeBc1ShadowConflicts(K(1, 1), state, bridgePocket, prep, true);
     assert.equal(reused.constructionWorkUnits, 0, 'reusing an already-fresh flood must cost nothing extra');
     assert.deepEqual(reused.conflicts, fresh.conflicts, 'reuse must not change the result');
+});
+
+test('bc1StrandedFreshVolume removes cells behind a goal-free bridge from the volume (BC1-V)', () => {
+    // 5x3, blocks at (3,1) and (3,3): the right-hand 2x3 pocket hangs off the single corridor cell (3,2).
+    const pocketLevel = makeLevel({
+        grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 1, y: 3 },
+        blocks: [{ x: 3, y: 1 }, { x: 3, y: 3 }], reqLen: 8,
+    });
+    const prep = prepLevel(pocketLevel);
+    const state = stateAt(pocketLevel, prep, [K(1, 1)]);
+    assert.equal(isConnected(K(1, 1), state, pocketLevel, prep), true, 'the ordinary volume check (13 + 0 >= 8) passes');
+    const v = bc1StrandedFreshVolume(K(1, 1), state, pocketLevel);
+    assert.deepEqual(v, { freshVolume: 13, strandedFresh: 7 }, 'corridor + pocket are stranded: one path cannot cross (2,2)-(3,2) twice');
+    assert.ok(v!.freshVolume - v!.strandedFresh + 0 < 8, 'only the 2x3 left block is usable, so length 8 is infeasible');
+
+    // Same board with the goal inside the pocket: the bridge is crossed once and nothing is stranded on that side.
+    const goalInPocket = makeLevel({
+        grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 3 },
+        blocks: [{ x: 3, y: 1 }, { x: 3, y: 3 }], reqLen: 8,
+    });
+    const prep2 = prepLevel(goalInPocket);
+    const state2 = stateAt(goalInPocket, prep2, [K(1, 1)]);
+    assert.equal(isConnected(K(1, 1), state2, goalInPocket, prep2), true);
+    assert.deepEqual(bc1StrandedFreshVolume(K(1, 1), state2, goalInPocket), { freshVolume: 13, strandedFresh: 0 });
 });
 
 test('computeBc1ShadowConflicts skips all flood/graph work when no mandatory cell is outstanding', () => {

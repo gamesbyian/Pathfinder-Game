@@ -1,4 +1,4 @@
-import { bc1HasConflictFast, computeBc1ShadowConflicts } from './topology.js';
+import { bc1HasConflictFast, bc1StrandedFreshVolume, computeBc1ShadowConflicts } from './topology.js';
 import { popcount } from './encoding.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { BeamResearchObserver, PrepLevel, SolverSearchState } from './types.js';
@@ -61,4 +61,26 @@ export function observeBc1ShadowCandidate(
  */
 export function bc1FreshConnectivityPrunes(next: number, ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     return bc1HasConflictFast(next, ws, level) ?? computeBc1ShadowConflicts(next, ws, level, prep, true).conflicts.length > 0;
+}
+
+/** Research counters for the opt-in BC1-V consumer (evaluations / rejections); never read by policy. */
+export const bc1VolumeCounters = { evaluated: 0, rejected: 0, strandedPositive: 0 };
+
+/**
+ * STRATEGY_BC1_VOLUME_PRUNE consumer (opt-in, research): same freshness precondition as
+ * `bc1FreshConnectivityPrunes`. Rejects when the fresh cells left after removing goal-free bridge
+ * sides cannot cover the remaining counted steps (`bc1StrandedFreshVolume`). Mirrors isConnected's
+ * portal-volume gate so it never evaluates where the ordinary volume check is disabled.
+ */
+export function bc1VolumePrunes(next: number, ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, rSteps: number): boolean {
+    if (level.portalMap.size > 0 && prep._cfg?.PRUNE_CONNECTIVITY_VOLUME_PORTAL === false) return false;
+    const v = bc1StrandedFreshVolume(next, ws, level);
+    if (!v) return false;
+    bc1VolumeCounters.evaluated++;
+    if (v.strandedFresh === 0) return false;
+    bc1VolumeCounters.strandedPositive++;
+    const intNeeded = level.requiredIntersections - ws.ints;
+    const reject = v.freshVolume - v.strandedFresh + intNeeded < rSteps;
+    if (reject) bc1VolumeCounters.rejected++;
+    return reject;
 }

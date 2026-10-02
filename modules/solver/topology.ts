@@ -1261,6 +1261,75 @@ export function bc1HasConflictFast(pos: number, state: SolverSearchState, level:
     return false;
 }
 
+/**
+ * BC1-V (volume consequence of theorem BC1; opt-in `STRATEGY_BC1_VOLUME_PRUNE`). Same exact-transition
+ * multigraph and DFS as `bc1HasConflictFast`: every cardinal edge and portal edge is a single-use
+ * resource, so a bridge whose stranded side holds no goal can never be crossed by a path that must
+ * return to end on the goal. Every cell on such a side is unusable for the rest of the path. The
+ * ordinary volume check `freshVolume + intNeeded < rSteps` counts those cells as available; removing
+ * them is a strictly stronger, still necessary, condition (rSteps = fresh entries + intersection
+ * entries, and fresh entries can only land on usable fresh cells).
+ *
+ * Requires `_reached()` to be fresh for (pos, state). Returns the reached fresh volume as
+ * `isConnected` counts it (pos counts 1) and the number of fresh cells stranded behind goal-free
+ * bridges, or null when the typed-array path is unsupported.
+ */
+export function bc1StrandedFreshVolume(pos: number, state: SolverSearchState, level: NormalizedLevel): { freshVolume: number; strandedFresh: number } | null {
+    const { w, h } = level.grid;
+    if (w > MAX_BITROW_DIM || h > MAX_BITROW_DIM) return null;
+    const partner = _bc1PortalPartners(level);
+    if (!partner) return null;
+    const n = w * h;
+    const start = ((pos >>> 16) & 0xFFFF) * w + (pos & 0xFFFF);
+    const goalKey = level.goalKey;
+    const goal = ((goalKey >>> 16) & 0xFFFF) * w + (goalKey & 0xFFFF);
+    _bc1Tin.fill(-1, 0, n);
+    let time = 0, sp = 0, orderLen = 0;
+    _bc1Tin[start] = _bc1Low[start] = time++; _bc1Parent[start] = -1; _bc1ParentKind[start] = -1; _bc1Next[start] = 0;
+    _bc1Stack[sp++] = start; _bc1Order[orderLen++] = start;
+    while (sp > 0) {
+        const v = _bc1Stack[sp - 1];
+        const kind = _bc1Next[v]++;
+        if (kind > 4) {
+            sp--;
+            _bc1Tout[v] = time - 1;
+            const p = _bc1Parent[v];
+            if (p >= 0 && _bc1Low[v] < _bc1Low[p]) _bc1Low[p] = _bc1Low[v];
+            continue;
+        }
+        const vx = v % w, vy = (v - vx) / w;
+        let u = -1;
+        if (kind === 0) { if (vx + 1 < w) u = v + 1; }
+        else if (kind === 1) { if (vx > 0) u = v - 1; }
+        else if (kind === 2) { if (vy + 1 < h) u = v + w; }
+        else if (kind === 3) { if (vy > 0) u = v - w; }
+        else u = partner[v];
+        if (u < 0) continue;
+        const uKey = ((u / w | 0) << 16) | (u % w);
+        if (!_reached(uKey)) continue;
+        if (u === _bc1Parent[v] && (kind < 4) === (_bc1ParentKind[v] < 4)) continue;
+        if (_bc1Tin[u] !== -1) { if (_bc1Tin[u] < _bc1Low[v]) _bc1Low[v] = _bc1Tin[u]; continue; }
+        _bc1Tin[u] = _bc1Low[u] = time++; _bc1Parent[u] = v; _bc1ParentKind[u] = kind; _bc1Next[u] = 0;
+        _bc1Stack[sp++] = u; _bc1Order[orderLen++] = u;
+    }
+    if (_bc1Tin[goal] === -1) return null; // ordinary connectivity failure; not BC1-V's job
+    // Discovery order puts parents first, so one forward pass marks every cell inside a goal-free bridge subtree.
+    const stranded = _bc1Mark;
+    stranded[start] = 0;
+    let freshVolume = 1, strandedFresh = 0;
+    const goalTin = _bc1Tin[goal];
+    for (let i = 1; i < orderLen; i++) {
+        const v = _bc1Order[i];
+        const p = _bc1Parent[v];
+        let s = stranded[p];
+        if (s === 0 && _bc1Low[v] > _bc1Tin[p] && (goalTin < _bc1Tin[v] || goalTin > _bc1Tout[v])) s = 1;
+        stranded[v] = s;
+        const vKey = ((v / w | 0) << 16) | (v % w);
+        if (state.visited[vKey] === 0) { freshVolume++; if (s) strandedFresh++; }
+    }
+    return { freshVolume, strandedFresh };
+}
+
 export function isConnectedForFalseGoalTriggerSearch(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     const intNeeded = level.requiredIntersections - state.ints;
     const maxVisit = intNeeded > 0 ? 1 : 0;
