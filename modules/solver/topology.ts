@@ -1261,6 +1261,104 @@ export function bc1HasConflictFast(pos: number, state: SolverSearchState, level:
     return false;
 }
 
+function _bc1PendingMustCross(cell: number, w: number, state: SolverSearchState, level: NormalizedLevel): boolean {
+    if (state.mustCrossMask === 0) return false;
+    const key = ((cell / w | 0) << 16) | (cell % w);
+    for (let i = 0; i < level.mustCrossKeys.length; i++) {
+        if ((state.mustCrossMask & (1 << i)) !== 0 && level.mustCrossKeys[i] === key) return true;
+    }
+    return false;
+}
+
+/**
+ * BC1-V (volume consequence of theorem BC1; opt-in `STRATEGY_BC1_VOLUME_PRUNE`). Same exact-transition
+ * multigraph and DFS as `bc1HasConflictFast`: every cardinal edge and portal edge is a single-use
+ * resource, so a bridge whose stranded side holds no goal can never be crossed by a path that must
+ * return to end on the goal. Every cell on such a side is unusable for the rest of the path. The
+ * ordinary volume check `freshVolume + intNeeded < rSteps` counts those cells as available; removing
+ * them is a strictly stronger, still necessary, condition (rSteps = fresh entries + intersection
+ * entries, and fresh entries can only land on usable fresh cells).
+ *
+ * Requires `_reached()` to be fresh for (pos, state). Returns the reached fresh volume as
+ * `isConnected` counts it (pos counts 1) and the number of fresh cells stranded behind goal-free
+ * bridges, or null when the typed-array path is unsupported.
+ */
+export function bc1StrandedFreshVolume(pos: number, state: SolverSearchState, level: NormalizedLevel, vertexCuts = false): { freshVolume: number; strandedFresh: number; bc1Conflict: boolean; vertexConflict: boolean } | null {
+    const { w, h } = level.grid;
+    if (w > MAX_BITROW_DIM || h > MAX_BITROW_DIM) return null;
+    const partner = _bc1PortalPartners(level);
+    if (!partner) return null;
+    const n = w * h;
+    const start = ((pos >>> 16) & 0xFFFF) * w + (pos & 0xFFFF);
+    const goalKey = level.goalKey;
+    const goal = ((goalKey >>> 16) & 0xFFFF) * w + (goalKey & 0xFFFF);
+    _bc1Tin.fill(-1, 0, n);
+    let time = 0, sp = 0, orderLen = 0;
+    _bc1Tin[start] = _bc1Low[start] = time++; _bc1Parent[start] = -1; _bc1ParentKind[start] = -1; _bc1Next[start] = 0;
+    _bc1Stack[sp++] = start; _bc1Order[orderLen++] = start;
+    while (sp > 0) {
+        const v = _bc1Stack[sp - 1];
+        const kind = _bc1Next[v]++;
+        if (kind > 4) {
+            sp--;
+            _bc1Tout[v] = time - 1;
+            const p = _bc1Parent[v];
+            if (p >= 0 && _bc1Low[v] < _bc1Low[p]) _bc1Low[p] = _bc1Low[v];
+            continue;
+        }
+        const vx = v % w, vy = (v - vx) / w;
+        let u = -1;
+        if (kind === 0) { if (vx + 1 < w) u = v + 1; }
+        else if (kind === 1) { if (vx > 0) u = v - 1; }
+        else if (kind === 2) { if (vy + 1 < h) u = v + w; }
+        else if (kind === 3) { if (vy > 0) u = v - w; }
+        else u = partner[v];
+        if (u < 0) continue;
+        const uKey = ((u / w | 0) << 16) | (u % w);
+        if (!_reached(uKey)) continue;
+        if (u === _bc1Parent[v] && (kind < 4) === (_bc1ParentKind[v] < 4)) continue;
+        if (_bc1Tin[u] !== -1) { if (_bc1Tin[u] < _bc1Low[v]) _bc1Low[v] = _bc1Tin[u]; continue; }
+        _bc1Tin[u] = _bc1Low[u] = time++; _bc1Parent[u] = v; _bc1ParentKind[u] = kind; _bc1Next[u] = 0;
+        _bc1Stack[sp++] = u; _bc1Order[orderLen++] = u;
+    }
+    if (_bc1Tin[goal] === -1) return null; // ordinary connectivity failure; not BC1-V's job
+    // Vertex-cut extension (BC1-VX, research): when no free intersection remains (every outstanding intersection is
+    // reserved for a pending must-cross crossing), no ordinary cell can be entered twice. A goal-free DFS subtree
+    // separated by the cut vertex p (low[v] >= tin[p]) can only be entered and left through p, which needs a second
+    // visit to p; it is unusable unless p itself is a pending must-cross cell (whose second crossing is still allowed).
+    const freeIntZero = vertexCuts && level.requiredIntersections - state.ints - popcount(state.mustCrossMask) <= 0;
+    // Discovery order puts parents first, so one forward pass marks every cell inside a goal-free bridge subtree
+    // (`bridgeSide`) and, in vertex mode, also behind a non-revisitable cut vertex (`stranded`).
+    const bridgeSide = _bc1Mark, stranded = _bc1Needed;
+    bridgeSide[start] = 0; stranded[start] = 0;
+    let freshVolume = 1, strandedFresh = 0;
+    const goalTin = _bc1Tin[goal];
+    for (let i = 1; i < orderLen; i++) {
+        const v = _bc1Order[i];
+        const p = _bc1Parent[v];
+        const goalOutside = goalTin < _bc1Tin[v] || goalTin > _bc1Tout[v];
+        const b = bridgeSide[p] !== 0 || (goalOutside && _bc1Low[v] > _bc1Tin[p]) ? 1 : 0;
+        bridgeSide[v] = b;
+        const s = b !== 0 || stranded[p] !== 0
+            || (freeIntZero && goalOutside && _bc1Low[v] >= _bc1Tin[p] && !_bc1PendingMustCross(p, w, state, level)) ? 1 : 0;
+        stranded[v] = s;
+        const vKey = ((v / w | 0) << 16) | (v % w);
+        if (state.visited[vKey] === 0) { freshVolume++; if (s) strandedFresh++; }
+    }
+    // BC1 itself (same verdict as bc1HasConflictFast): some pending mandatory cell lies on a goal-free bridge side.
+    // vertexConflict (BC1-VX's mandatory consequence): a pending mandatory cell behind a non-revisitable cut vertex.
+    let bc1Conflict = false, vertexConflict = false;
+    const check = (key: number): void => {
+        const c = ((key >>> 16) & 0xFFFF) * w + (key & 0xFFFF);
+        if (_bc1Tin[c] === -1) return;
+        if (bridgeSide[c] !== 0) bc1Conflict = true;
+        if (stranded[c] !== 0) vertexConflict = true;
+    };
+    for (let i = 0; i < level.mustPassKeys.length; i++) if ((state.mpVisitedMask & (1 << i)) === 0) check(level.mustPassKeys[i]);
+    for (let i = 0; i < level.mustCrossKeys.length; i++) if ((state.mustCrossMask & (1 << i)) !== 0) check(level.mustCrossKeys[i]);
+    return { freshVolume, strandedFresh, bc1Conflict, vertexConflict };
+}
+
 export function isConnectedForFalseGoalTriggerSearch(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     const intNeeded = level.requiredIntersections - state.ints;
     const maxVisit = intNeeded > 0 ? 1 : 0;

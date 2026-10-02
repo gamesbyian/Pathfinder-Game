@@ -162,10 +162,13 @@ function authoredEdges(model) {
     add('premiseAdmissions', row.premiseId, 'premise', 'premises', row.premiseId, sourceFor(row, 'premiseAdmissions'));
   }
 
+  // A durable bundle links to its research block only when that block is materialized in this graph (artifact
+  // discovery off leaves no block rows) and the bundle is not retracted (retracted bundles never define a block).
+  const materializedBlockIds = new Set((model.relations.researchBlocks ?? []).map(row => row.blockId));
   for (const row of model.relations.durableEvidence ?? []) {
     if (row.questionId) add('durableEvidence', row.bundlePath, 'question', 'questions', row.questionId, sourceFor(row, 'durableEvidence'));
     if (row.measurementOpportunity) add('durableEvidence', row.bundlePath, 'measurementOpportunity', 'measurementOpportunities', row.measurementOpportunity, sourceFor(row, 'durableEvidence'));
-    if (row.blockId) add('durableEvidence', row.bundlePath, 'block', 'researchBlocks', row.blockId, sourceFor(row, 'durableEvidence'));
+    if (row.blockId && !row.retraction && materializedBlockIds.has(row.blockId)) add('durableEvidence', row.bundlePath, 'block', 'researchBlocks', row.blockId, sourceFor(row, 'durableEvidence'));
     if (row.manifestPath) add('durableEvidence', row.bundlePath, 'manifest', 'repositoryRefs', row.manifestPath, sourceFor(row, 'durableEvidence'));
   }
 

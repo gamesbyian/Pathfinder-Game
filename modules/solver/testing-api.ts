@@ -16,7 +16,7 @@ import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import { getRealLengthFromState } from './solution.js';
 import { mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
 import { structuralSolutionFamilySignature } from '../domain/path-features.js';
-import { bc1HasConflictFast, connectivityResearchSnapshot, findBridgeExcursionConflicts, findMultigraphBridges, isConnected } from './topology.js';
+import { bc1HasConflictFast, bc1StrandedFreshVolume, connectivityResearchSnapshot, findBridgeExcursionConflicts, findMultigraphBridges, isConnected } from './topology.js';
 import { Bc1ShadowDispositionObserver } from './bc1-shadow-disposition.js';
 
 /** The canonical solver analysis/debug surface (also a named Solver export). */
@@ -34,6 +34,7 @@ export function createSolverTestingApi() {
         createState,
         isConnected,
         bc1HasConflictFast,
+        bc1StrandedFreshVolume,
         getNeighbors,
         applyMove,
         // undoMove (2026-09-03, added for scripts/beam-to-dfs-handoff-pilot.mjs — rung 4 of

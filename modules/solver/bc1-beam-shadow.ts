@@ -1,4 +1,4 @@
-import { bc1HasConflictFast, computeBc1ShadowConflicts } from './topology.js';
+import { bc1HasConflictFast, bc1StrandedFreshVolume, computeBc1ShadowConflicts } from './topology.js';
 import { popcount } from './encoding.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { BeamResearchObserver, PrepLevel, SolverSearchState } from './types.js';
@@ -61,4 +61,47 @@ export function observeBc1ShadowCandidate(
  */
 export function bc1FreshConnectivityPrunes(next: number, ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     return bc1HasConflictFast(next, ws, level) ?? computeBc1ShadowConflicts(next, ws, level, prep, true).conflicts.length > 0;
+}
+
+/** Research counters for the opt-in BC1-V consumer (evaluations / rejections); never read by policy. */
+export const bc1VolumeCounters = { evaluated: 0, rejected: 0, strandedPositive: 0 };
+
+/**
+ * STRATEGY_BC1_VOLUME_PRUNE / STRATEGY_BC1_VERTEX_VOLUME_PRUNE consumer (opt-in, research; the vertex flag adds
+ * goal-free blocks behind non-revisitable cut vertices once no free intersection remains): same freshness precondition as
+ * `bc1FreshConnectivityPrunes`. Rejects when the fresh cells left after removing goal-free bridge
+ * sides cannot cover the remaining counted steps (`bc1StrandedFreshVolume`). Mirrors isConnected's
+ * portal-volume gate so it never evaluates where the ordinary volume check is disabled.
+ */
+export function bc1VolumePrunes(next: number, ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, rSteps: number): boolean {
+    if (level.portalMap.size > 0 && prep._cfg?.PRUNE_CONNECTIVITY_VOLUME_PORTAL === false) return false;
+    const v = bc1StrandedFreshVolume(next, ws, level, prep._cfg?.STRATEGY_BC1_VERTEX_VOLUME_PRUNE === true);
+    if (!v) return false;
+    bc1VolumeCounters.evaluated++;
+    if (v.strandedFresh === 0) return false;
+    bc1VolumeCounters.strandedPositive++;
+    const intNeeded = level.requiredIntersections - ws.ints;
+    const reject = v.freshVolume - v.strandedFresh + intNeeded < rSteps;
+    if (reject) bc1VolumeCounters.rejected++;
+    return reject;
+}
+
+/**
+ * One-DFS beam seam for BC1 plus BC1-V/VX (used only when a volume flag is on): the same verdict as
+ * `bc1FreshConnectivityPrunes(...) || bc1VolumePrunes(...)`, without a second DFS when a pending cell exists.
+ * Falls back to the two separate calls where the typed-array path is unsupported.
+ */
+export function bc1WithVolumePrunes(next: number, ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, rSteps: number): boolean {
+    const portalVolumeOff = level.portalMap.size > 0 && prep._cfg?.PRUNE_CONNECTIVITY_VOLUME_PORTAL === false;
+    const v = portalVolumeOff ? null : bc1StrandedFreshVolume(next, ws, level, prep._cfg?.STRATEGY_BC1_VERTEX_VOLUME_PRUNE === true);
+    if (!v) return bc1FreshConnectivityPrunes(next, ws, level, prep) || bc1VolumePrunes(next, ws, level, prep, rSteps);
+    if (v.bc1Conflict) return true;
+    bc1VolumeCounters.evaluated++;
+    // v.vertexConflict (a pending cell behind a non-revisitable cut vertex) is sound but deliberately unused: on the
+    // random-300 raw beam it added no net solves over the volume rule (reports/2026-10-02-bc1-volume-consequence-result-001.md).
+    if (v.strandedFresh === 0) return false;
+    bc1VolumeCounters.strandedPositive++;
+    const reject = v.freshVolume - v.strandedFresh + level.requiredIntersections - ws.ints < rSteps;
+    if (reject) bc1VolumeCounters.rejected++;
+    return reject;
 }

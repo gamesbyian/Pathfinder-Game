@@ -1025,7 +1025,7 @@
       "id": "WS2-CUT-BALANCE-PROJECTION",
       "question": "Can a small exact current-input cut/region-flow projection expose sound decision-bearing conservation, capacity, or pressure that existing scalar connectivity/volume and Lane-A separator signatures miss?",
       "owner": "WS2",
-      "state": "concluded-positive",
+      "state": "active-candidate",
       "aliases": [
         "cut balance",
         "boundary crossing balance",
@@ -1048,9 +1048,10 @@
         "reports/2026-09-30-bc1-shadow-construction-cost-reduction-result-001.md",
         "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
         "reports/2026-09-30-bc1-fresh-only-prefilter-result-001.md",
-        "reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md"
+        "reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md",
+        "reports/2026-10-02-bc1-volume-consequence-result-001.md"
       ],
-      "result": "CONCLUDED-POSITIVE / PROMOTED 2026-10-01. BC1 fresh-connectivity pruning was reduced to a zero-canonical-work check at the seam where ordinary connectivity already ran, then cleared matched-budget production A/B, gain/loss replay, solved-control, and regression gates. Random-300 at 50M improved 206 -> 225 solved (23 gains / 4 losses); the production flag is default-ON. Unconditional per-candidate checking, pipeline-wide DFS/repair/admissible-order application, every-phase checking, higher-budget probes, and BC1-G production use are closed in their tested forms. BC1-G remains a sound research-only strengthening with low incremental incidence. The BC1-off dead-last whole-ladder retry is parked in solver-future-work.md and is not a current gate.",
+      "result": "CONCLUDED-POSITIVE / PROMOTED 2026-10-01. BC1 fresh-connectivity pruning was reduced to a zero-canonical-work check at the seam where ordinary connectivity already ran, then cleared matched-budget production A/B, gain/loss replay, solved-control, and regression gates. Random-300 at 50M improved 206 -> 225 solved (23 gains / 4 losses); the production flag is default-ON. Unconditional per-candidate checking, pipeline-wide DFS/repair/admissible-order application, every-phase checking, higher-budget probes, and BC1-G production use are closed in their tested forms. BC1-G remains a sound research-only strengthening with low incremental incidence. The BC1-off dead-last whole-ladder retry is parked in solver-future-work.md and is not a current gate. REOPENED 2026-10-02 for BC1-V (volume consequence of the same theorem: fresh cells behind goal-free bridges are unusable, so they leave the volume check; no pending mandatory cell needed). Sound on 861k stored-solution witness states; raw-beam random-300 42 -> 48 (7 gains / 1 loss); production A/B pending.",
       "constrains": [
         "Do not reopen Lane A C0-C2 unchanged: recurring compact interface identity and per-state bridge conservation are different premises.",
         "BC1 fresh-connectivity pruning is promoted/default-ON; do not buy another generic confirmation round for the same treatment.",

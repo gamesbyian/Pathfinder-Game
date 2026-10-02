@@ -1,0 +1,459 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-intervention-response-atlas",
+  "evidenceRole": "forensic",
+  "historicalRuns": [
+    {
+      "runId": "31874764534",
+      "solverRef": "7d2b0f7a2a97630a4102825de729dc88c2062817",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 724,
+      "total": 1700
+    },
+    {
+      "runId": "31895631847",
+      "solverRef": "a7aa4ba416a8c00ecc351d98d1ed9ca20ab9a3f7",
+      "enableFlags": "STRATEGY_DEDUP_NEAR_TIE_RETRY",
+      "disableFlags": "",
+      "solved": 707,
+      "total": 1700
+    },
+    {
+      "runId": "31902837955",
+      "solverRef": "c79180efd4a829c0be730bd5bc31cff498146628",
+      "enableFlags": "STRATEGY_DEDUP_NEAR_TIE_RETRY",
+      "disableFlags": "",
+      "solved": 764,
+      "total": 1700
+    },
+    {
+      "runId": "31910836458",
+      "solverRef": "6e835ff03a30a8f3ef471bb7d48328105e39a24d",
+      "enableFlags": "STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY",
+      "disableFlags": "",
+      "solved": 809,
+      "total": 1700
+    },
+    {
+      "runId": "31918095910",
+      "solverRef": "fc3040cb3959e499a9a8df56348e43cb4300b077",
+      "enableFlags": "STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY",
+      "disableFlags": "",
+      "solved": 819,
+      "total": 1700
+    },
+    {
+      "runId": "32224200709",
+      "solverRef": "912b6bb9d3ca55a47c6c1de0729fe1ae93f66891",
+      "enableFlags": "STRATEGY_MC_NEIGHBOR_BUDGET_RETRY",
+      "disableFlags": "",
+      "solved": 828,
+      "total": 1700
+    },
+    {
+      "runId": "32252988428",
+      "solverRef": "93cf6425cf92732ab26f27e3fbb77377b73795ba",
+      "enableFlags": "STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE",
+      "disableFlags": "",
+      "solved": 824,
+      "total": 1700
+    },
+    {
+      "runId": "32393579449",
+      "solverRef": "e021378b6b7769301ae20916e3071039389cb1c8",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 848,
+      "total": 1700
+    },
+    {
+      "runId": "32418694112",
+      "solverRef": "bbcf80035c231152ce84d6e95252f65ff65850e8",
+      "enableFlags": "STRATEGY_REPAIR_LATE_PROBE",
+      "disableFlags": "",
+      "solved": 868,
+      "total": 1700
+    },
+    {
+      "runId": "32419836654",
+      "solverRef": "a519dcc56baa09974545e3784523a342097cfce9",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 863,
+      "total": 1700
+    },
+    {
+      "runId": "32452482531",
+      "solverRef": "c4569ef01122299d86d012d4393f2278dbeac5b8",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 861,
+      "total": 1700
+    },
+    {
+      "runId": "32453248184",
+      "solverRef": "e5034e8c433eb32ab6d1882d80271dc277b91b0f",
+      "enableFlags": "STRATEGY_REPAIR_LATE_PROBE",
+      "disableFlags": "",
+      "solved": 881,
+      "total": 1700
+    },
+    {
+      "runId": "32459711208",
+      "solverRef": "e5034e8c433eb32ab6d1882d80271dc277b91b0f",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 863,
+      "total": 1700
+    },
+    {
+      "runId": "32526927206",
+      "solverRef": "ce4fc98a6ec4e87060c740161ea800dd04970a2b",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 880,
+      "total": 1700
+    },
+    {
+      "runId": "32835403128",
+      "solverRef": "fc625d187204a86c94dd18fedf12013906b7863d",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 976,
+      "total": 1700
+    },
+    {
+      "runId": "33588487486",
+      "solverRef": "a3a7bb109b8212bd8e3afe37b09bcfcd2d74abcf",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 975,
+      "total": 1700
+    },
+    {
+      "runId": "33824275953",
+      "solverRef": "1b7353955cf67df93cd35a8083546adfc670ad94",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 975,
+      "total": 1700
+    },
+    {
+      "runId": "33841017634",
+      "solverRef": "045bbe904a567929ef4ed3aeeded110bd13b5491",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 975,
+      "total": 1700
+    },
+    {
+      "runId": "34531412380",
+      "solverRef": "92c3155837c695312e9e14b95b631b750a25ac0a",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 1029,
+      "total": 1700
+    },
+    {
+      "runId": "34674256538",
+      "solverRef": "51715da5d04c45af3811fff5a3e26107676592ea",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 1048,
+      "total": 1700
+    },
+    {
+      "runId": "34683011115",
+      "solverRef": "5973d6e4141f1480a5ebe58618e7e0d59dae9b8e",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 1048,
+      "total": 1700
+    },
+    {
+      "runId": "35043165547",
+      "solverRef": "4421bd8fcf0f4a948a901082accfab0d151c6369",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 1048,
+      "total": 1700
+    },
+    {
+      "runId": "35066677597",
+      "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 1169,
+      "total": 1700
+    },
+    {
+      "runId": "35687363645",
+      "solverRef": "39d14d49023aa09cb680053b975ef786eeae9b01",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 1169,
+      "total": 1700
+    },
+    {
+      "runId": "35944989969",
+      "solverRef": "dff942b650c41f167f7f0df16f828c890e88e672",
+      "enableFlags": "",
+      "disableFlags": "",
+      "solved": 1169,
+      "total": 1700
+    }
+  ],
+  "transitions": [
+    {
+      "from": "31874764534",
+      "to": "31895631847",
+      "toFlags": {
+        "enable": "STRATEGY_DEDUP_NEAR_TIE_RETRY",
+        "disable": ""
+      },
+      "gains": 48,
+      "losses": 65
+    },
+    {
+      "from": "31895631847",
+      "to": "31902837955",
+      "toFlags": {
+        "enable": "STRATEGY_DEDUP_NEAR_TIE_RETRY",
+        "disable": ""
+      },
+      "gains": 65,
+      "losses": 8
+    },
+    {
+      "from": "31902837955",
+      "to": "31910836458",
+      "toFlags": {
+        "enable": "STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY",
+        "disable": ""
+      },
+      "gains": 45,
+      "losses": 0
+    },
+    {
+      "from": "31910836458",
+      "to": "31918095910",
+      "toFlags": {
+        "enable": "STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY",
+        "disable": ""
+      },
+      "gains": 10,
+      "losses": 0
+    },
+    {
+      "from": "31918095910",
+      "to": "32224200709",
+      "toFlags": {
+        "enable": "STRATEGY_MC_NEIGHBOR_BUDGET_RETRY",
+        "disable": ""
+      },
+      "gains": 9,
+      "losses": 0
+    },
+    {
+      "from": "32224200709",
+      "to": "32252988428",
+      "toFlags": {
+        "enable": "STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE",
+        "disable": ""
+      },
+      "gains": 0,
+      "losses": 4
+    },
+    {
+      "from": "32252988428",
+      "to": "32393579449",
+      "toFlags": null,
+      "gains": 25,
+      "losses": 1
+    },
+    {
+      "from": "32393579449",
+      "to": "32418694112",
+      "toFlags": {
+        "enable": "STRATEGY_REPAIR_LATE_PROBE",
+        "disable": ""
+      },
+      "gains": 20,
+      "losses": 0
+    },
+    {
+      "from": "32418694112",
+      "to": "32419836654",
+      "toFlags": null,
+      "gains": 14,
+      "losses": 19
+    },
+    {
+      "from": "32419836654",
+      "to": "32452482531",
+      "toFlags": null,
+      "gains": 79,
+      "losses": 81
+    },
+    {
+      "from": "32452482531",
+      "to": "32453248184",
+      "toFlags": {
+        "enable": "STRATEGY_REPAIR_LATE_PROBE",
+        "disable": ""
+      },
+      "gains": 91,
+      "losses": 71
+    },
+    {
+      "from": "32453248184",
+      "to": "32459711208",
+      "toFlags": null,
+      "gains": 0,
+      "losses": 18
+    },
+    {
+      "from": "32459711208",
+      "to": "32526927206",
+      "toFlags": null,
+      "gains": 90,
+      "losses": 73
+    },
+    {
+      "from": "32526927206",
+      "to": "32835403128",
+      "toFlags": null,
+      "gains": 96,
+      "losses": 0
+    },
+    {
+      "from": "32835403128",
+      "to": "33588487486",
+      "toFlags": null,
+      "gains": 4,
+      "losses": 5
+    },
+    {
+      "from": "33588487486",
+      "to": "33824275953",
+      "toFlags": null,
+      "gains": 0,
+      "losses": 0
+    },
+    {
+      "from": "33824275953",
+      "to": "33841017634",
+      "toFlags": null,
+      "gains": 0,
+      "losses": 0
+    },
+    {
+      "from": "33841017634",
+      "to": "34531412380",
+      "toFlags": null,
+      "gains": 54,
+      "losses": 0
+    },
+    {
+      "from": "34531412380",
+      "to": "34674256538",
+      "toFlags": null,
+      "gains": 35,
+      "losses": 16
+    },
+    {
+      "from": "34674256538",
+      "to": "34683011115",
+      "toFlags": null,
+      "gains": 0,
+      "losses": 0
+    },
+    {
+      "from": "34683011115",
+      "to": "35043165547",
+      "toFlags": null,
+      "gains": 0,
+      "losses": 0
+    },
+    {
+      "from": "35043165547",
+      "to": "35066677597",
+      "toFlags": null,
+      "gains": 121,
+      "losses": 0
+    },
+    {
+      "from": "35066677597",
+      "to": "35687363645",
+      "toFlags": null,
+      "gains": 0,
+      "losses": 0
+    },
+    {
+      "from": "35687363645",
+      "to": "35944989969",
+      "toFlags": null,
+      "gains": 0,
+      "losses": 0
+    }
+  ],
+  "levelHistorySummary": {
+    "levels": 1700,
+    "flipDistribution": {
+      "0": 1103,
+      "1": 356,
+      "2": 61,
+      "3": 91,
+      "4": 42,
+      "5": 37,
+      "6": 8,
+      "7": 1,
+      "8": 1
+    },
+    "latestResidual": 531,
+    "latestResidualEverSolved": 29,
+    "latestSolvedEverLost": 216,
+    "latestSolvedEverLostInStableEra": 13,
+    "unrecoveredStableEraLosses": [
+      "R00536",
+      "R01761",
+      "R02196",
+      "R02206",
+      "R02258",
+      "R02458",
+      "R03251",
+      "R03323"
+    ]
+  },
+  "retrospective": [
+    {
+      "label": "BC1 gains vs capability-signature nomination (pre-BC1 residual)",
+      "responders": 23,
+      "respondersMarked": 3,
+      "nonResponders": 75,
+      "nonRespondersMarked": 8,
+      "oddsRatio": 1.256,
+      "fisherP": 0.716
+    },
+    {
+      "label": "BC1 gains vs historical flip (pre-BC1 residual)",
+      "responders": 23,
+      "respondersMarked": 2,
+      "nonResponders": 75,
+      "nonRespondersMarked": 2,
+      "oddsRatio": 3.476,
+      "fisherP": 0.234
+    },
+    {
+      "label": "BC1 losses vs historical ever-lost (pre-BC1 solved)",
+      "responders": 4,
+      "respondersMarked": 2,
+      "nonResponders": 198,
+      "nonRespondersMarked": 41,
+      "oddsRatio": 3.829,
+      "fisherP": 0.199
+    }
+  ],
+  "prospective": null
+}
