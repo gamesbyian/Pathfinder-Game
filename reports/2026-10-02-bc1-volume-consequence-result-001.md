@@ -1,9 +1,9 @@
 # BC1-V: volume consequence of theorem BC1
 
 > **Status:** active
-> **Last evidence:** 2026-10-02 — witness soundness on all stored Corpus-2 and Corpus-1 solutions (0 alarms); raw width-500 beam A/B on the frozen random-300 (42 → 48 solved, 7 gains / 1 loss).
-> **Decision:** BC1-V is sound and new. It earns the production-ladder A/B. The flag stays default-OFF until that A/B and a regression gate come back.
-> **Remaining gate:** representative production A/B on `data/stress/bc1-prune-ab-001-ids.txt` (treatment GHA 37051159924, `enable_flags=STRATEGY_BC1_VOLUME_PRUNE`; control = BC1-on arm 36772815197, whose solver semantics equal current `main`, and the current-main full-corpus control 37049775397 as a second control). Promote if gains clearly exceed losses, as BC1 did; then run the solved-control regression set.
+> **Last evidence:** 2026-10-02 — witness soundness on all stored Corpus-2 and Corpus-1 solutions (0 alarms, both forms); raw width-500 beam A/B on the frozen random-300: BC1-V 42 → 48 (7 gains / 1 loss), BC1-VX adds 48 → 51 (3 / 0).
+> **Decision:** BC1-V and its vertex-cut extension BC1-VX are sound and new. VX is a strict superset that adds 3 gains for 0 losses at flat work, so **BC1-VX (`STRATEGY_BC1_VERTEX_VOLUME_PRUNE`) is the production candidate**. Both flags stay default-OFF until the production A/B and a regression gate come back.
+> **Remaining gate:** representative production A/B on `data/stress/bc1-prune-ab-001-ids.txt` (treatment GHA 37052447194, `enable_flags=STRATEGY_BC1_VERTEX_VOLUME_PRUNE`, which replaced the cancelled BC1-V-only arm 37051159924; control = BC1-on arm 36772815197, whose solver semantics equal current `main`, and the current-main full-corpus control 37049775397 as a second control). Promote if gains clearly exceed losses, as BC1 did; then run the solved-control regression set.
 > **Research question:** `WS2-CUT-BALANCE-PROJECTION`
 > **Evidence role:** discovery
 > **Selection:** prespecified (BC1's frozen seeded random-300; no outcome selection)
@@ -47,9 +47,20 @@ Novelty witness (`topology.test.ts`): on a 5×3 board with blocks at (3,1) and (
 | 2 | 9 | 11 | 3 | 1 | 34,560 / 639,807 |
 | **All 300** | **42** | **48** | **7** | **1** | 117,886 / 2,043,189 (5.8%) |
 
-Gains: R02357 R00712 R02293 R02046 R02666 R02698 R01157. Loss: R02099. Canonical `workSpent` fell 2.2% (101.35M → 99.26M). Wall time rose about 18% (75 s → 88 s per 100 levels) from the extra DFS on candidates BC1 skips because nothing mandatory is pending. If promoted, one DFS can serve both BC1 and BC1-V.
+Gains: R02357 R00712 R02293 R02046 R02666 R02698 R01157. Loss: R02099. Canonical `workSpent` fell 2.2% (101.35M → 99.26M). Wall time rose about 18% (75 s → 88 s per 100 levels) from the extra DFS on candidates BC1 skips because nothing mandatory is pending. If promoted, one DFS can serve BC1 and BC1-V/VX: a BC1 conflict is exactly a pending cell that is stranded in bridge-only mode.
 
 The exchange (7:1) is smaller than BC1's raw beam (20:1) and has the same character: rejected candidates are provably dead and free beam slots. Raw-beam gains are not cold solves; most raw-beam BC1 gains were already solved by the wider ladder.
+
+## BC1-VX: cut vertices once no free intersection remains
+
+When `requiredIntersections − ints − popcount(mustCrossMask) ≤ 0`, every remaining intersection is reserved for a pending must-cross crossing, so no ordinary cell can be entered twice (the same invariant as `PRUNE_MC_RESERVED_WALL`). A goal-free DFS subtree separated by a cut vertex `p` (`low[v] ≥ tin[p]`) can be entered and left only through `p`. That needs a second visit to `p`, so the subtree is unusable unless `p` is a pending must-cross cell. Bridges are the special case that needs no intersection argument. The proof uses the same supergraph argument as BC1: extra edges in the reached graph can only hide cuts, never invent them.
+
+| Check | Result |
+|---|---|
+| Witness soundness, Corpus-2, 5 paths/level (`--vertex-cuts=true`) | 821,270 states, **0 alarms**, min slack 1 (`reports/stress/bc1vx-witness-soundness-corpus2.json`) |
+| Raw-beam increment over BC1-V, random-300 (`reports/stress/bc1vx-over-bc1v-ab-001-shard{0,1,2}.json`) | 48 → 51, **3 gains / 0 losses**; rejections 117,886 → 130,042; `workSpent` −0.04%; wall flat |
+
+Cumulative raw-beam effect versus the production BC1-only beam: 42 → 51 on the random-300.
 
 ## What this does not establish
 
