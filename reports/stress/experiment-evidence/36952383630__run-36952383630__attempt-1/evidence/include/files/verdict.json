@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-ws1-late-continuation-single-stage-verdict",
+  "researchQuestion": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
+  "frozenProtocol": {
+    "parentCount": 160,
+    "masterSeed": 2026092591,
+    "blockId": "ws1-late-continuation-single-001",
+    "idPrefix": "U",
+    "breadthFloor": 3,
+    "capturedWorkShareFloor": 0.05,
+    "maxParentWorkShare": 0.35,
+    "sameStageWorkShareFloorExclusive": 0.5
+  },
+  "scoringInput": "logs/ws1-late-continuation-single-001/scoring.json",
+  "actionBoundaryDigest": "sha256:9797a437e987e39eae99bc4613397cb1977c882bc19522255ef560e0506b3993",
+  "verdict": "positive",
+  "criteria": [
+    {
+      "id": "winner-safety",
+      "description": "zero recorded winner endangerment",
+      "observed": 0,
+      "pass": true
+    },
+    {
+      "id": "captured-work-share",
+      "description": "captured canonical pre-winner work share >= 5%",
+      "observed": 0.08421336348095883,
+      "pass": true
+    },
+    {
+      "id": "independent-parent-breadth",
+      "description": "at least 3 independently nominated parents",
+      "observed": 12,
+      "pass": true
+    },
+    {
+      "id": "parent-concentration",
+      "description": "no single parent contributes more than 35% of nominated work",
+      "observed": 0.1588630088239717,
+      "pass": true
+    },
+    {
+      "id": "same-stage-majority",
+      "description": "more than 50% of nominated pre-winner work is same-stage late continuation",
+      "observed": 0.9783819282557266,
+      "pass": true
+    }
+  ]
+}

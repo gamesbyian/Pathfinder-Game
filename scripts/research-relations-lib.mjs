@@ -105,7 +105,34 @@ function walkFiles(root, relative, predicate, out = []) {
     return out;
 }
 
+const RETRACTED_BUNDLES_PATH = 'reports/stress/experiment-evidence/retracted-bundles.json';
+
+/**
+ * Authored sidecar for retained evidence bundles whose conclusion was retracted (for example an
+ * instrument-invalid run). Retained bundles are immutable, so a retraction cannot edit them; instead the sidecar
+ * names each retracted bundle directory with its reason and successor. Retracted bundles stay visible as durable
+ * evidence (flagged) but must not define a research block, because a block id names exactly one population.
+ */
+export function readRetractedBundles(root = process.cwd()) {
+    const absolute = path.join(root, RETRACTED_BUNDLES_PATH);
+    if (!existsSync(absolute)) return new Map();
+    const doc = JSON.parse(readFileSync(absolute, 'utf8'));
+    const out = new Map();
+    for (const row of doc.bundles ?? []) {
+        for (const field of ['bundleDir', 'retractedOn', 'reason', 'supersededBy']) {
+            if (typeof row?.[field] !== 'string' || !row[field]) throw new Error(`${RETRACTED_BUNDLES_PATH}: each retraction requires ${field}`);
+        }
+        const dir = row.bundleDir.replace(/\/+$/u, '');
+        // Sparse CI checkouts keep each bundle's manifest.json but not bundle.json, so only require the directory.
+        if (!existsSync(path.join(root, dir))) throw new Error(`${RETRACTED_BUNDLES_PATH}: unknown bundle ${dir}`);
+        out.set(dir, row);
+    }
+    return out;
+}
+
 export function discoverResearchArtifactPaths(root = process.cwd()) {
+    const retracted = readRetractedBundles(root);
+    const isRetracted = relative => [...retracted.keys()].some(dir => relative === dir || relative.startsWith(`${dir}/`));
     const transientRoots = [
         'tmp/research-generation',
         'tmp/research-populations',
@@ -120,7 +147,8 @@ export function discoverResearchArtifactPaths(root = process.cwd()) {
             (relative, stat) => relative.endsWith('.json') && stat.size <= 32 * 1024 * 1024,
         )),
         ...walkFiles(root, 'reports/stress/experiment-evidence',
-            (relative, stat) => path.basename(relative) === 'manifest.json' && stat.size <= 32 * 1024 * 1024),
+            (relative, stat) => path.basename(relative) === 'manifest.json' && stat.size <= 32 * 1024 * 1024
+                && !isRetracted(relative)),
     ];
     const discovered = [];
     for (const relative of candidates) {
@@ -160,6 +188,7 @@ function durableBundleManifestPath(root, bundlePath, bundle) {
 function buildDurableEvidenceRelations(root) {
     const bundles = walkFiles(root, 'reports/stress/experiment-evidence',
         relative => path.basename(relative) === 'bundle.json');
+    const retracted = readRetractedBundles(root);
     return bundles.map(bundlePath => {
         const bundle = JSON.parse(readFileSync(path.join(root, bundlePath), 'utf8'));
         const manifestPath = durableBundleManifestPath(root, bundlePath, bundle);
@@ -170,6 +199,7 @@ function buildDurableEvidenceRelations(root) {
             questionId: bundle?.researchQuestion?.questionId ?? bundle?.researchBlock?.questionId ?? null,
             measurementOpportunity: bundle?.researchQuestion?.measurementOpportunity ?? null,
             blockId: bundle?.researchBlock?.blockId ?? null,
+            retraction: retracted.get(path.dirname(bundlePath)) ?? null,
             _researchSource: { relation: 'durableEvidence', source: bundlePath },
         };
     });
