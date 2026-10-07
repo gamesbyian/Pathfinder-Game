@@ -213,6 +213,8 @@ Current `family-generate.mjs` generation-run records preserve invocation-local r
 | Generate a justified generic family pilot | `npm run family:generate` |
 | Generate a question-first human/editor contrast pilot | `node scripts/human-parent-contrast-pilot.mjs` |
 | Build/query index | `family:index`, `family:show`, `family:query`, `family:coverage` |
+| Build equal-work parent/variant × technique cells | `npm run family:technique-response-plan` |
+| Analyze controlled technique-response derivatives | `npm run family:technique-response-analyze` |
 | Join solve/mutation effects | `npm run family:analyze` |
 | Boundary synthesis | `npm run family:boundary-report` |
 | Parent/variant divergence | `npm run stress:family-pair-divergence` |
@@ -234,6 +236,9 @@ The variant-family dataset is **evidence, not backlog**. Current family work sho
 3. first-divergence diagnosis for symmetry cliffs, with semantic RNG coupling only when randomness is part of the question;
 4. exact/reference labels around causal boundaries;
 5. repair/restart/operator behavior across controlled relatives;
-6. human-origin controlled contrasts when existing/natural families cannot answer an earned ranked question.
+6. human-origin controlled contrasts when existing/natural families cannot answer an earned ranked question;
+7. controlled **technique-response neighborhoods** when the question is whether a small structural change changes the marginal value of an isolated technique. Use equal canonical-work cells, count whole parent families as the independent unit, and send only nominated cliffs to the pair-divergence microscope. See [the 2026-10-07 plan](../reports/2026-10-07-controlled-technique-response-neighborhoods-plan-001.md).
+
+For fixed-geometry terminal-requirement neighborhoods, reuse `solver:req-length-sweep` as a nomination tool before any new generator. Keep requirement-response claims separate from geometry-family claims unless a shared mechanism is independently supported.
 
 Bulk census-generation for its own sake is deprioritized. If family analysis is no longer changing a ranked decision, stop mining or generating it merely because the resource exists.
