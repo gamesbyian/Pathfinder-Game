@@ -82,7 +82,6 @@ const addCell = ({ role, levelId, levelPos, corpusFile, variantId = null, edge =
         techniqueKeys: [technique],
         workBudget,
         budgetMs,
-        collectAttemptTelemetry: true,
         familyContext: {
             familyId,
             parentId,
