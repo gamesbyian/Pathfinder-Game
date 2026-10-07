@@ -12,7 +12,7 @@ node scripts/research-status-index.mjs --compact --query=<term>
 
 Optional filters: `--status=...`, `--kind=queue|experiment|evidence`. Open only the matched report whose protocol, evidence, caveats, or reasoning you need.
 
-Current solver priority/state/gates: [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md). The solver-treatment queue is currently exhausted but the workstream authority contains an active retained-evidence premise-discovery lane; its current premise evidence overlay is [`../docs/solver-premise-map-post-exhaustion-status-2026-10-01.json`](../docs/solver-premise-map-post-exhaustion-status-2026-10-01.json). For explicitly historical/retired solver premises and their dispositions, use [`../docs/solver-archaeology-register.md`](../docs/solver-archaeology-register.md) before opening broad old report families.
+Current solver priority/state/gates: [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md). The treatment queue has one earned BC1-VX A/B awaiting re-dispatch; premise discovery currently includes the retained-evidence intervention atlas and the controlled technique-response neighborhood lane. The latter is specified in [`2026-10-07-controlled-technique-response-neighborhoods-plan-001.md`](2026-10-07-controlled-technique-response-neighborhoods-plan-001.md). The current premise evidence overlay is [`../docs/solver-premise-map-post-exhaustion-status-2026-10-01.json`](../docs/solver-premise-map-post-exhaustion-status-2026-10-01.json). For explicitly historical/retired solver premises and their dispositions, use [`../docs/solver-archaeology-register.md`](../docs/solver-archaeology-register.md) before opening broad old report families.
 
 ## Report contract
 
@@ -61,6 +61,7 @@ Reproducible selected-on evidence remains selected-on evidence. See [`2026-09-14
 - deferred/reopen ideas and premise-generation advancement conditions: [`../docs/solver-future-work.md`](../docs/solver-future-work.md)
 - current premise evidence state: [`../docs/solver-premise-map-post-exhaustion-status-2026-10-01.json`](../docs/solver-premise-map-post-exhaustion-status-2026-10-01.json)
 - post-exhaustion premise refresh / re-entry lanes: [`2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md`](2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md)
+- controlled level × technique response neighborhoods: [`2026-10-07-controlled-technique-response-neighborhoods-plan-001.md`](2026-10-07-controlled-technique-response-neighborhoods-plan-001.md)
 
 Large generated result families should be reached through report provenance or compact queries. Treat `latest` pointers as navigation, not authority; inspect embedded commit/protocol metadata before comparison.
 
