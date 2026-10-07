@@ -1,8 +1,8 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Program state:** **ONE EARNED TREATMENT (BC1-VX, 2X) AWAITING ITS PRODUCTION A/B; PREMISE-DISCOVERY LANE B ACTIVE.** BC1-V/VX (volume consequences of theorem BC1) earned the production gate on 2026-10-02; the first production arm was cancelled by the maintainer. Closed/promoted/negative rows stay closed; supporting/service rows activate only on a named reopen condition or external need. The 2026-10-02 premise-discovery pass produced no treatment gate (table below); the WS1 consumer was resolved as work-only and parked (seam audit), and the one open discovery item is PG-B (prospective arms cancelled by the maintainer; re-dispatch awaits go-ahead).
-> **Reconciled:** 2026-10-02.
+> **Program state:** **ONE EARNED TREATMENT (BC1-VX, 2X) AWAITING ITS PRODUCTION A/B; PREMISE-DISCOVERY LANES B AND G ACTIVE.** BC1-V/VX (volume consequences of theorem BC1) earned the production gate on 2026-10-02; the first production arm was cancelled by the maintainer. PG-B's prospective arms were also cancelled and await re-dispatch. PG-G (controlled technique-response neighborhoods) was opened 2026-10-07 as a research-only premise generator using existing family/census infrastructure; it has no treatment authority.
+> **Reconciled:** 2026-10-07.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 > **Historical snapshots:** [2026-09-25](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md) · [2026-10-02](../reports/2026-10-02-solver-optimization-workstreams-precompaction-snapshot-002.md) (full closed-record narratives, including the retracted WS1 negative).
 
@@ -12,9 +12,9 @@ Method: [operating model](solver-research-operating-model.md) · [scheduling](so
 
 C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts, never historical outcomes/identity/hints. Negatives close only tested claims.
 
-## Premise-discovery lanes (executed 2026-10-02)
+## Premise-discovery lanes
 
-The [post-exhaustion premise refresh](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md) (148 v2 premises, no new IDs; overlay: [post-exhaustion status](solver-premise-map-post-exhaustion-status-2026-10-01.json)) nominated six retained-evidence lanes. They are discovery gates, never treatment authority: they may produce reports, relation updates or premise specializations, and may not create a treatment, flag, broad acquisition or architecture build without the ordinary promotion contract.
+The [post-exhaustion premise refresh](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md) (148 v2 premises, no new IDs; overlay: [post-exhaustion status](solver-premise-map-post-exhaustion-status-2026-10-01.json)) nominated six retained-evidence lanes. PG-G was added 2026-10-07 after a repository audit showed that controlled level families and isolated technique execution already existed but had not been composed into a systematic interaction experiment. These are discovery gates, never treatment authority: they may produce reports, relation updates or premise specializations, and may not create a treatment, flag, broad acquisition or architecture build without the ordinary promotion contract.
 
 | ID | Lane | Outcome | Result |
 |---:|---|---|---|
@@ -24,6 +24,7 @@ The [post-exhaustion premise refresh](../reports/2026-10-01-post-exhaustion-solv
 | PG-C | First-loss refresh | not executed | needs causal labels A/B/E did not supply |
 | PG-D | Cut/resource sibling mining | not executed | needs a sound candidate fact with a proof sketch first |
 | PG-F | Local-forcedness descriptor | closed | null on 42 solved levels ([result](../reports/2026-10-01-forcedness-winner-descriptor-result-001.md)) |
+| PG-G | Controlled technique-response neighborhoods | active | compose existing controlled parent/variant families with isolated equal-work technique cells; current gate is a 6-12 independent-parent pilot, with only nominated cliffs sent to the existing pair-divergence microscope ([plan](../reports/2026-10-07-controlled-technique-response-neighborhoods-plan-001.md)) |
 
 ## Closed solver-treatment record
 
@@ -57,7 +58,7 @@ Tested forms closed unless their named premise changes: admissible-order reserve
 | 5 | Exact/reference service | `on-demand` | `service` | exact/reference truth service for microscopes | use only when a live discriminator requires it | — |
 | 3 | Generalization method | `method-complete` | `method` | independent-unit / selection-pressure methodology established | preserve method in future confirmations | — |
 
-The one active solver-treatment row is 2X (BC1-VX production A/B, awaiting re-dispatch). The WS1 row is on-demand/reopen-only (work-only consumer parked). All tested treatment forms are closed/reopen-only/subsumed, while supporting/service rows are conditional resources. The 2026-10-02 premise-discovery pass is complete (table above); the only open item is PG-B (whose artifacts are now retained by the harvester where decision-bearing). See the snapshots and future-work authority for exact reopen conditions.
+The one active solver-treatment row is 2X (BC1-VX production A/B, awaiting re-dispatch). The WS1 row is on-demand/reopen-only (work-only consumer parked). All tested treatment forms are closed/reopen-only/subsumed, while supporting/service rows are conditional resources. Premise discovery currently has two open items: PG-B, whose prospective current-main arms await re-dispatch, and PG-G, whose first gate is a bounded controlled-family × isolated-technique pilot. Neither discovery lane is treatment authority. See the snapshots and future-work authority for exact reopen conditions.
 
 ## Queue-transition closure
 
