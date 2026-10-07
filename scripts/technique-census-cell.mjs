@@ -75,12 +75,19 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
 
     const CORPUS_FILES = { published: 'data/levels.json', corpus1: 'data/stress/stress-levels.json', corpus2: 'data/stress/stress-levels-random.json' };
     const corpusCache = new Map();
-    function getRawLevel(corpus, pos) {
-        if (!corpusCache.has(corpus)) {
-            const raw = JSON.parse(readFileSync(path.resolve(CORPUS_FILES[corpus]), 'utf8'));
-            corpusCache.set(corpus, Array.isArray(raw) ? raw : raw.levels);
+    function getRawLevel(corpus, pos, explicitCorpusFile = null) {
+        const corpusFile = explicitCorpusFile ?? CORPUS_FILES[corpus];
+        if (!corpusFile) throw new Error(`unknown corpus "${corpus}" without cell.corpusFile`);
+        const cacheKey = path.resolve(corpusFile);
+        if (!corpusCache.has(cacheKey)) {
+            const raw = JSON.parse(readFileSync(cacheKey, 'utf8'));
+            const levels = Array.isArray(raw) ? raw : raw.levels;
+            if (!Array.isArray(levels)) throw new Error(`corpus file ${corpusFile} has no levels array`);
+            corpusCache.set(cacheKey, levels);
         }
-        return corpusCache.get(corpus)[pos - 1];
+        const entry = corpusCache.get(cacheKey)[pos - 1];
+        if (!entry) throw new Error(`level position ${pos} is absent from corpus file ${corpusFile}`);
+        return entry;
     }
 
     const parsedConfigCache = new Map();
@@ -90,7 +97,7 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
     }
 
     async function runCell(cell) {
-        const entry = getRawLevel(cell.corpus, cell.levelPos);
+        const entry = getRawLevel(cell.corpus, cell.levelPos, cell.corpusFile ?? null);
         const { id: _id, stressMeta: _sm, ...rawLevel } = entry;
         const level = Solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
         const prep = prepLevel(level);
@@ -216,7 +223,9 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
             : 'exhausted';
 
         return {
-            cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, levelId: entry.id ?? cell.levelId ?? null, levelPos: cell.levelPos,
+            cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, corpusFile: cell.corpusFile ?? null,
+            familyContext: cell.familyContext ?? null,
+            levelId: entry.id ?? cell.levelId ?? null, levelPos: cell.levelPos,
             budgetMs: cell.budgetMs,
             techniqueKeys: canonicalTechniqueKeys, variantLabel: cell.variantLabel ?? null,
             pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
@@ -242,7 +251,9 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
         try { return await runCell(cell); }
         catch (err) {
             return {
-                cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, levelId: cell.levelId ?? null, levelPos: cell.levelPos,
+                cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, corpusFile: cell.corpusFile ?? null,
+                familyContext: cell.familyContext ?? null,
+                levelId: cell.levelId ?? null, levelPos: cell.levelPos,
                 budgetMs: cell.budgetMs,
                 techniqueKeys: cell.techniqueKeys, variantLabel: cell.variantLabel ?? null,
                 pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
