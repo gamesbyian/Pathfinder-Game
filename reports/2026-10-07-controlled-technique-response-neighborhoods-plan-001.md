@@ -1,8 +1,11 @@
 # Controlled technique-response neighborhoods — plan and infrastructure audit (2026-10-07)
 
-> **Status:** active premise-discovery method.
+> **Status:** active.
+> **Last evidence:** 2026-10-07 — current-main infrastructure audit plus the retained July family synthesis/resource audits.
 > **Decision:** reuse the existing variant-family and technique-census systems; do not build a second solver harness or launch another bulk family-generation campaign.
-> **Current gate:** run a bounded current-main pilot over existing controlled families, with whole parent families as the independent unit, then inspect only response-cliff edges with the existing pair-divergence microscope.
+> **Remaining gate:** run a bounded current-main pilot over existing controlled families, with whole parent families as the independent unit, then inspect only response-cliff edges with the existing pair-divergence microscope.
+> **Evidence role:** discovery / method-enabling.
+> **Selection:** the initial cohort is deliberately information-rich and historically repair-response-enriched; it estimates mechanisms, not population prevalence.
 > **Treatment authority:** none. Interesting interactions nominate premises; they do not promote solver behavior.
 
 ## Question
@@ -91,7 +94,9 @@ Heterogeneity is a nomination signal, not a causal conclusion. Generic difficult
 
 Do not start with all 96k variants.
 
-1. Query existing current/recent family resources for 6-12 independent parent families with small interpretable transformations and useful technique diversity.
+The retained July family work already supplies a coherent six-parent discovery cohort with the same three transformation families observed on each parent: **P00146, P00144, R00631, P00136, R02976 and R00792**. Each has symmetry, local-mutant and swap evidence, and all six were re-evaluated after the repair elite-splice fix. This cohort is intentionally selected-on and therefore suitable for mechanism discovery only. Its value is the matched transformation coverage, not representativeness. Any general claim must move to untouched whole-parent confirmation families.
+
+1. Start with those six parents if their family artifacts can be mounted/recovered with intact generation identity; otherwise substitute 6-12 existing independent parent families with equally small interpretable transformations and record the substitution rule.
 2. Prefer local-mutant, swap, tightly bounded density changes, and selected symmetry edges. Avoid broad reshuffles in the first causal pilot.
 3. Use 3-6 isolated techniques chosen to span genuinely different search behavior, not dozens of near-duplicate configurations.
 4. Give every cell the same workBudget; use a generous wall deadline solely as a safety cap.
