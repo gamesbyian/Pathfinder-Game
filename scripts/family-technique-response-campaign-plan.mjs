@@ -110,13 +110,22 @@ for(const familySpec of spec.families){
     }
   }
 }
+const byTechnique=new Map(techniques.map(key=>[key,[]]));
+for(const cell of cells) byTechnique.get(cell.techniqueKeys[0]).push(cell);
+const balancedCells=[];
+const maxBucket=Math.max(...[...byTechnique.values()].map(bucket=>bucket.length));
+for(let i=0;i<maxBucket;i++) for(const technique of techniques) {
+  const cell=byTechnique.get(technique)[i];
+  if(cell) balancedCells.push(cell);
+}
 const plan={
   schemaVersion:1,kind:'pathfinder-family-technique-response-campaign-plan',generatedAt:new Date().toISOString(),
   budgetProtocol:'family-technique-equal-work',equalCostAcrossTechniques:true,
   scientificUnit:'parent-controlled-transformation-technique-response',independenceUnit:'parentId',
   sourceSpec:portablePath(specFile),variantFamilyDatasetRoot:portablePath(datasetRoot),parentCorpusRoot:portablePath(parentRoot),
   workBudget,budgetMs,techniques,parentIds:[...parentIds].sort(),independentParentCount:parentIds.size,
-  familyModeBlockCount:blocks.length,blocks,expectedCells:cells.length,cells,
+  familyModeBlockCount:blocks.length,blocks,executionOrdering:'round-robin-by-technique',
+  expectedCells:balancedCells.length,cells:balancedCells,
 };
 mkdirSync(path.dirname(path.resolve(outFile)),{recursive:true});
 writeFileSync(path.resolve(outFile),JSON.stringify(plan,null,2)+'\n');
