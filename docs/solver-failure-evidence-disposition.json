@@ -34,16 +34,6 @@
       }
     },
     {
-      "id": "controlled-technique-response-pilot-one-shot",
-      "workflow": ".github/workflows/controlled-technique-response-pilot-one-shot.yml",
-      "disposition": "standard",
-      "reason": null,
-      "durability": {
-        "mode": "artifact-only",
-        "reason": "One-shot selected-on family/technique discovery evidence is retained in its standard solver-sweep result and raw shard artifacts; generated-variant outcomes are not canonical level evidence."
-      }
-    },
-    {
       "id": "cpsat-explicit-prefix-reference",
       "workflow": ".github/workflows/cpsat-explicit-prefix-reference.yml",
       "disposition": "unsupported",
@@ -214,6 +204,16 @@
       }
     },
     {
+      "id": "ws1-remaining-length-intrasolve-stage-a-one-shot",
+      "workflow": ".github/workflows/ws1-remaining-length-intrasolve-stage-a-one-shot.yml",
+      "disposition": "unsupported",
+      "reason": "Frozen paired WS1 elite-prefix ordering harness emits purpose-built control/treatment trace rows rather than the ordinary attempt-shaped compact failure-response population.",
+      "durability": {
+        "mode": "artifact-only",
+        "reason": "This one-shot Stage A experiment publishes its frozen result and standard solver-sweep artifact; it is not a recurring compact failure-response producer."
+      }
+    },
+    {
       "id": "ws1-late-continuation-single-stage-confirmation",
       "workflow": ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml",
       "disposition": "standard",
@@ -224,13 +224,13 @@
       }
     },
     {
-      "id": "ws1-remaining-length-intrasolve-stage-a-one-shot",
-      "workflow": ".github/workflows/ws1-remaining-length-intrasolve-stage-a-one-shot.yml",
-      "disposition": "unsupported",
-      "reason": "Frozen paired WS1 elite-prefix ordering harness emits purpose-built control/treatment trace rows rather than the ordinary attempt-shaped compact failure-response population.",
+      "id": "controlled-technique-response-pilot-one-shot",
+      "workflow": ".github/workflows/controlled-technique-response-pilot-one-shot.yml",
+      "disposition": "standard",
+      "reason": null,
       "durability": {
         "mode": "artifact-only",
-        "reason": "This one-shot Stage A experiment publishes its frozen result and standard solver-sweep artifact; it is not a recurring compact failure-response producer."
+        "reason": "One-shot selected-on family/technique discovery evidence is retained in its standard solver-sweep result and raw shard artifacts; generated-variant outcomes are not canonical level evidence."
       }
     }
   ]
