@@ -38,6 +38,8 @@ if (spec.datasetRef) {
   }
   if (mountedRef !== spec.datasetRef) throw new Error(`variant-family dataset ref mismatch: spec=${spec.datasetRef}, mounted=${mountedRef}`);
 }
+let solverRef='local';
+try { solverRef=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); } catch {}
 const techniques=spec.techniques??[];
 if(!Array.isArray(techniques)||!techniques.length) throw new Error('spec.techniques must be a non-empty array');
 const workBudget=Number(spec.workBudget);
@@ -123,7 +125,8 @@ const plan={
   schemaVersion:1,kind:'pathfinder-family-technique-response-campaign-plan',generatedAt:new Date().toISOString(),
   budgetProtocol:'family-technique-equal-work',equalCostAcrossTechniques:true,
   scientificUnit:'parent-controlled-transformation-technique-response',independenceUnit:'parentId',
-  sourceSpec:portablePath(path.resolve(specFile)),variantFamilyDatasetRoot:portablePath(datasetRoot),parentCorpusRoot:portablePath(parentRoot),
+  sourceSpec:portablePath(path.resolve(specFile)),solverRef,
+  variantFamilyDatasetRoot:portablePath(datasetRoot),parentCorpusRoot:portablePath(parentRoot),
   workBudget,budgetMs,techniques,parentIds:[...parentIds].sort(),independentParentCount:parentIds.size,
   familyModeBlockCount:blocks.length,blocks,expectedCells:cells.length,cells,
 };
