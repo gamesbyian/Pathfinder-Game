@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "workflows": [
     {
-      "workflow": "ci-historical-value-audit.yml",
-      "role": "operational",
-      "status": "maintained",
-      "currentConsumer": "manual historical CI value/cadence audit collection",
-      "retirementTrigger": "retire when the historical audit is complete and any recurring CI-value telemetry has moved into an intentionally maintained surface"
-    },
-    {
       "workflow": "ci-deep-concurrency-benchmark.yml",
       "role": "operational",
       "status": "maintained",
       "currentConsumer": "manual evidence-only CI deep same-runner concurrency measurement",
       "retirementTrigger": "retire after the <=35s critical-path program settles deep execution topology and this manual rehearsal no longer adds decision value"
+    },
+    {
+      "workflow": "ci-historical-value-audit.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "manual historical CI value/cadence audit collection",
+      "retirementTrigger": "retire when the historical audit is complete and any recurring CI-value telemetry has moved into an intentionally maintained surface"
     },
     {
       "workflow": "ci-node-concurrency-benchmark.yml",
@@ -77,6 +77,13 @@
       "status": "maintained",
       "currentConsumer": "solver research program",
       "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "controlled-technique-response-pilot-one-shot.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "PG-G controlled technique-response neighborhood discovery pilot",
+      "retirementTrigger": "delete after the frozen six-parent pilot evidence is durably recorded and any required follow-up uses the generic family/census tooling"
     },
     {
       "workflow": "cpsat-explicit-prefix-reference.yml",
@@ -219,6 +226,20 @@
       "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
     },
     {
+      "workflow": "solver-research-input-materialization-rehearsal.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "solver research execution-efficiency sparse/full input-boundary parity audit",
+      "retirementTrigger": "retire after short-job sparse input contracts are settled and equivalent dependency/input-boundary protection is permanently owned elsewhere"
+    },
+    {
+      "workflow": "solver-research-runtime-rehearsal.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "solver research execution-efficiency exact-runtime parity audit",
+      "retirementTrigger": "retire after the maintained research runtime is pinned and equivalent runtime identity/parity protection is owned by ordinary workflow contracts"
+    },
+    {
       "workflow": "solver-residual-confirmation.yml",
       "role": "evidence-producing",
       "status": "maintained",
@@ -266,20 +287,6 @@
       "status": "maintained",
       "currentConsumer": "WS1 remaining-length intra-solve Stage A bridge",
       "retirementTrigger": "retire after the frozen Stage A result is reconciled and no successor requires this exact one-shot execution surface"
-    },
-    {
-      "workflow": "solver-research-input-materialization-rehearsal.yml",
-      "role": "operational",
-      "status": "maintained",
-      "currentConsumer": "solver research execution-efficiency sparse/full input-boundary parity audit",
-      "retirementTrigger": "retire after short-job sparse input contracts are settled and equivalent dependency/input-boundary protection is permanently owned elsewhere"
-    },
-    {
-      "workflow": "solver-research-runtime-rehearsal.yml",
-      "role": "operational",
-      "status": "maintained",
-      "currentConsumer": "solver research execution-efficiency exact-runtime parity audit",
-      "retirementTrigger": "retire after the maintained research runtime is pinned and equivalent runtime identity/parity protection is owned by ordinary workflow contracts"
     }
   ],
   "retiredWorkflows": [
