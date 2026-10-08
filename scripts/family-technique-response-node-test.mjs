@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const dir = await mkdtemp(path.join(tmpdir(), 'pathfinder-family-technique-response-'));
+await mkdir(path.join(root, 'tmp'), { recursive: true });
+const dir = await mkdtemp(path.join(root, 'tmp', 'pathfinder-family-technique-response-'));
 try {
     const parentCorpus = path.join(dir, 'parents.json');
     const variantCorpus = path.join(dir, 'variants.json');
