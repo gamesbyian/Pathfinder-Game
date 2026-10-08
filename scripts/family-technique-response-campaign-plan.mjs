@@ -9,6 +9,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { getLevelFingerprint } from '../modules/domain/level-fingerprint.js';
 
 const argv=process.argv.slice(2);
 const args=new Map(argv.filter(a=>a.startsWith('--')&&a.includes('=')).map(a=>{
@@ -67,6 +68,10 @@ for(const familySpec of spec.families){
     const variantLevels=loadLevels(variantCorpusFile);
     const parentPos=parentLevels.findIndex((lv,i)=>idOf(lv,i+1)===parentId)+1;
     if(!parentPos) throw new Error(`${parentId} not found in ${parentCorpusFile}`);
+    const currentParentHash=await getLevelFingerprint(parentLevels[parentPos-1]);
+    if(manifest.parentContentHash && manifest.parentContentHash!==currentParentHash) {
+      throw new Error(`${familyId} parent content drift: manifest=${manifest.parentContentHash}, current=${currentParentHash}`);
+    }
     const variantPosById=new Map(variantLevels.map((lv,i)=>[idOf(lv,i+1),i+1]));
     const familyId=String(manifest.familyId??base);
     const relation=manifest.familyMode??manifest.relation??null;
@@ -76,7 +81,10 @@ for(const familySpec of spec.families){
       if(!variantId||!levelPos) throw new Error(`${familyId} variant missing from corpus: ${variantId||'(empty)'}`);
       return {variantId,levelPos,edge:v};
     });
-    blocks.push({familyId,parentId,token,relation,manifestFile,variantCorpusFile,parentCorpusFile,variantCount:variants.length});
+    blocks.push({familyId,parentId,token,relation,manifestFile,variantCorpusFile,parentCorpusFile,
+      manifestParentContentHash:manifest.parentContentHash??null,currentParentContentHash:currentParentHash,
+      parentContentIdentityVerified:manifest.parentContentHash?manifest.parentContentHash===currentParentHash:false,
+      variantCount:variants.length});
     for(let ti=0;ti<techniques.length;ti++){
       const technique=techniques[ti];
       const suffix=`t${String(ti+1).padStart(2,'0')}`;
