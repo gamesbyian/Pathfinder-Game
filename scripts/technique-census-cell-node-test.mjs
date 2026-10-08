@@ -438,3 +438,24 @@ test('runCellSafe retains treatment and level identity on a thrown error', async
     assert.equal(result.budgetMs, 8000);
     assert.match(result.error, /boom/);
 });
+
+
+test('cell.corpusFile supports arbitrary family corpora and preserves familyContext', async () => {
+    const { runAttemptForTesting } = stubRunner((call, prep) => {
+        prep._metrics.nodesExpanded += 10;
+        return { path: null, outcome: 'exhausted' };
+    });
+    const { runCell } = await createCellRunner({ runAttemptForTesting });
+    const familyContext = { familyId: 'family-P00001-local-mutant', parentId: 'P00001', variantId: null, role: 'parent' };
+    const result = await runCell({
+        ...baseCell,
+        corpus: 'family-parent',
+        corpusFile: 'data/levels.json',
+        familyContext,
+        nodeBudget: 5,
+    });
+    assert.equal(result.corpus, 'family-parent');
+    assert.equal(result.corpusFile, 'data/levels.json');
+    assert.deepEqual(result.familyContext, familyContext);
+    assert.equal(result.status, 'node-budget-reached');
+});
