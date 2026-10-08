@@ -75,6 +75,10 @@ const out={
   resultFiles,
   complete:true,
   statusCounts,
+  levels: results.map(r => ({
+    id:r.id, levelId:r.levelId, ok:r.ok, status:r.status,
+    workSpent:r.workSpent??null, nodesExpanded:r.nodesExpanded??null,
+  })),
   results,
 };
 mkdirSync(path.dirname(path.resolve(outFile)),{recursive:true});
