@@ -96,6 +96,16 @@ Do not start with all 96k variants.
 
 The retained July family work already supplies a coherent six-parent discovery cohort with the same three transformation families observed on each parent: **P00146, P00144, R00631, P00136, R02976 and R00792**. Each has symmetry, local-mutant and swap evidence, and all six were re-evaluated after the repair elite-splice fix. This cohort is intentionally selected-on and therefore suitable for mechanism discovery only. Its value is the matched transformation coverage, not representativeness. Any general claim must move to untouched whole-parent confirmation families.
 
+The first pilot is frozen in `reports/2026-10-07-controlled-technique-response-pilot-spec-001.json`:
+
+- three family blocks per parent: local-mutant, swap and symmetry;
+- five materially different isolated techniques: standard repair, objective-first 5k plain beam, intersection-harvest 5k mechanic-bucket beam, default DFS, and no-tie-break admissible-order;
+- `workBudget = 10,000,000` per cell, matching the previously validated EW1 equal-work scale;
+- `budgetMs = 600000` only as a wall-safety deadline;
+- unique `parentId`, not family-mode block, is the independence denominator.
+
+Mount `claude/variant-levels-solver-insights-tpk4qg` as the historical dataset root, then use `family:technique-response-campaign-plan` against the frozen spec. The campaign planner reads each historical manifest's own `parentCorpus` but executes current-main parent levels and historical generated descendants, retaining the manifest mutation relation in every cell.
+
 1. Start with those six parents if their family artifacts can be mounted/recovered with intact generation identity; otherwise substitute 6-12 existing independent parent families with equally small interpretable transformations and record the substitution rule.
 2. Prefer local-mutant, swap, tightly bounded density changes, and selected symmetry edges. Avoid broad reshuffles in the first causal pilot.
 3. Use 3-6 isolated techniques chosen to span genuinely different search behavior, not dozens of near-duplicate configurations.
