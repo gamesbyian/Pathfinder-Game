@@ -84,7 +84,7 @@ try {
         workBudget:1000, budgetMs:9999, techniques:[t1,t2],
         families:[{parentId:'P1',modes:['localmutant']}],
     }));
-    const campaign = spawnSync(process.execPath, ['scripts/family-technique-response-campaign-plan.mjs',
+    const campaign = spawnSync(process.execPath, ['scripts/run-bundled.mjs', 'scripts/family-technique-response-campaign-plan.mjs', '--',
         `--spec=${campaignSpec}`, `--variant-family-dataset-root=${datasetRoot}`,
         `--parent-corpus-root=${root}`, `--out=${campaignPlan}`], { cwd:root, encoding:'utf8' });
     assert.equal(campaign.status, 0, campaign.stderr || campaign.stdout);
