@@ -79,6 +79,13 @@
       "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
     },
     {
+      "workflow": "controlled-technique-response-neighborhoods.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "PG-G controlled solver-response premise-discovery pilot",
+      "retirementTrigger": "retire when PG-G closes or a shared family-response workflow supersedes this bounded dispatch surface"
+    },
+    {
       "workflow": "cpsat-explicit-prefix-reference.yml",
       "role": "evidence-producing",
       "status": "maintained",
