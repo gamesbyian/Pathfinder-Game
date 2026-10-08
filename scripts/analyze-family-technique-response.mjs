@@ -5,7 +5,7 @@
  * Input may be one shard result or several comma-separated shard result files from technique-census.mjs.
  * Parent and variant rows are paired by familyContext + canonical technique identity.
  */
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { techniqueCensusIdentityKey } from './technique-census-result-lib.mjs';
@@ -21,9 +21,17 @@ if (!inputArg && !inputDir) throw new Error('--input=<result.json[,result2.json,
 if (inputArg && inputDir) throw new Error('use only one of --input or --input-dir');
 const outFile = args.get('--out') ?? 'tmp/family-technique-response/analysis.json';
 const planFile = args.get('--plan') ?? null;
+function findShardFiles(dir) {
+    const out = [];
+    for (const name of readdirSync(dir).sort()) {
+        const file = path.join(dir, name);
+        if (statSync(file).isDirectory()) out.push(...findShardFiles(file));
+        else if (/^shard-\d+\.json$/u.test(name)) out.push(file);
+    }
+    return out;
+}
 const inputFiles = inputDir
-    ? readdirSync(path.resolve(inputDir)).filter(name => /^shard-\d+\.json$/u.test(name)).sort()
-        .map(name => path.join(path.resolve(inputDir), name))
+    ? findShardFiles(path.resolve(inputDir))
     : inputArg.split(',').map(x => x.trim()).filter(Boolean);
 if (!inputFiles.length) throw new Error('no input result files found');
 const rows = [];
