@@ -117,9 +117,11 @@ for (const familyId of familyIds) {
     });
 }
 
+const parentIds = [...new Set(families.map(f => f.parentId))].sort();
 const summary = {
-    families: families.length,
-    parentFamilies: families.length,
+    familyModeBlocks: families.length,
+    parentFamilies: parentIds.length,
+    parentIds,
     variants: families.reduce((n, f) => n + f.variants, 0),
     edgesWithTechniqueHeterogeneity: families.reduce((n, f) => n + f.heterogeneousEdges, 0),
     gainCells: families.reduce((n, f) => n + f.techniqueSummary.reduce((s, t) => s + t.gains, 0), 0),
@@ -133,7 +135,7 @@ const out = {
     interpretation: {
         derivative: 'For one independent parent family, compare one isolated technique under equal work on the parent and one controlled descendant.',
         heterogeneity: 'An edge is heterogeneous when different techniques have different solve-state transitions on the same parent->variant transformation.',
-        independence: 'Variant edges are repeated observations within a parent family, not independent between-level confirmation.',
+        independence: 'Variant edges and multiple transformation-mode blocks from the same parent are repeated observations within one parent family; unique parentId is the between-level independence unit.',
     },
     summary,
     families,
