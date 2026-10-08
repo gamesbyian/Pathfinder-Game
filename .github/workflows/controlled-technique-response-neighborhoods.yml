@@ -1,0 +1,238 @@
+# Controlled parent/variant × isolated-technique premise-discovery pilot (PG-G).
+#
+# Evidence-only. The six-parent cohort and technique panel are frozen in
+# reports/2026-10-07-controlled-technique-response-pilot-spec-001.json.
+# Historical descendants are checked out read-only from the retained family-data branch; current
+# parent content is fingerprint-checked against each historical family manifest before fan-out.
+name: Controlled technique-response neighborhoods
+run-name: "Technique-response pilot · 6 parents · 10M work · workers=${{ inputs.workers }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      workers:
+        description: 'Cross-cell worker processes per shard.'
+        required: false
+        default: '4'
+      max_parallel:
+        description: 'Shard jobs running concurrently.'
+        required: false
+        default: '9'
+
+concurrency:
+  group: controlled-technique-response-neighborhoods
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Freeze and canary campaign
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Check out dispatched solver commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Check out retained family dataset
+        uses: actions/checkout@v7
+        with:
+          ref: claude/variant-levels-solver-insights-tpk4qg
+          path: historical-family-data
+          sparse-checkout: |
+            data/families
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frozen campaign plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run family:technique-response-campaign-plan -- \
+            --spec=reports/2026-10-07-controlled-technique-response-pilot-spec-001.json \
+            --variant-family-dataset-root=historical-family-data \
+            --parent-corpus-root=. \
+            --out=plan/controlled-technique-response-plan.json
+
+      - name: Canary one parent cell per technique
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const plan = JSON.parse(fs.readFileSync('plan/controlled-technique-response-plan.json', 'utf8'));
+          const firstFamily = plan.blocks[0]?.familyId;
+          const seen = new Set();
+          const cells = [];
+          for (const cell of plan.cells) {
+            if (cell.familyContext?.familyId !== firstFamily || cell.familyContext?.role !== 'parent') continue;
+            const key = cell.techniqueKeys?.[0];
+            if (!key || seen.has(key)) continue;
+            seen.add(key);
+            cells.push(cell);
+          }
+          if (cells.length !== plan.techniques.length) throw new Error(`canary selected ${cells.length}/${plan.techniques.length} techniques`);
+          fs.writeFileSync('plan/canary-plan.json', JSON.stringify({
+            ...plan,
+            kind: 'pathfinder-family-technique-response-canary-plan',
+            cells,
+            expectedCells: cells.length,
+          }, null, 2) + '\n');
+          NODE
+          node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+            --plan=plan/canary-plan.json --shard=1 --shards=1 --workers="${{ inputs.workers }}" \
+            --out=logs/controlled-technique-response-canary.json
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const r = JSON.parse(fs.readFileSync('logs/controlled-technique-response-canary.json', 'utf8'));
+          if (r.partial) throw new Error('canary result is partial');
+          if (r.results.length !== 5) throw new Error(`canary returned ${r.results.length}/5 rows`);
+          const bad = r.results.filter(x => x.status === 'error' || x.status === 'deadline-truncated');
+          if (bad.length) throw new Error(`canary has invalid rows: ${bad.map(x => x.cellId + ':' + x.status).join(', ')}`);
+          console.log('controlled technique-response canary: 5/5 structurally valid');
+          NODE
+
+      - name: Upload frozen plan and canary
+        uses: actions/upload-artifact@v7
+        with:
+          name: controlled-technique-response-plan
+          path: |
+            plan/controlled-technique-response-plan.json
+            logs/controlled-technique-response-canary.json
+          retention-days: 30
+          if-no-files-found: error
+
+  shards:
+    name: Response shard ${{ matrix.shard }}/18
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(inputs.max_parallel) }}
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+    steps:
+      - name: Check out dispatched solver commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Check out retained family dataset
+        uses: actions/checkout@v7
+        with:
+          ref: claude/variant-levels-solver-insights-tpk4qg
+          path: historical-family-data
+          sparse-checkout: |
+            data/families
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download frozen plan
+        uses: actions/download-artifact@v8
+        with:
+          name: controlled-technique-response-plan
+          path: plan-artifact
+
+      - name: Run shard
+        shell: bash
+        run: |
+          set -euo pipefail
+          nn=$(printf '%02d' "${{ matrix.shard }}")
+          mkdir -p logs/controlled-technique-response-shards
+          timeout -k 30s --preserve-status 345m node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+            --plan=plan-artifact/plan/controlled-technique-response-plan.json \
+            --shard="${{ matrix.shard }}" --shards=18 --workers="${{ inputs.workers }}" \
+            --out="logs/controlled-technique-response-shards/shard-${nn}.json" \
+            --summary-out="logs/controlled-technique-response-shards/shard-${nn}-summary.md"
+
+      - name: Upload shard
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: controlled-technique-response-shard-${{ matrix.shard }}
+          path: logs/controlled-technique-response-shards/
+          retention-days: 30
+          if-no-files-found: error
+
+  combine:
+    name: Combine and analyze response matrix
+    needs: shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Check out dispatched solver commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download frozen plan
+        uses: actions/download-artifact@v8
+        with:
+          name: controlled-technique-response-plan
+          path: plan-artifact
+
+      - name: Download all shards
+        uses: actions/download-artifact@v8
+        with:
+          pattern: controlled-technique-response-shard-*
+          path: artifact-staging
+          merge-multiple: false
+
+      - name: Enforce exact coverage and analyze
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "reports/stress/controlled-technique-response/${{ github.run_id }}"
+          node scripts/combine-family-technique-response-shards.mjs \
+            --plan=plan-artifact/plan/controlled-technique-response-plan.json \
+            --staging-dir=artifact-staging \
+            --out="reports/stress/controlled-technique-response/${{ github.run_id }}/combined-results.json"
+          node scripts/analyze-family-technique-response.mjs \
+            --input="reports/stress/controlled-technique-response/${{ github.run_id }}/combined-results.json" \
+            --out="reports/stress/controlled-technique-response/${{ github.run_id }}/analysis.json"
+          cp reports/2026-10-07-controlled-technique-response-pilot-spec-001.json \
+            "reports/stress/controlled-technique-response/${{ github.run_id }}/pilot-spec.json"
+          cp plan-artifact/plan/controlled-technique-response-plan.json \
+            "reports/stress/controlled-technique-response/${{ github.run_id }}/plan.json"
+          cp plan-artifact/logs/controlled-technique-response-canary.json \
+            "reports/stress/controlled-technique-response/${{ github.run_id }}/canary.json"
+
+      - name: Upload complete pilot evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: controlled-technique-response-pilot
+          path: reports/stress/controlled-technique-response/${{ github.run_id }}/
+          retention-days: 90
+          if-no-files-found: error
