@@ -412,6 +412,12 @@ jobs:
             process.exit(0);
           }
           const a = JSON.parse(fs.readFileSync(p, 'utf8'));
+          if (!a.summary) {
+            console.log(`- result: **incomplete**`);
+            console.log(`- outcome: **${a.researchOutcome?.outcome ?? 'unknown'}**`);
+            console.log(`- reason: ${a.researchOutcome?.reason ?? 'analysis did not complete'}`);
+            process.exit(0);
+          }
           console.log(`- independent parents: **${a.summary.parentFamilies}**`);
           console.log(`- family-mode blocks: **${a.summary.familyModeBlocks}**`);
           console.log(`- variants: **${a.summary.variants}**`);
