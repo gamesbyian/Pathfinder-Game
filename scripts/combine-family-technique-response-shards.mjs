@@ -6,7 +6,7 @@
  *   node scripts/combine-family-technique-response-shards.mjs \
  *     --plan=<campaign-plan.json> --staging-dir=<downloaded-artifacts> --out=<combined.json>
  */
-import { readdirSync, readFileSync, statSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -54,7 +54,7 @@ if(duplicates.length) throw new Error(`duplicate cell results: ${[...new Set(dup
 const missing=expected.filter(id=>!byId.has(id));
 if(missing.length) throw new Error(`missing ${missing.length}/${expected.length} planned cells; first: ${missing.slice(0,20).join(', ')}`);
 
-const results=expected.map(id=>byId.get(id));
+const results=expected.map(id=>({ ...byId.get(id), id }));
 const statusCounts={};
 for(const r of results) statusCounts[r.status??'unknown']=(statusCounts[r.status??'unknown']??0)+1;
 const invalidStatuses = new Set(['error','deadline-truncated','referee-invalid']);
