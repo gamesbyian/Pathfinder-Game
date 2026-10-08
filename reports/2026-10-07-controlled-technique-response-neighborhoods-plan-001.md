@@ -1,6 +1,6 @@
 # Controlled technique-response neighborhoods — plan and infrastructure audit (2026-10-07)
 
-> **Status:** active.
+> **Status:** active
 > **Last evidence:** 2026-10-07 — current-main infrastructure audit plus the retained July family synthesis/resource audits.
 > **Decision:** reuse the existing variant-family and technique-census systems; do not build a second solver harness or launch another bulk family-generation campaign.
 > **Remaining gate:** run a bounded current-main pilot over existing controlled families, with whole parent families as the independent unit, then inspect only response-cliff edges with the existing pair-divergence microscope.
