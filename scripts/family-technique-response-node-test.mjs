@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -66,6 +66,33 @@ try {
     const v1 = analysis.families[0].edges.find(e => e.variantId === 'V1');
     assert.deepEqual(v1.gains, [t1]);
     assert.equal(v1.responses.find(r => r.technique === t2).transition, 'neither');
+
+    const datasetRoot = path.join(dir, 'dataset');
+    const familyDir = path.join(datasetRoot, 'data', 'families');
+    await mkdir(familyDir, { recursive: true });
+    await writeFile(path.join(familyDir, 'family-P1-localmutant.json'), JSON.stringify([{ id:'V1' }, { id:'V2' }]));
+    await writeFile(path.join(familyDir, 'family-P1-localmutant-manifest.json'), JSON.stringify({
+        familyId:'family-P1-w0-local-mutant', parentLevelId:'P1', parentCorpus:path.relative(root, parentCorpus),
+        familyMode:'local-mutant', variants:[
+            { variantId:'V1', mutationManifest:{operation:'move'} },
+            { variantId:'V2', mutationManifest:{operation:'move'} },
+        ],
+    }));
+    const campaignSpec = path.join(dir, 'campaign-spec.json');
+    const campaignPlan = path.join(dir, 'campaign-plan.json');
+    await writeFile(campaignSpec, JSON.stringify({
+        workBudget:1000, budgetMs:9999, techniques:[t1,t2],
+        families:[{parentId:'P1',modes:['localmutant']}],
+    }));
+    const campaign = spawnSync(process.execPath, ['scripts/family-technique-response-campaign-plan.mjs',
+        `--spec=${campaignSpec}`, `--variant-family-dataset-root=${datasetRoot}`,
+        `--parent-corpus-root=${root}`, `--out=${campaignPlan}`], { cwd:root, encoding:'utf8' });
+    assert.equal(campaign.status, 0, campaign.stderr || campaign.stdout);
+    const campaignDoc = JSON.parse(await readFile(campaignPlan, 'utf8'));
+    assert.equal(campaignDoc.independentParentCount, 1);
+    assert.equal(campaignDoc.familyModeBlockCount, 1);
+    assert.equal(campaignDoc.expectedCells, 6);
+    assert.deepEqual(campaignDoc.parentIds, ['P1']);
 } finally {
     await rm(dir, { recursive:true, force:true });
 }
