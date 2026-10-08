@@ -213,7 +213,8 @@ Current `family-generate.mjs` generation-run records preserve invocation-local r
 | Generate a justified generic family pilot | `npm run family:generate` |
 | Generate a question-first human/editor contrast pilot | `node scripts/human-parent-contrast-pilot.mjs` |
 | Build/query index | `family:index`, `family:show`, `family:query`, `family:coverage` |
-| Build equal-work parent/variant × technique cells | `npm run family:technique-response-plan` |
+| Build equal-work cells for one parent/variant family | `npm run family:technique-response-plan` |
+| Build a multi-family response campaign from a frozen spec | `npm run family:technique-response-campaign-plan` |
 | Analyze controlled technique-response derivatives | `npm run family:technique-response-analyze` |
 | Join solve/mutation effects | `npm run family:analyze` |
 | Boundary synthesis | `npm run family:boundary-report` |
