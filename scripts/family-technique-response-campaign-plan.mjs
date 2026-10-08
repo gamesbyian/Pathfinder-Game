@@ -61,6 +61,7 @@ for(const familySpec of spec.families){
     const manifest=readJson(manifestFile);
     const manifestParentId=String(manifest.parentLevelId??manifest.parentId??'');
     if(manifestParentId!==parentId) throw new Error(`${manifestFile} parent ${manifestParentId} != spec ${parentId}`);
+    const familyId=String(manifest.familyId??base);
     const parentCorpusRel=manifest.parentCorpus;
     if(!parentCorpusRel) throw new Error(`${manifestFile} lacks parentCorpus`);
     const parentCorpusFile=path.resolve(parentRoot,parentCorpusRel);
@@ -73,7 +74,6 @@ for(const familySpec of spec.families){
       throw new Error(`${familyId} parent content drift: manifest=${manifest.parentContentHash}, current=${currentParentHash}`);
     }
     const variantPosById=new Map(variantLevels.map((lv,i)=>[idOf(lv,i+1),i+1]));
-    const familyId=String(manifest.familyId??base);
     const relation=manifest.familyMode??manifest.relation??null;
     const variants=(manifest.variants??[]).map(v=>{
       const variantId=String(v.variantId??v.id??'');
