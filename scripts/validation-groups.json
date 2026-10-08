@@ -193,6 +193,7 @@
       "test:derive-timeout-recovery-population",
       "test:lifecycle-failure-map",
       "test:family-census-combine",
+      "test:family-technique-response",
       "test:research-analysis-lib",
       "test:experiment-manifest",
       "test:technique-campaign-analysis",
@@ -609,6 +610,11 @@
       ],
       "test:solver-deep-integrations": [
         "solver"
+      ],
+      "test:family-technique-response": [
+        "data",
+        "research",
+        "solver"
       ]
     },
     "validators": {
@@ -763,6 +769,13 @@
         "filesystemScope": "repo-inputs",
         "repoPaths": [
           "data/levels.json"
+        ]
+      },
+      "test:family-technique-response": {
+        "filesystemScope": "fixture-only",
+        "processEntrypoints": [
+          "scripts/family-technique-response-plan.mjs",
+          "scripts/analyze-family-technique-response.mjs"
         ]
       }
     }
