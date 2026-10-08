@@ -304,6 +304,23 @@ jobs:
             reason="The controlled technique-response pilot did not produce a complete analysis artifact."
           fi
           node scripts/research-workflow-outcome.mjs --out="$out/outcome.json" --outcome="$outcome" --reason="$reason"
+          if [ ! -s "$out/analysis.json" ]; then
+            node - <<'NODE'
+          const fs = require('node:fs');
+          const out = 'reports/stress/controlled-technique-response/${{ github.run_id }}';
+          const outcome = JSON.parse(fs.readFileSync(out + '/outcome.json', 'utf8'));
+          fs.writeFileSync(out + '/analysis.json', JSON.stringify({
+            schemaVersion: 1,
+            kind: 'pathfinder-family-technique-response-analysis',
+            incomplete: true,
+            researchOutcome: outcome,
+            summary: null
+          }, null, 2) + '\n');
+          NODE
+          fi
+          if [ ! -s "$out/combined-cells.json" ]; then
+            printf '%s\n' '{"schemaVersion":1,"results":[],"incomplete":true}' > "$out/combined-cells.json"
+          fi
           node - <<'NODE'
           const fs = require('node:fs');
           const crypto = require('node:crypto');
