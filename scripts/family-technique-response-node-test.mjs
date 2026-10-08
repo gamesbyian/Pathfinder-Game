@@ -56,8 +56,9 @@ try {
         row(t1,'variant','V2',false,1000), row(t2,'variant','V2',false,1000),
     ]};
     await writeFile(resultsFile, JSON.stringify(resultDoc));
-    await mkdir(shardDir, { recursive: true });
-    await writeFile(path.join(shardDir, 'shard-01.json'), JSON.stringify(resultDoc));
+    const nestedShardDir = path.join(shardDir, 'logs', 'controlled-technique-response');
+    await mkdir(nestedShardDir, { recursive: true });
+    await writeFile(path.join(nestedShardDir, 'shard-01.json'), JSON.stringify(resultDoc));
     const analyzed = spawnSync(process.execPath, ['scripts/analyze-family-technique-response.mjs',
         `--input-dir=${shardDir}`, `--out=${analysisFile}`], { cwd:root, encoding:'utf8' });
     assert.equal(analyzed.status, 0, analyzed.stderr || analyzed.stdout);
