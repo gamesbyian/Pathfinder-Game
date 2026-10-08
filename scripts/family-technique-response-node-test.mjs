@@ -124,6 +124,15 @@ try {
     const combinedDoc = JSON.parse(await readFile(combinedFile, 'utf8'));
     assert.equal(combinedDoc.complete, true);
     assert.equal(combinedDoc.observedCells, campaignDoc.expectedCells);
+
+    const badRows = campaignDoc.cells.map(resultRow);
+    badRows[0] = { ...badRows[0], status:'deadline-truncated' };
+    await writeFile(path.join(shardDir, 'shard-01.json'), JSON.stringify({results:badRows.slice(0, half)}));
+    const rejected = spawnSync(process.execPath, ['scripts/combine-family-technique-response-shards.mjs',
+        `--plan=${campaignPlan}`, `--staging-dir=${shardDir}`, `--out=${combinedFile}`],
+        { cwd:root, encoding:'utf8' });
+    assert.notEqual(rejected.status, 0, 'deadline-truncated decision-bearing rows must invalidate the campaign');
+    assert.match(rejected.stderr, /invalid decision-bearing rows/);
 } finally {
     await rm(dir, { recursive:true, force:true });
 }
