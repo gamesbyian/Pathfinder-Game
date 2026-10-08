@@ -503,6 +503,28 @@
       "partialFailureUpload": true,
       "hintIngestionDisposition": "experiment-only-no-hint-ingestion",
       "rationale": "Canonical portfolio producer metadata remains historyAware=true, but this invocation asserts baseline/prime/attempt-cache absent and saveHints=false; central harvest persists decision-bearing experiment evidence only."
+    },
+    {
+      "workflow": "controlled-technique-response-pilot-one-shot.yml",
+      "currentHintMode": "generated-variant experiment evidence only; explicitly excluded from canonical Hint harvest",
+      "centralHarvester": false,
+      "target": "remain experiment evidence only",
+      "partialFailureEvidence": true,
+      "executionClass": "controlled generated-family x isolated-technique discovery",
+      "artifactSufficientForFutureSemanticHint": "intentionally irrelevant to canonical Hint stores; successful paths target generated historical variants",
+      "migrationTarget": "remain experiment-only",
+      "producerEntrypoint": "scripts/technique-census.mjs",
+      "levelBlind": true,
+      "historyAware": false,
+      "currentHintPersistence": "experiment artifacts only",
+      "exactSuccessfulPath": "yes in solved generated-variant cell rows",
+      "winningAttemptConfig": "isolated technique identity explicit",
+      "levelRevision": "sealed current-parent identity plus historical family manifest/variant corpus",
+      "effectiveExecutionConfig": "sealed equal-work campaign plan + experiment contract",
+      "sourceRunLineage": "source run + family block + cell/shard",
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "experiment-only-no-hint-ingestion",
+      "rationale": "The experiment evaluates retained generated variant-family descendants. Their solutions are research evidence for those generated levels and must not be ingested as canonical published/stress Hint observations."
     }
   ],
   "provenanceMissingness": [

@@ -280,6 +280,13 @@
       "status": "maintained",
       "currentConsumer": "solver research execution-efficiency exact-runtime parity audit",
       "retirementTrigger": "retire after the maintained research runtime is pinned and equivalent runtime identity/parity protection is owned by ordinary workflow contracts"
+    },
+    {
+      "workflow": "controlled-technique-response-pilot-one-shot.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "PG-G controlled technique-response neighborhood discovery pilot",
+      "retirementTrigger": "delete after the frozen six-parent pilot evidence is durably recorded and any required follow-up uses the generic family/census tooling"
     }
   ],
   "retiredWorkflows": [

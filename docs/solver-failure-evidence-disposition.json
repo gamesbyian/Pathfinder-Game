@@ -222,6 +222,16 @@
         "mode": "automatic-harvest",
         "reason": null
       }
+    },
+    {
+      "id": "controlled-technique-response-pilot-one-shot",
+      "workflow": ".github/workflows/controlled-technique-response-pilot-one-shot.yml",
+      "disposition": "standard",
+      "reason": null,
+      "durability": {
+        "mode": "artifact-only",
+        "reason": "One-shot selected-on family/technique discovery evidence is retained in its standard solver-sweep result and raw shard artifacts; generated-variant outcomes are not canonical level evidence."
+      }
     }
   ]
 }

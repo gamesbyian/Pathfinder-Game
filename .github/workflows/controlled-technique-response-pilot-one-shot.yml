@@ -1,0 +1,437 @@
+name: Controlled technique-response pilot (one-shot)
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/controlled-technique-response-pilot-one-shot.yml'
+      - 'scripts/family-technique-response-campaign-plan.mjs'
+      - 'scripts/analyze-family-technique-response.mjs'
+      - 'scripts/family-technique-response-node-test.mjs'
+  workflow_dispatch:
+
+concurrency:
+  group: controlled-technique-response-pilot-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22.23.2'
+  PILOT_SPEC: 'reports/2026-10-07-controlled-technique-response-pilot-spec-001.json'
+  DATASET_REF: 'claude/variant-levels-solver-insights-tpk4qg'
+  SHARDS: '12'
+  WORKERS: '4'
+
+jobs:
+  plan:
+    name: Seal pilot inputs and canary
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the exact experiment source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Check out only the selected historical families
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ env.DATASET_REF }}
+          path: historical
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /data/families/family-P00146-localmutant.json
+            /data/families/family-P00146-localmutant-manifest.json
+            /data/families/family-P00146-swap.json
+            /data/families/family-P00146-swap-manifest.json
+            /data/families/family-P00146-symmetry.json
+            /data/families/family-P00146-symmetry-manifest.json
+            /data/families/family-P00144-localmutant.json
+            /data/families/family-P00144-localmutant-manifest.json
+            /data/families/family-P00144-swap.json
+            /data/families/family-P00144-swap-manifest.json
+            /data/families/family-P00144-symmetry.json
+            /data/families/family-P00144-symmetry-manifest.json
+            /data/families/family-R00631-localmutant.json
+            /data/families/family-R00631-localmutant-manifest.json
+            /data/families/family-R00631-swap.json
+            /data/families/family-R00631-swap-manifest.json
+            /data/families/family-R00631-symmetry.json
+            /data/families/family-R00631-symmetry-manifest.json
+            /data/families/family-P00136-localmutant.json
+            /data/families/family-P00136-localmutant-manifest.json
+            /data/families/family-P00136-swap.json
+            /data/families/family-P00136-swap-manifest.json
+            /data/families/family-P00136-symmetry.json
+            /data/families/family-P00136-symmetry-manifest.json
+            /data/families/family-R02976-localmutant.json
+            /data/families/family-R02976-localmutant-manifest.json
+            /data/families/family-R02976-swap.json
+            /data/families/family-R02976-swap-manifest.json
+            /data/families/family-R02976-symmetry.json
+            /data/families/family-R02976-symmetry-manifest.json
+            /data/families/family-R00792-localmutant.json
+            /data/families/family-R00792-localmutant-manifest.json
+            /data/families/family-R00792-swap.json
+            /data/families/family-R00792-swap-manifest.json
+            /data/families/family-R00792-symmetry.json
+            /data/families/family-R00792-symmetry-manifest.json
+
+      - name: Setup exact scientific Node runtime
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the frozen campaign plan
+        run: |
+          npm run family:technique-response-campaign-plan -- \
+            --spec="${PILOT_SPEC}" \
+            --variant-family-dataset-root=historical \
+            --parent-corpus-root=. \
+            --out=plan/controlled-technique-response-plan.json
+
+      - name: Validate the plan shape
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const plan = JSON.parse(fs.readFileSync('plan/controlled-technique-response-plan.json', 'utf8'));
+          if (plan.independentParentCount !== 6) throw new Error(`expected 6 independent parents, got ${plan.independentParentCount}`);
+          if (plan.familyModeBlockCount !== 18) throw new Error(`expected 18 family-mode blocks, got ${plan.familyModeBlockCount}`);
+          if (!plan.cells.length) throw new Error('pilot plan has no cells');
+          if (plan.blocks.some(block => !block.parentContentIdentityVerified)) throw new Error('one or more historical parent identities were not verified');
+          console.log(JSON.stringify({
+            independentParents: plan.independentParentCount,
+            familyModeBlocks: plan.familyModeBlockCount,
+            cells: plan.cells.length,
+            techniques: plan.techniques.length,
+            workBudget: plan.workBudget,
+          }));
+          NODE
+
+      - name: Run one short canary per technique family
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const plan = JSON.parse(fs.readFileSync('plan/controlled-technique-response-plan.json', 'utf8'));
+          const firstFamily = plan.blocks[0].familyId;
+          const chosen = [];
+          const seen = new Set();
+          for (const cell of plan.cells) {
+            if (cell.familyContext.familyId !== firstFamily || cell.familyContext.role !== 'parent') continue;
+            const key = cell.techniqueKeys[0];
+            if (seen.has(key)) continue;
+            seen.add(key);
+            chosen.push({ ...cell, workBudget: Math.min(cell.workBudget, 250000), cellId: 'CANARY::' + cell.cellId });
+          }
+          if (chosen.length !== plan.techniques.length) throw new Error('canary did not cover every technique');
+          fs.writeFileSync('plan/canary-plan.json', JSON.stringify({ ...plan, cells: chosen, expectedCells: chosen.length }, null, 2));
+          NODE
+          node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+            --plan=plan/canary-plan.json --shard=1 --shards=1 --workers=4 \
+            --out=plan/canary-result.json
+
+      - name: Upload sealed plan and historical inputs
+        uses: actions/upload-artifact@v7
+        with:
+          name: controlled-technique-response-plan-inputs
+          path: |
+            plan/controlled-technique-response-plan.json
+            plan/canary-result.json
+            historical/data/families/
+          retention-days: 30
+          if-no-files-found: error
+
+  shards:
+    name: Pilot shard ${{ matrix.shard }}/12
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    steps:
+      - name: Check out the exact experiment source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Setup exact scientific Node runtime
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download sealed plan and family inputs
+        uses: actions/download-artifact@v8
+        with:
+          name: controlled-technique-response-plan-inputs
+          path: .
+
+      - name: Execute shard
+        shell: bash
+        run: |
+          set -euo pipefail
+          nn=$(printf '%02d' "${{ matrix.shard }}")
+          mkdir -p logs/controlled-technique-response
+          timeout -k 30s --preserve-status 345m node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+            --plan=plan/controlled-technique-response-plan.json \
+            --shard="${{ matrix.shard }}" --shards="${SHARDS}" --workers="${WORKERS}" \
+            --out="logs/controlled-technique-response/shard-${nn}.json" \
+            --summary-out="logs/controlled-technique-response/shard-${nn}-summary.md"
+
+      - name: Upload shard result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: controlled-technique-response-shard-${{ matrix.shard }}
+          path: logs/controlled-technique-response/
+          retention-days: 30
+          if-no-files-found: error
+
+  combine:
+    name: Validate and analyze pilot
+    needs: shards
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the exact experiment source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Setup exact scientific Node runtime
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download sealed plan
+        uses: actions/download-artifact@v8
+        with:
+          name: controlled-technique-response-plan-inputs
+          path: sealed
+
+      - name: Download all shard outputs
+        uses: actions/download-artifact@v8
+        with:
+          pattern: controlled-technique-response-shard-*
+          path: artifact-staging
+          merge-multiple: true
+
+      - name: Combine raw cells and validate exact population
+        id: combine
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="reports/stress/controlled-technique-response/${{ github.run_id }}"
+          mkdir -p "$out"
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const roots = [];
+          function walk(dir) {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const p = path.join(dir, entry.name);
+              if (entry.isDirectory()) walk(p);
+              else if (/^shard-\d+\.json$/.test(entry.name)) roots.push(p);
+            }
+          }
+          walk('artifact-staging');
+          roots.sort();
+          const results = roots.flatMap(file => JSON.parse(fs.readFileSync(file, 'utf8')).results ?? []);
+          fs.writeFileSync('reports/stress/controlled-technique-response/${{ github.run_id }}/combined-cells.json',
+            JSON.stringify({ schemaVersion: 1, results }, null, 2) + '\n');
+          const plan = JSON.parse(fs.readFileSync('sealed/plan/controlled-technique-response-plan.json', 'utf8'));
+          fs.writeFileSync('reports/stress/controlled-technique-response/${{ github.run_id }}/expected-cell-ids.txt',
+            plan.cells.map(cell => cell.cellId).join('\n') + '\n');
+          NODE
+          node scripts/validate-solver-sweep-integrity.mjs \
+            --rows-field=results \
+            --expected-ids="$out/expected-cell-ids.txt" \
+            --result="$out/combined-cells.json" \
+            --integrity-out="$out/population-integrity.json"
+
+      - name: Analyze with exact plan coverage
+        id: analyze
+        shell: bash
+        run: |
+          out="reports/stress/controlled-technique-response/${{ github.run_id }}"
+          node scripts/analyze-family-technique-response.mjs \
+            --input-dir=artifact-staging \
+            --plan=sealed/plan/controlled-technique-response-plan.json \
+            --out="$out/analysis.json"
+
+      - name: Declare discovery outcome and experiment contract
+        if: always()
+        shell: bash
+        run: |
+          out="reports/stress/controlled-technique-response/${{ github.run_id }}"
+          mkdir -p "$out"
+          if [ -s "$out/analysis.json" ]; then
+            heterogeneous=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$out/analysis.json','utf8')).summary.edgesWithTechniqueHeterogeneity)")
+            if [ "$heterogeneous" -gt 0 ]; then
+              outcome=completed-positive
+              reason="At least one controlled parent-to-variant edge showed technique-response heterogeneity under the frozen equal-work protocol."
+            else
+              outcome=completed-negative
+              reason="No controlled parent-to-variant edge showed technique-response heterogeneity under the frozen equal-work protocol."
+            fi
+          elif [ "${{ needs.shards.result }}" = cancelled ]; then
+            outcome=infrastructure-error
+            reason="The controlled technique-response shard matrix was cancelled before complete analysis."
+          else
+            outcome=harness-error
+            reason="The controlled technique-response pilot did not produce a complete analysis artifact."
+          fi
+          node scripts/research-workflow-outcome.mjs --out="$out/outcome.json" --outcome="$outcome" --reason="$reason"
+          if [ ! -s "$out/analysis.json" ]; then
+            node - <<'NODE'
+          const fs = require('node:fs');
+          const out = 'reports/stress/controlled-technique-response/${{ github.run_id }}';
+          const outcome = JSON.parse(fs.readFileSync(out + '/outcome.json', 'utf8'));
+          fs.writeFileSync(out + '/analysis.json', JSON.stringify({
+            schemaVersion: 1,
+            kind: 'pathfinder-family-technique-response-analysis',
+            incomplete: true,
+            researchOutcome: outcome,
+            summary: null
+          }, null, 2) + '\n');
+          NODE
+          fi
+          if [ ! -s "$out/combined-cells.json" ]; then
+            printf '%s\n' '{"schemaVersion":1,"results":[],"incomplete":true}' > "$out/combined-cells.json"
+          fi
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+          const out = 'reports/stress/controlled-technique-response/${{ github.run_id }}';
+          const plan = JSON.parse(fs.readFileSync('sealed/plan/controlled-technique-response-plan.json', 'utf8'));
+          const ids = plan.cells.map(cell => cell.cellId);
+          const corpusIdentity = 'sha256:' + crypto.createHash('sha256').update(JSON.stringify(ids)).digest('hex');
+          fs.writeFileSync(out + '/experiment-contract-spec.json', JSON.stringify({
+            configuration: {
+              pilotSpec: plan.sourceSpec,
+              techniques: plan.techniques,
+              workBudget: plan.workBudget,
+              budgetMs: plan.budgetMs,
+              executionOrdering: plan.executionOrdering,
+              historicalDatasetRef: '${{ env.DATASET_REF }}'
+            },
+            workflowFamily: 'controlled-technique-response-pilot',
+            producer: 'controlled-technique-response-pilot-one-shot.yml',
+            entrypoint: 'scripts/technique-census.mjs',
+            population: {
+              kind: 'controlled-family-technique-cells',
+              identityBasis: 'sealed-plan-cell-id',
+              corpusIdentity,
+              independentUnit: 'parentId'
+            },
+            execution: {
+              levelBlind: true,
+              historyAware: false,
+              historicalInputs: ['generated variant-family descendants; outcomes are not solver inputs'],
+              reproducibilityExpected: true,
+              producerFamily: 'technique-census',
+              schedulerMode: 'isolated-techniques'
+            },
+            limits: {
+              cumulativeNodeCeiling: null,
+              initialWorkAllocation: plan.workBudget,
+              totalWorkCeiling: plan.workBudget,
+              wallSafetyDeadlineMs: plan.budgetMs,
+              wallDeadlineBinding: false
+            },
+            sideEffects: {
+              hints: 'none',
+              canonicalBaseline: 'none',
+              telemetry: 'compact',
+              reports: 'artifact-only'
+            }
+          }, null, 2) + '\n');
+          NODE
+          node scripts/write-solver-experiment-contract.mjs \
+            --spec="$out/experiment-contract-spec.json" \
+            --out="$out/experiment-contract.json"
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          out="reports/stress/controlled-technique-response/${{ github.run_id }}"
+          node scripts/sweep-publish.mjs \
+            --primary="$out/analysis.json" \
+            --failure-source="$out/combined-cells.json" \
+            --outcome-file="$out/outcome.json" \
+            --integrity-file="$out/population-integrity.json" \
+            --contract-file="$out/experiment-contract.json" \
+            --include="$out/combined-cells.json" \
+            --shards-expected="${SHARDS}" \
+            --shards-observed="$(find artifact-staging -type f -name 'shard-*.json' | wc -l | tr -d ' ')" \
+            --source-artifact="controlled-technique-response-analysis"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Write bounded run digest
+        if: always()
+        shell: bash
+        run: |
+          node - <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          const fs = require('node:fs');
+          const p = 'reports/stress/controlled-technique-response/${{ github.run_id }}/analysis.json';
+          console.log('## Controlled technique-response pilot');
+          console.log('');
+          if (!fs.existsSync(p)) {
+            console.log('Analysis was not produced. Inspect the failed coverage or shard step.');
+            process.exit(0);
+          }
+          const a = JSON.parse(fs.readFileSync(p, 'utf8'));
+          if (!a.summary) {
+            console.log(`- result: **incomplete**`);
+            console.log(`- outcome: **${a.researchOutcome?.outcome ?? 'unknown'}**`);
+            console.log(`- reason: ${a.researchOutcome?.reason ?? 'analysis did not complete'}`);
+            process.exit(0);
+          }
+          console.log(`- independent parents: **${a.summary.parentFamilies}**`);
+          console.log(`- family-mode blocks: **${a.summary.familyModeBlocks}**`);
+          console.log(`- variants: **${a.summary.variants}**`);
+          console.log(`- heterogeneous edges: **${a.summary.edgesWithTechniqueHeterogeneity}**`);
+          console.log(`- gain cells: **${a.summary.gainCells}**`);
+          console.log(`- loss cells: **${a.summary.lossCells}**`);
+          console.log(`- exact plan coverage: **${a.planCoverage?.complete ? 'complete' : 'not complete'}**`);
+          NODE
+
+      - name: Upload combined analysis
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: controlled-technique-response-analysis
+          path: reports/stress/controlled-technique-response/${{ github.run_id }}/
+          retention-days: 90
+          if-no-files-found: warn

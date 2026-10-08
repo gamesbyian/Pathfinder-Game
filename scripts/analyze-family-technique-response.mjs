@@ -5,7 +5,7 @@
  * Input may be one shard result or several comma-separated shard result files from technique-census.mjs.
  * Parent and variant rows are paired by familyContext + canonical technique identity.
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { techniqueCensusIdentityKey } from './technique-census-result-lib.mjs';
@@ -16,9 +16,24 @@ const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map
     return [a.slice(0, i), a.slice(i + 1)];
 }));
 const inputArg = args.get('--input');
-if (!inputArg) throw new Error('--input=<result.json[,result2.json,...]> is required');
+const inputDir = args.get('--input-dir');
+if (!inputArg && !inputDir) throw new Error('--input=<result.json[,result2.json,...]> or --input-dir=<directory> is required');
+if (inputArg && inputDir) throw new Error('use only one of --input or --input-dir');
 const outFile = args.get('--out') ?? 'tmp/family-technique-response/analysis.json';
-const inputFiles = inputArg.split(',').map(x => x.trim()).filter(Boolean);
+const planFile = args.get('--plan') ?? null;
+function findShardFiles(dir) {
+    const out = [];
+    for (const name of readdirSync(dir).sort()) {
+        const file = path.join(dir, name);
+        if (statSync(file).isDirectory()) out.push(...findShardFiles(file));
+        else if (/^shard-\d+\.json$/u.test(name)) out.push(file);
+    }
+    return out;
+}
+const inputFiles = inputDir
+    ? findShardFiles(path.resolve(inputDir))
+    : inputArg.split(',').map(x => x.trim()).filter(Boolean);
+if (!inputFiles.length) throw new Error('no input result files found');
 const rows = [];
 for (const file of inputFiles) {
     const doc = JSON.parse(readFileSync(path.resolve(file), 'utf8'));
@@ -42,6 +57,17 @@ for (const row of usable) {
     else rowByKey.set(key, row);
 }
 if (duplicateKeys.size) throw new Error(`duplicate family-technique result cells: ${duplicateKeys.size}`);
+
+let planCoverage = null;
+if (planFile) {
+    const plan = JSON.parse(readFileSync(path.resolve(planFile), 'utf8'));
+    const expected = new Set((plan.cells ?? []).map(cell => cell.cellId));
+    const observed = new Set(usable.map(row => row.cellId));
+    const missing = [...expected].filter(id => !observed.has(id)).sort();
+    const extra = [...observed].filter(id => !expected.has(id)).sort();
+    planCoverage = { expected: expected.size, observed: observed.size, missing, extra, complete: missing.length === 0 && extra.length === 0 };
+    if (!planCoverage.complete) throw new Error(`family-technique plan coverage mismatch: missing=${missing.length}, extra=${extra.length}`);
+}
 
 const familyIds = [...new Set(usable.map(r => r.familyContext.familyId))].sort();
 const classify = (parent, variant) => parent.ok
@@ -132,6 +158,7 @@ const out = {
     kind: 'pathfinder-family-technique-response-analysis',
     generatedAt: new Date().toISOString(),
     inputs: inputFiles,
+    ...(planFile ? { planFile: path.resolve(planFile), planCoverage } : {}),
     interpretation: {
         derivative: 'For one independent parent family, compare one isolated technique under equal work on the parent and one controlled descendant.',
         heterogeneity: 'An edge is heterogeneous when different techniques have different solve-state transitions on the same parent->variant transformation.',

@@ -14,6 +14,7 @@ try {
     const manifest = path.join(dir, 'manifest.json');
     const planFile = path.join(dir, 'plan.json');
     const resultsFile = path.join(dir, 'results.json');
+    const shardDir = path.join(dir, 'shards');
     const analysisFile = path.join(dir, 'analysis.json');
     const t1 = 'beam|score=default|bias=none|width=500|retention=plain';
     const t2 = 'dfs|score=default|bias=none';
@@ -49,13 +50,17 @@ try {
         familyContext:{familyId:'family-P1-local',parentId:'P1',variantId,role,relation:'local-mutant',
             mutation:role==='variant'?{operation:'move'}:null},
     });
-    await writeFile(resultsFile, JSON.stringify({results:[
+    const resultDoc = {results:[
         row(t1,'parent',null,false,1000), row(t2,'parent',null,false,1000),
         row(t1,'variant','V1',true,800), row(t2,'variant','V1',false,1000),
         row(t1,'variant','V2',false,1000), row(t2,'variant','V2',false,1000),
-    ]}));
+    ]};
+    await writeFile(resultsFile, JSON.stringify(resultDoc));
+    const nestedShardDir = path.join(shardDir, 'logs', 'controlled-technique-response');
+    await mkdir(nestedShardDir, { recursive: true });
+    await writeFile(path.join(nestedShardDir, 'shard-01.json'), JSON.stringify(resultDoc));
     const analyzed = spawnSync(process.execPath, ['scripts/analyze-family-technique-response.mjs',
-        `--input=${resultsFile}`, `--out=${analysisFile}`], { cwd:root, encoding:'utf8' });
+        `--input-dir=${shardDir}`, `--out=${analysisFile}`], { cwd:root, encoding:'utf8' });
     assert.equal(analyzed.status, 0, analyzed.stderr || analyzed.stdout);
     const analysis = JSON.parse(await readFile(analysisFile, 'utf8'));
     assert.equal(analysis.summary.familyModeBlocks, 1);

@@ -30,6 +30,11 @@ if(!Number.isSafeInteger(budgetMs)||budgetMs<=0) throw new Error('spec.budgetMs 
 if(!Array.isArray(spec.families)||!spec.families.length) throw new Error('spec.families must be a non-empty array');
 
 const readJson=file=>JSON.parse(readFileSync(file,'utf8'));
+const portablePath=file=>{
+  const abs=path.resolve(file);
+  const rel=path.relative(process.cwd(),abs);
+  return rel && !rel.startsWith('..') && !path.isAbsolute(rel) ? rel : abs;
+};
 const levelsOf=doc=>Array.isArray(doc)?doc:doc?.levels;
 const idOf=(level,pos)=>String(level?.id??pos);
 const cache=new Map();
@@ -81,7 +86,10 @@ for(const familySpec of spec.families){
       if(!variantId||!levelPos) throw new Error(`${familyId} variant missing from corpus: ${variantId||'(empty)'}`);
       return {variantId,levelPos,edge:v};
     });
-    blocks.push({familyId,parentId,token,relation,manifestFile,variantCorpusFile,parentCorpusFile,
+    const manifestRef=portablePath(manifestFile);
+    const variantCorpusRef=portablePath(variantCorpusFile);
+    const parentCorpusRef=portablePath(parentCorpusFile);
+    blocks.push({familyId,parentId,token,relation,manifestFile:manifestRef,variantCorpusFile:variantCorpusRef,parentCorpusFile:parentCorpusRef,
       manifestParentContentHash:manifest.parentContentHash??null,currentParentContentHash:currentParentHash,
       parentContentIdentityVerified:manifest.parentContentHash?manifest.parentContentHash===currentParentHash:false,
       variantCount:variants.length});
@@ -90,25 +98,34 @@ for(const familySpec of spec.families){
       const suffix=`t${String(ti+1).padStart(2,'0')}`;
       cells.push({
         cellId:`FTR1::${familyId}::parent::${suffix}`,tier:'FTR1',corpus:'family-parent',
-        corpusFile:parentCorpusFile,levelId:parentId,levelPos:parentPos,techniqueKeys:[technique],
+        corpusFile:parentCorpusRef,levelId:parentId,levelPos:parentPos,techniqueKeys:[technique],
         workBudget,budgetMs,familyContext:{familyId,parentId,variantId:null,role:'parent',relation,witnessRelation:null,mutation:null},
       });
       for(const v of variants) cells.push({
         cellId:`FTR1::${familyId}::${v.variantId}::${suffix}`,tier:'FTR1',corpus:'family-variant',
-        corpusFile:variantCorpusFile,levelId:v.variantId,levelPos:v.levelPos,techniqueKeys:[technique],
+        corpusFile:variantCorpusRef,levelId:v.variantId,levelPos:v.levelPos,techniqueKeys:[technique],
         workBudget,budgetMs,familyContext:{familyId,parentId,variantId:v.variantId,role:'variant',
           relation:v.edge.relation??relation,witnessRelation:v.edge.witnessRelation??null,mutation:v.edge.mutationManifest??null},
       });
     }
   }
 }
+const byTechnique=new Map(techniques.map(key=>[key,[]]));
+for(const cell of cells) byTechnique.get(cell.techniqueKeys[0]).push(cell);
+const balancedCells=[];
+const maxBucket=Math.max(...[...byTechnique.values()].map(bucket=>bucket.length));
+for(let i=0;i<maxBucket;i++) for(const technique of techniques) {
+  const cell=byTechnique.get(technique)[i];
+  if(cell) balancedCells.push(cell);
+}
 const plan={
   schemaVersion:1,kind:'pathfinder-family-technique-response-campaign-plan',generatedAt:new Date().toISOString(),
   budgetProtocol:'family-technique-equal-work',equalCostAcrossTechniques:true,
   scientificUnit:'parent-controlled-transformation-technique-response',independenceUnit:'parentId',
-  sourceSpec:path.resolve(specFile),variantFamilyDatasetRoot:datasetRoot,parentCorpusRoot:parentRoot,
+  sourceSpec:portablePath(specFile),variantFamilyDatasetRoot:portablePath(datasetRoot),parentCorpusRoot:portablePath(parentRoot),
   workBudget,budgetMs,techniques,parentIds:[...parentIds].sort(),independentParentCount:parentIds.size,
-  familyModeBlockCount:blocks.length,blocks,expectedCells:cells.length,cells,
+  familyModeBlockCount:blocks.length,blocks,executionOrdering:'round-robin-by-technique',
+  expectedCells:balancedCells.length,cells:balancedCells,
 };
 mkdirSync(path.dirname(path.resolve(outFile)),{recursive:true});
 writeFileSync(path.resolve(outFile),JSON.stringify(plan,null,2)+'\n');
