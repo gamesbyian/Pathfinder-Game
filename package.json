@@ -182,6 +182,7 @@
     "family:query": "node scripts/family-index.mjs query",
     "family:coverage": "node scripts/family-index.mjs coverage",
     "family:technique-response-plan": "node scripts/family-technique-response-plan.mjs",
+    "family:technique-response-campaign-plan": "node scripts/family-technique-response-campaign-plan.mjs",
     "family:technique-response-analyze": "node scripts/analyze-family-technique-response.mjs",
     "test:family-generate": "tsx scripts/family-generate-node-test.mjs",
     "test:family-index": "node scripts/family-index-lib-check.mjs && node scripts/generator-implementation-provenance-check.mjs",
