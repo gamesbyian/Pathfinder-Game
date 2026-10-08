@@ -277,6 +277,13 @@ jobs:
             outcome=$(sed -n '1p' tmp-response-outcome.txt)
             reason=$(sed -n '2p' tmp-response-outcome.txt)
             node scripts/research-workflow-outcome.mjs --out="$out/outcome.json" --outcome="$outcome" --reason="$reason"
+            node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const out = 'reports/stress/controlled-technique-response/${{ github.run_id }}';
+          const primary = JSON.parse(fs.readFileSync(out + '/combined-results.json', 'utf8'));
+          primary.researchOutcome = JSON.parse(fs.readFileSync(out + '/outcome.json', 'utf8'));
+          fs.writeFileSync(out + '/combined-results.json', JSON.stringify(primary, null, 2) + '\n');
+          NODE
           fi
 
           contract_arg=()
@@ -292,7 +299,6 @@ jobs:
             workflowFamily: 'controlled-technique-response-neighborhoods',
             producer: 'controlled-technique-response-neighborhoods.yml',
             entrypoint: 'scripts/technique-census.mjs',
-            researchQuestion: { id: 'PG-G', role: 'discovery' },
             population: {
               kind: 'controlled-family-technique-cells',
               identityBasis: 'sealed-plan-cell-id',
@@ -337,7 +343,7 @@ jobs:
           done
 
           observed=$(find artifact-staging -type f -name 'shard-*.json' 2>/dev/null | wc -l | tr -d ' ')
-          node scripts/sweep-publish.mjs --failure-in=p \
+          node scripts/sweep-publish.mjs --failure-in=p --failure-rows-key=results \
             --primary="$out/combined-results.json" \
             "${include_args[@]}" \
             --outcome-file="$out/outcome.json" \
