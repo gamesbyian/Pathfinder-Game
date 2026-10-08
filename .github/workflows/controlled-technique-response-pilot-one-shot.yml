@@ -11,7 +11,7 @@ on:
 
 concurrency:
   group: controlled-technique-response-pilot-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   NODE_VERSION: '22.23.2'
