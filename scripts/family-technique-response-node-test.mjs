@@ -78,10 +78,20 @@ try {
             { variantId:'V2', mutationManifest:{operation:'move'} },
         ],
     }));
+    for (const gitArgs of [
+        ['init'], ['config','user.email','test@example.invalid'], ['config','user.name','Pathfinder Test'],
+        ['add','.'], ['commit','-m','fixture'],
+    ]) {
+        const git = spawnSync('git', ['-C', datasetRoot, ...gitArgs], { encoding:'utf8' });
+        assert.equal(git.status, 0, git.stderr || git.stdout);
+    }
+    const datasetRefResult = spawnSync('git', ['-C', datasetRoot, 'rev-parse', 'HEAD'], { encoding:'utf8' });
+    assert.equal(datasetRefResult.status, 0, datasetRefResult.stderr || datasetRefResult.stdout);
+    const datasetRef = datasetRefResult.stdout.trim();
     const campaignSpec = path.join(dir, 'campaign-spec.json');
     const campaignPlan = path.join(dir, 'campaign-plan.json');
     await writeFile(campaignSpec, JSON.stringify({
-        workBudget:1000, budgetMs:9999, techniques:[t1,t2],
+        datasetRef, workBudget:1000, budgetMs:9999, techniques:[t1,t2],
         families:[{parentId:'P1',modes:['localmutant']}],
     }));
     const campaign = spawnSync(process.execPath, ['scripts/run-bundled.mjs', 'scripts/family-technique-response-campaign-plan.mjs', '--',
