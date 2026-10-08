@@ -9,6 +9,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { execFileSync } from 'node:child_process';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.js';
 
 const argv=process.argv.slice(2);
@@ -28,6 +29,15 @@ const portablePath = abs => {
 };
 const outFile=args.get('--out')??'tmp/family-technique-response/campaign-plan.json';
 const spec=JSON.parse(readFileSync(path.resolve(specFile),'utf8'));
+if (spec.datasetRef) {
+  let mountedRef;
+  try {
+    mountedRef = execFileSync('git', ['-C', datasetRoot, 'rev-parse', 'HEAD'], { encoding:'utf8' }).trim();
+  } catch (error) {
+    throw new Error(`cannot verify variant-family dataset git identity at ${datasetRoot}: ${error?.message ?? error}`);
+  }
+  if (mountedRef !== spec.datasetRef) throw new Error(`variant-family dataset ref mismatch: spec=${spec.datasetRef}, mounted=${mountedRef}`);
+}
 const techniques=spec.techniques??[];
 if(!Array.isArray(techniques)||!techniques.length) throw new Error('spec.techniques must be a non-empty array');
 const workBudget=Number(spec.workBudget);
