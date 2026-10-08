@@ -461,6 +461,27 @@
       "rationale": "Variant-family generation owns data/families levels and sibling Hints together on its research branch. Direct GHA persistence is reviewed in docs/hint-workflow-persistence-audit.json and is limited to data/families/."
     },
     {
+      "workflow": "controlled-technique-response-neighborhoods.yml",
+      "currentHintMode": "explicitly excluded from canonical hint harvest",
+      "centralHarvester": true,
+      "target": "remain experiment evidence only",
+      "partialFailureEvidence": true,
+      "executionClass": "selected-on controlled family × isolated-technique premise-discovery experiment",
+      "artifactSufficientForFutureSemanticHint": "intentionally irrelevant for canonical levels; descendants are historical controlled variants",
+      "migrationTarget": "remain experiment-only",
+      "producerEntrypoint": "scripts/technique-census.mjs",
+      "levelBlind": true,
+      "historyAware": false,
+      "currentHintPersistence": "experiment evidence only; no canonical Hint mutation or ingestion",
+      "exactSuccessfulPath": "yes in cell rows, retained for experiment interpretation only",
+      "winningAttemptConfig": "isolated technique identity explicit",
+      "levelRevision": "historical descendant content pinned by dataset commit plus parent fingerprint checks",
+      "effectiveExecutionConfig": "frozen campaign plan and experiment contract",
+      "sourceRunLineage": "source run + shard + cell",
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "experiment-only-no-hint-ingestion"
+    },
+    {
       "workflow": "cpsat-explicit-prefix-reference.yml",
       "currentHintMode": "non-Hint exact/reference evidence only",
       "centralHarvester": false,
