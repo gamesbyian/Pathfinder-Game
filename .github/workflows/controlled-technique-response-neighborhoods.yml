@@ -342,7 +342,7 @@ jobs:
             if [ -s "$file" ]; then include_args+=(--include="$file"); fi
           done
 
-          observed=$(find artifact-staging -type f -name 'shard-*.json' 2>/dev/null | wc -l | tr -d ' ')
+          observed=$( { find artifact-staging -type f -name 'shard-*.json' 2>/dev/null || true; } | wc -l | tr -d ' ')
           node scripts/sweep-publish.mjs --failure-in=p --failure-rows-key=results \
             --primary="$out/combined-results.json" \
             "${include_args[@]}" \
