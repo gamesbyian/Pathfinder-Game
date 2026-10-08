@@ -20,6 +20,7 @@ const inputDir = args.get('--input-dir');
 if (!inputArg && !inputDir) throw new Error('--input=<result.json[,result2.json,...]> or --input-dir=<directory> is required');
 if (inputArg && inputDir) throw new Error('use only one of --input or --input-dir');
 const outFile = args.get('--out') ?? 'tmp/family-technique-response/analysis.json';
+const planFile = args.get('--plan') ?? null;
 const inputFiles = inputDir
     ? readdirSync(path.resolve(inputDir)).filter(name => /^shard-\d+\.json$/u.test(name)).sort()
         .map(name => path.join(path.resolve(inputDir), name))
@@ -48,6 +49,17 @@ for (const row of usable) {
     else rowByKey.set(key, row);
 }
 if (duplicateKeys.size) throw new Error(`duplicate family-technique result cells: ${duplicateKeys.size}`);
+
+let planCoverage = null;
+if (planFile) {
+    const plan = JSON.parse(readFileSync(path.resolve(planFile), 'utf8'));
+    const expected = new Set((plan.cells ?? []).map(cell => cell.cellId));
+    const observed = new Set(usable.map(row => row.cellId));
+    const missing = [...expected].filter(id => !observed.has(id)).sort();
+    const extra = [...observed].filter(id => !expected.has(id)).sort();
+    planCoverage = { expected: expected.size, observed: observed.size, missing, extra, complete: missing.length === 0 && extra.length === 0 };
+    if (!planCoverage.complete) throw new Error(`family-technique plan coverage mismatch: missing=${missing.length}, extra=${extra.length}`);
+}
 
 const familyIds = [...new Set(usable.map(r => r.familyContext.familyId))].sort();
 const classify = (parent, variant) => parent.ok
@@ -138,6 +150,7 @@ const out = {
     kind: 'pathfinder-family-technique-response-analysis',
     generatedAt: new Date().toISOString(),
     inputs: inputFiles,
+    ...(planFile ? { planFile: path.resolve(planFile), planCoverage } : {}),
     interpretation: {
         derivative: 'For one independent parent family, compare one isolated technique under equal work on the parent and one controlled descendant.',
         heterogeneity: 'An edge is heterogeneous when different techniques have different solve-state transitions on the same parent->variant transformation.',
