@@ -104,7 +104,7 @@ The first pilot is frozen in `reports/2026-10-07-controlled-technique-response-p
 - `budgetMs = 600000` only as a wall-safety deadline;
 - unique `parentId`, not family-mode block, is the independence denominator.
 
-Mount `claude/variant-levels-solver-insights-tpk4qg` as the historical dataset root, then use `family:technique-response-campaign-plan` against the frozen spec. The campaign planner reads each historical manifest's own `parentCorpus` but executes current-main parent levels and historical generated descendants, retaining the manifest mutation relation in every cell.
+Mount the historical family dataset at pinned commit `32132d6ba60f1203ee013ed0d475f46061eddd49` (branch provenance: `claude/variant-levels-solver-insights-tpk4qg`), then use `family:technique-response-campaign-plan` against the frozen spec. The maintained dispatch surface is `.github/workflows/controlled-technique-response-neighborhoods.yml`; it canaries all five technique families before fan-out and requires exact planned-cell coverage before analysis. The campaign planner reads each historical manifest's own `parentCorpus` but executes current-main parent levels and historical generated descendants, retaining the manifest mutation relation in every cell.
 
 1. Start with those six parents if their family artifacts can be mounted/recovered with intact generation identity; otherwise substitute 6-12 existing independent parent families with equally small interpretable transformations and record the substitution rule.
 2. Prefer local-mutant, swap, tightly bounded density changes, and selected symmetry edges. Avoid broad reshuffles in the first causal pilot.

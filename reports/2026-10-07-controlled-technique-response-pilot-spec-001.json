@@ -3,7 +3,7 @@
   "question": "Which small controlled level perturbations change the marginal value of materially different isolated solver techniques under equal canonical work?",
   "evidenceRole": "discovery",
   "selection": "selected-on historical repair-response cohort; mechanism discovery only, not prevalence or confirmation",
-  "datasetRef": "claude/variant-levels-solver-insights-tpk4qg",
+  "datasetRef": "32132d6ba60f1203ee013ed0d475f46061eddd49",
   "workBudget": 10000000,
   "budgetMs": 600000,
   "techniques": [
@@ -69,5 +69,6 @@
     "primaryOutcome": "per-technique parent->variant solve-state transition at equal work",
     "secondaryOutcome": "work ratio among both-solved pairs",
     "confirmationRule": "any generalized mechanism must move to untouched whole-parent families"
-  }
+  },
+  "datasetBranch": "claude/variant-levels-solver-insights-tpk4qg"
 }

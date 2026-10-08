@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const dir = await mkdtemp(path.join(tmpdir(), 'pathfinder-family-technique-response-'));
+await mkdir(path.join(root, 'tmp'), { recursive: true });
+const dir = await mkdtemp(path.join(root, 'tmp', 'pathfinder-family-technique-response-'));
 try {
     const parentCorpus = path.join(dir, 'parents.json');
     const variantCorpus = path.join(dir, 'variants.json');
@@ -78,10 +78,20 @@ try {
             { variantId:'V2', mutationManifest:{operation:'move'} },
         ],
     }));
+    for (const gitArgs of [
+        ['init'], ['config','user.email','test@example.invalid'], ['config','user.name','Pathfinder Test'],
+        ['add','.'], ['commit','-m','fixture'],
+    ]) {
+        const git = spawnSync('git', ['-C', datasetRoot, ...gitArgs], { encoding:'utf8' });
+        assert.equal(git.status, 0, git.stderr || git.stdout);
+    }
+    const datasetRefResult = spawnSync('git', ['-C', datasetRoot, 'rev-parse', 'HEAD'], { encoding:'utf8' });
+    assert.equal(datasetRefResult.status, 0, datasetRefResult.stderr || datasetRefResult.stdout);
+    const datasetRef = datasetRefResult.stdout.trim();
     const campaignSpec = path.join(dir, 'campaign-spec.json');
     const campaignPlan = path.join(dir, 'campaign-plan.json');
     await writeFile(campaignSpec, JSON.stringify({
-        workBudget:1000, budgetMs:9999, techniques:[t1,t2],
+        datasetRef, workBudget:1000, budgetMs:9999, techniques:[t1,t2],
         families:[{parentId:'P1',modes:['localmutant']}],
     }));
     const campaign = spawnSync(process.execPath, ['scripts/run-bundled.mjs', 'scripts/family-technique-response-campaign-plan.mjs', '--',
@@ -93,6 +103,36 @@ try {
     assert.equal(campaignDoc.familyModeBlockCount, 1);
     assert.equal(campaignDoc.expectedCells, 6);
     assert.deepEqual(campaignDoc.parentIds, ['P1']);
+    assert.ok(campaignDoc.cells.every(cell => !path.isAbsolute(cell.corpusFile)), 'campaign corpus paths must be portable across jobs');
+
+    const shardDir = path.join(dir, 'shards');
+    await mkdir(shardDir, { recursive: true });
+    const half = Math.ceil(campaignDoc.cells.length / 2);
+    const resultRow = cell => ({
+        cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, corpusFile: cell.corpusFile,
+        levelId: cell.levelId, levelPos: cell.levelPos, techniqueKeys: cell.techniqueKeys,
+        workBudget: cell.workBudget, workSpent: cell.workBudget, ok: false, status: 'work-budget-reached',
+        familyContext: cell.familyContext,
+    });
+    await writeFile(path.join(shardDir, 'shard-01.json'), JSON.stringify({results:campaignDoc.cells.slice(0, half).map(resultRow)}));
+    await writeFile(path.join(shardDir, 'shard-02.json'), JSON.stringify({results:campaignDoc.cells.slice(half).map(resultRow)}));
+    const combinedFile = path.join(dir, 'combined.json');
+    const combined = spawnSync(process.execPath, ['scripts/combine-family-technique-response-shards.mjs',
+        `--plan=${campaignPlan}`, `--staging-dir=${shardDir}`, `--out=${combinedFile}`],
+        { cwd:root, encoding:'utf8' });
+    assert.equal(combined.status, 0, combined.stderr || combined.stdout);
+    const combinedDoc = JSON.parse(await readFile(combinedFile, 'utf8'));
+    assert.equal(combinedDoc.complete, true);
+    assert.equal(combinedDoc.observedCells, campaignDoc.expectedCells);
+
+    const badRows = campaignDoc.cells.map(resultRow);
+    badRows[0] = { ...badRows[0], status:'deadline-truncated' };
+    await writeFile(path.join(shardDir, 'shard-01.json'), JSON.stringify({results:badRows.slice(0, half)}));
+    const rejected = spawnSync(process.execPath, ['scripts/combine-family-technique-response-shards.mjs',
+        `--plan=${campaignPlan}`, `--staging-dir=${shardDir}`, `--out=${combinedFile}`],
+        { cwd:root, encoding:'utf8' });
+    assert.notEqual(rejected.status, 0, 'deadline-truncated decision-bearing rows must invalidate the campaign');
+    assert.match(rejected.stderr, /invalid decision-bearing rows/);
 } finally {
     await rm(dir, { recursive:true, force:true });
 }

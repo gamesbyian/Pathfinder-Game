@@ -34,6 +34,16 @@
       }
     },
     {
+      "id": "controlled-technique-response-neighborhoods",
+      "workflow": ".github/workflows/controlled-technique-response-neighborhoods.yml",
+      "disposition": "standard",
+      "reason": null,
+      "durability": {
+        "mode": "artifact-only",
+        "reason": "The selected-on controlled-family pilot retains its compact failure-response rows inside the standard solver-sweep artifact; it is premise-discovery evidence and is not automatically harvested into canonical solver evidence."
+      }
+    },
+    {
       "id": "cpsat-explicit-prefix-reference",
       "workflow": ".github/workflows/cpsat-explicit-prefix-reference.yml",
       "disposition": "unsupported",

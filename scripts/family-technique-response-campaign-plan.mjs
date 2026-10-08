@@ -9,6 +9,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { execFileSync } from 'node:child_process';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.js';
 
 const argv=process.argv.slice(2);
@@ -17,10 +18,28 @@ const args=new Map(argv.filter(a=>a.startsWith('--')&&a.includes('=')).map(a=>{
 }));
 const required=name=>{ const v=args.get(name); if(!v) throw new Error(`${name}=... is required`); return v; };
 const specFile=required('--spec');
-const datasetRoot=path.resolve(required('--variant-family-dataset-root'));
-const parentRoot=path.resolve(args.get('--parent-corpus-root')??'.');
+const datasetRootArg=required('--variant-family-dataset-root');
+const parentRootArg=args.get('--parent-corpus-root')??'.';
+const datasetRoot=path.resolve(datasetRootArg);
+const parentRoot=path.resolve(parentRootArg);
+const portablePath = abs => {
+  const rel = path.relative(process.cwd(), abs);
+  if (!rel.startsWith('..'+path.sep) && rel !== '..' && !path.isAbsolute(rel)) return rel || '.';
+  return abs;
+};
 const outFile=args.get('--out')??'tmp/family-technique-response/campaign-plan.json';
 const spec=JSON.parse(readFileSync(path.resolve(specFile),'utf8'));
+if (spec.datasetRef) {
+  let mountedRef;
+  try {
+    mountedRef = execFileSync('git', ['-C', datasetRoot, 'rev-parse', 'HEAD'], { encoding:'utf8' }).trim();
+  } catch (error) {
+    throw new Error(`cannot verify variant-family dataset git identity at ${datasetRoot}: ${error?.message ?? error}`);
+  }
+  if (mountedRef !== spec.datasetRef) throw new Error(`variant-family dataset ref mismatch: spec=${spec.datasetRef}, mounted=${mountedRef}`);
+}
+let solverRef='local';
+try { solverRef=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); } catch {}
 const techniques=spec.techniques??[];
 if(!Array.isArray(techniques)||!techniques.length) throw new Error('spec.techniques must be a non-empty array');
 const workBudget=Number(spec.workBudget);
@@ -81,7 +100,7 @@ for(const familySpec of spec.families){
       if(!variantId||!levelPos) throw new Error(`${familyId} variant missing from corpus: ${variantId||'(empty)'}`);
       return {variantId,levelPos,edge:v};
     });
-    blocks.push({familyId,parentId,token,relation,manifestFile,variantCorpusFile,parentCorpusFile,
+    blocks.push({familyId,parentId,token,relation,manifestFile:portablePath(manifestFile),variantCorpusFile:portablePath(variantCorpusFile),parentCorpusFile:portablePath(parentCorpusFile),
       manifestParentContentHash:manifest.parentContentHash??null,currentParentContentHash:currentParentHash,
       parentContentIdentityVerified:manifest.parentContentHash?manifest.parentContentHash===currentParentHash:false,
       variantCount:variants.length});
@@ -90,12 +109,12 @@ for(const familySpec of spec.families){
       const suffix=`t${String(ti+1).padStart(2,'0')}`;
       cells.push({
         cellId:`FTR1::${familyId}::parent::${suffix}`,tier:'FTR1',corpus:'family-parent',
-        corpusFile:parentCorpusFile,levelId:parentId,levelPos:parentPos,techniqueKeys:[technique],
+        corpusFile:portablePath(parentCorpusFile),levelId:parentId,levelPos:parentPos,techniqueKeys:[technique],
         workBudget,budgetMs,familyContext:{familyId,parentId,variantId:null,role:'parent',relation,witnessRelation:null,mutation:null},
       });
       for(const v of variants) cells.push({
         cellId:`FTR1::${familyId}::${v.variantId}::${suffix}`,tier:'FTR1',corpus:'family-variant',
-        corpusFile:variantCorpusFile,levelId:v.variantId,levelPos:v.levelPos,techniqueKeys:[technique],
+        corpusFile:portablePath(variantCorpusFile),levelId:v.variantId,levelPos:v.levelPos,techniqueKeys:[technique],
         workBudget,budgetMs,familyContext:{familyId,parentId,variantId:v.variantId,role:'variant',
           relation:v.edge.relation??relation,witnessRelation:v.edge.witnessRelation??null,mutation:v.edge.mutationManifest??null},
       });
@@ -106,7 +125,8 @@ const plan={
   schemaVersion:1,kind:'pathfinder-family-technique-response-campaign-plan',generatedAt:new Date().toISOString(),
   budgetProtocol:'family-technique-equal-work',equalCostAcrossTechniques:true,
   scientificUnit:'parent-controlled-transformation-technique-response',independenceUnit:'parentId',
-  sourceSpec:path.resolve(specFile),variantFamilyDatasetRoot:datasetRoot,parentCorpusRoot:parentRoot,
+  sourceSpec:portablePath(path.resolve(specFile)),solverRef,
+  variantFamilyDatasetRoot:portablePath(datasetRoot),parentCorpusRoot:portablePath(parentRoot),
   workBudget,budgetMs,techniques,parentIds:[...parentIds].sort(),independentParentCount:parentIds.size,
   familyModeBlockCount:blocks.length,blocks,expectedCells:cells.length,cells,
 };
