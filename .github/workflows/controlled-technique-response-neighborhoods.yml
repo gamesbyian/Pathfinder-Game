@@ -39,7 +39,7 @@ jobs:
       - name: Check out retained family dataset
         uses: actions/checkout@v7
         with:
-          ref: claude/variant-levels-solver-insights-tpk4qg
+          ref: 32132d6ba60f1203ee013ed0d475f46061eddd49
           path: historical-family-data
           sparse-checkout: |
             data/families
@@ -133,7 +133,7 @@ jobs:
       - name: Check out retained family dataset
         uses: actions/checkout@v7
         with:
-          ref: claude/variant-levels-solver-insights-tpk4qg
+          ref: 32132d6ba60f1203ee013ed0d475f46061eddd49
           path: historical-family-data
           sparse-checkout: |
             data/families
