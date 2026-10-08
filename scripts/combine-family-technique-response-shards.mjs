@@ -57,6 +57,11 @@ if(missing.length) throw new Error(`missing ${missing.length}/${expected.length}
 const results=expected.map(id=>byId.get(id));
 const statusCounts={};
 for(const r of results) statusCounts[r.status??'unknown']=(statusCounts[r.status??'unknown']??0)+1;
+const invalidStatuses = new Set(['error','deadline-truncated','referee-invalid']);
+const invalidRows = results.filter(r => invalidStatuses.has(r.status));
+if (invalidRows.length) {
+  throw new Error(`invalid decision-bearing rows: ${invalidRows.slice(0,20).map(r => r.cellId + ':' + r.status).join(', ')}${invalidRows.length > 20 ? ` (+${invalidRows.length - 20} more)` : ''}`);
+}
 const out={
   schemaVersion:1,
   kind:'pathfinder-family-technique-response-combined',
