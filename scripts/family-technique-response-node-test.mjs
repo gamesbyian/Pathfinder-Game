@@ -93,6 +93,27 @@ try {
     assert.equal(campaignDoc.familyModeBlockCount, 1);
     assert.equal(campaignDoc.expectedCells, 6);
     assert.deepEqual(campaignDoc.parentIds, ['P1']);
+    assert.ok(campaignDoc.cells.every(cell => !path.isAbsolute(cell.corpusFile)), 'campaign corpus paths must be portable across jobs');
+
+    const shardDir = path.join(dir, 'shards');
+    await mkdir(shardDir, { recursive: true });
+    const half = Math.ceil(campaignDoc.cells.length / 2);
+    const resultRow = cell => ({
+        cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, corpusFile: cell.corpusFile,
+        levelId: cell.levelId, levelPos: cell.levelPos, techniqueKeys: cell.techniqueKeys,
+        workBudget: cell.workBudget, workSpent: cell.workBudget, ok: false, status: 'work-budget-reached',
+        familyContext: cell.familyContext,
+    });
+    await writeFile(path.join(shardDir, 'shard-01.json'), JSON.stringify({results:campaignDoc.cells.slice(0, half).map(resultRow)}));
+    await writeFile(path.join(shardDir, 'shard-02.json'), JSON.stringify({results:campaignDoc.cells.slice(half).map(resultRow)}));
+    const combinedFile = path.join(dir, 'combined.json');
+    const combined = spawnSync(process.execPath, ['scripts/combine-family-technique-response-shards.mjs',
+        `--plan=${campaignPlan}`, `--staging-dir=${shardDir}`, `--out=${combinedFile}`],
+        { cwd:root, encoding:'utf8' });
+    assert.equal(combined.status, 0, combined.stderr || combined.stdout);
+    const combinedDoc = JSON.parse(await readFile(combinedFile, 'utf8'));
+    assert.equal(combinedDoc.complete, true);
+    assert.equal(combinedDoc.observedCells, campaignDoc.expectedCells);
 } finally {
     await rm(dir, { recursive:true, force:true });
 }
