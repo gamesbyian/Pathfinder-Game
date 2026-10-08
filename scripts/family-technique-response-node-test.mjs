@@ -58,7 +58,9 @@ try {
         `--input=${resultsFile}`, `--out=${analysisFile}`], { cwd:root, encoding:'utf8' });
     assert.equal(analyzed.status, 0, analyzed.stderr || analyzed.stdout);
     const analysis = JSON.parse(await readFile(analysisFile, 'utf8'));
-    assert.equal(analysis.summary.families, 1);
+    assert.equal(analysis.summary.familyModeBlocks, 1);
+    assert.equal(analysis.summary.parentFamilies, 1);
+    assert.deepEqual(analysis.summary.parentIds, ['P1']);
     assert.equal(analysis.summary.variants, 2);
     assert.equal(analysis.summary.edgesWithTechniqueHeterogeneity, 1);
     const v1 = analysis.families[0].edges.find(e => e.variantId === 'V1');
