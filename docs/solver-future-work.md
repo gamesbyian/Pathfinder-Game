@@ -87,22 +87,9 @@ Do not reopen unchanged:
 
 Closure is form-scoped: cross-level connectivity ≠ solve-local rediscovery; gadgets ≠ per-instance commutativity; blueprints ≠ future-intersection realizability; positional repair ≠ dependency-defined revision; H1 vocabulary ≠ bounded feasibility.
 
-## Post-exhaustion premise-generation lanes
+## Premise-discovery routing
 
-The frozen v2 premise map remains 148 propositions / 184 relations. The [2026-10-01 refresh](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md) found 50 material evidence-state updates and admitted no new premise IDs. The following work is routed through the workstream authority as premise discovery, not as treatment execution.
-
-| Lane | Parent premises | Advancement condition |
-|---|---|---|
-| BC1 perturbation microscope | P144/P175/P183/P184/P187 | retained gain/loss frontier analysis finds a recurring set-level survivor/displacement property that precedes the outcome difference and survives rival explanations |
-| Intervention-response residual atlas | P113/P145/P181/P199 | multiple independent interventions expose a reproducible response regime with explicit observed/unobserved ancestry |
-| WS1 generalization-unit failure analysis | P112/P181/P199/P206 | historical-positive/fresh-zero contrast is explained by a recurring identity-free unit that can prospectively define a population or state |
-| Counterfactual first-loss refresh | P024/P135/P183 | retained causal pairs collapse to a compact recurrent first-loss vocabulary; new telemetry only if a specific missing observable blocks classification |
-| Cut/resource sibling mining | P012/P032/P157/P163 | a materially different exact consequence has a proof sketch, soundness path and nontrivial recurrent incidence before any consumer |
-| Local-forcedness reinterpretation | P170/P198/P204 | local forcedness changes a real decision/handoff oracle ceiling despite global compression economics being closed |
-
-Do not promote correlations, descriptive clusters or post-hoc labels directly. A surviving lane must pass through semantic premise -> cheapest falsifier -> smallest consumer -> matched-work economics.
-
-Machine-readable current evidence state: [post-exhaustion overlay](solver-premise-map-post-exhaustion-status-2026-10-01.json).
+The original six post-exhaustion nominations, premise IDs, and advancement conditions remain preserved in the [2026-10-01 refresh report](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md). Current lane state, priorities, closures, and next gates are owned exclusively by [solver optimization workstreams](solver-optimization-workstreams.md); do not treat the historical nominations as a second active queue.
 
 ## Research hygiene
 
