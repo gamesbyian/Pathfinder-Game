@@ -1,5 +1,5 @@
 {
-  "schema": "pathfinder.external-solver-code-repo-candidates/v1",
+  "schema": "pathfinder.external-solver-code-repo-candidates/v2",
   "capturedDate": "2026-10-12",
   "scope": "External code and libraries relevant to constraint decoding of Pathfinder paths, including prior-census references and unverified discovery candidates.",
   "provenance": {
@@ -10,7 +10,8 @@
       "reports/2026-08-24-frontier-zdd-pilot-spec.md",
       "reports/2026-08-24-external-research-pathfinder-synthesis.md"
     ],
-    "codeSearch": "GitHub public code symbol queries: FrontierSTPathSpec, active_edges_single_cycle, GraphSet.paths, Numberlink Z3, etc.; surfaced hidden TypeScript/F#/Japanese code families."
+    "codeSearch": "GitHub public code symbol queries: FrontierSTPathSpec, active_edges_single_cycle, GraphSet.paths, Numberlink Z3, etc.; surfaced hidden TypeScript/F#/Japanese code families.",
+    "mechanicSearch": "Added 2026-10-13 source-level Icebarn/Icelom, Noqx/ASP, CP-SAT region-border cardinality and code-symbol inspection. Facets represent source affordances, not proven Pathfinder semantic equivalence."
   },
   "readmeGrades": {
     "source+readme+metadata": "Named source files examined as well as repo description/readme.",
@@ -26,7 +27,7 @@
     "code-search": "Exact implementation code or file surfaced by GitHub public code search; repository implementation not yet reviewed."
   },
   "counts": {
-    "totalUnique": 81
+    "totalUnique": 91
   },
   "candidates": [
     {
@@ -34,21 +35,42 @@
       "url": "https://github.com/graphillion/graphillion",
       "family": "frontier-dd",
       "reviewStatus": "readme+metadata+source-doc",
-      "relevance": "Prior DD family; efficient graph sets, simple paths and cost-bounded solutions"
+      "relevance": "Prior DD family; efficient graph sets, simple paths and cost-bounded solutions",
+      "mechanicFacets": [
+        "whole-solution-family",
+        "exact-resource-vectors"
+      ],
+      "sourceFiles": [
+        "README.md"
+      ]
     },
     {
       "repository": "kunisura/TdZdd",
       "url": "https://github.com/kunisura/TdZdd",
       "family": "frontier-dd",
       "reviewStatus": "readme+metadata",
-      "relevance": "Prior family; frontier decision diagrams, MIT"
+      "relevance": "Prior family; frontier decision diagrams, MIT",
+      "mechanicFacets": [
+        "whole-solution-family",
+        "global-connectivity"
+      ],
+      "sourceFiles": [
+        "README.md"
+      ]
     },
     {
       "repository": "junkawahara/frontier_basic_tdzdd",
       "url": "https://github.com/junkawahara/frontier_basic_tdzdd",
       "family": "frontier-dd",
       "reviewStatus": "readme+metadata",
-      "relevance": "Prior family; s-t paths and Hamiltonian paths"
+      "relevance": "Prior family; s-t paths and Hamiltonian paths",
+      "mechanicFacets": [
+        "whole-solution-family",
+        "global-connectivity"
+      ],
+      "sourceFiles": [
+        "README.md"
+      ]
     },
     {
       "repository": "kunisura/algorithms2012",
@@ -104,14 +126,30 @@
       "url": "https://github.com/hana-hiro/graphillion-trails",
       "family": "trails-and-revisits",
       "reviewStatus": "readme+metadata",
-      "relevance": "New: enumerates trails with repeated vertices allowed; line-graph conversion"
+      "relevance": "New: enumerates trails with repeated vertices allowed; line-graph conversion",
+      "mechanicFacets": [
+        "crossing-lanes",
+        "global-connectivity"
+      ],
+      "sourceFiles": [
+        "README.md"
+      ],
+      "warning": "Edge-trails allow repeated vertices but do not preserve Pathfinder direction/axis-history without extra constraints."
     },
     {
       "repository": "thomasahle/numberlink",
       "url": "https://github.com/thomasahle/numberlink",
       "family": "trails-and-revisits",
       "reviewStatus": "readme+metadata",
-      "relevance": "Prior: diagonal sweep and corner representation; AGPL-3.0"
+      "relevance": "Prior: diagonal sweep and corner representation; AGPL-3.0",
+      "mechanicFacets": [
+        "global-connectivity",
+        "whole-solution-family"
+      ],
+      "sourceFiles": [
+        "README.md"
+      ],
+      "warning": "AGPL; full-grid no-touch model differs from Pathfinder."
     },
     {
       "repository": "asSqr/puzz_sqr",
@@ -237,14 +275,30 @@
       "url": "https://github.com/semiexp/cspuz_core",
       "family": "puzzle-csp-native-graph",
       "reviewStatus": "source+readme+metadata",
-      "relevance": "New: Rust SAT/CSP with native graph division propagator and cross-border parity loop example"
+      "relevance": "New: Rust SAT/CSP with native graph division propagator and cross-border parity loop example",
+      "mechanicFacets": [
+        "global-connectivity",
+        "forced-facts",
+        "region-boundary-counts"
+      ],
+      "sourceFiles": [
+        "cspuz_core/src/propagators/graph_division.rs",
+        "cspuz_rs_puzzles/src/puzzles/cross_border_parity_loop.rs"
+      ]
     },
     {
       "repository": "semiexp/cspuz",
       "url": "https://github.com/semiexp/cspuz",
       "family": "puzzle-csp-native-graph",
       "reviewStatus": "source+readme+metadata",
-      "relevance": "Prior broad framework; active_edges_single_cycle / connected divisions / multiple backends"
+      "relevance": "Prior broad framework; active_edges_single_cycle / connected divisions / multiple backends",
+      "mechanicFacets": [
+        "global-connectivity",
+        "forced-facts"
+      ],
+      "sourceFiles": [
+        "cspuz/graph.py"
+      ]
     },
     {
       "repository": "semiexp/cspuz-js",
@@ -258,28 +312,55 @@
       "url": "https://github.com/obijywk/grilops",
       "family": "puzzle-csp-native-graph",
       "reviewStatus": "source+readme+metadata",
-      "relevance": "Prior Z3 grid paths with explicit path symbols, open/closed path modelling"
+      "relevance": "Prior Z3 grid paths with explicit path symbols, open/closed path modelling",
+      "mechanicFacets": [
+        "global-connectivity",
+        "directed-order"
+      ],
+      "sourceFiles": [
+        "grilops/paths.py",
+        "examples/numberlink.py"
+      ]
     },
     {
       "repository": "praveenkulkarni1996/slitherlinky",
       "url": "https://github.com/praveenkulkarni1996/slitherlinky",
       "family": "puzzle-csp-native-graph",
       "reviewStatus": "source+readme+metadata",
-      "relevance": "Prior/nearby SAT loop; edge vars and connectivity checking"
+      "relevance": "Prior/nearby SAT loop; edge vars and connectivity checking",
+      "mechanicFacets": [
+        "global-connectivity",
+        "abstraction-refinement"
+      ],
+      "sourceFiles": [
+        "slitherlinky.py"
+      ]
     },
     {
       "repository": "xzy06/slitherlink_solver",
       "url": "https://github.com/xzy06/slitherlink_solver",
       "family": "puzzle-csp-native-graph",
       "reviewStatus": "source+readme+metadata",
-      "relevance": "New CN SAT with iterative multi-loop elimination, propagation, degree clauses"
+      "relevance": "New CN SAT with iterative multi-loop elimination, propagation, degree clauses",
+      "mechanicFacets": [
+        "global-connectivity",
+        "abstraction-refinement"
+      ],
+      "sourceFiles": [
+        "sat_solver.py"
+      ]
     },
     {
       "repository": "ytakata69/yajilin-sat",
       "url": "https://github.com/ytakata69/yajilin-sat",
       "family": "puzzle-csp-native-graph",
       "reviewStatus": "metadata",
-      "relevance": "SAT Yajilin loop solver"
+      "relevance": "SAT Yajilin loop solver",
+      "mechanicFacets": [
+        "global-connectivity",
+        "mandatory-turns"
+      ],
+      "sourceFiles": []
     },
     {
       "repository": "Baorlog/pysat-slitherlink",
@@ -349,14 +430,31 @@
       "url": "https://github.com/Overv/TheWitnessSolver",
       "family": "witness-and-zip",
       "reviewStatus": "readme+metadata",
-      "relevance": "Incremental region validation; path is self-avoiding, not Pathfinder crossings"
+      "relevance": "Incremental region validation; path is self-avoiding, not Pathfinder crossings",
+      "mechanicFacets": [
+        "region-boundary-counts",
+        "global-connectivity",
+        "forced-facts"
+      ],
+      "sourceFiles": [
+        "README.md"
+      ],
+      "warning": "Witness self-avoiding paths and region symbol logic are different."
     },
     {
       "repository": "RainbowwPhoenixx/witness-solver",
       "url": "https://github.com/RainbowwPhoenixx/witness-solver",
       "family": "witness-and-zip",
       "reviewStatus": "readme+metadata",
-      "relevance": "Rust partial-area early inference and work-count comparisons"
+      "relevance": "Rust partial-area early inference and work-count comparisons",
+      "mechanicFacets": [
+        "region-boundary-counts",
+        "global-connectivity",
+        "forced-facts"
+      ],
+      "sourceFiles": [
+        "README.md"
+      ]
     },
     {
       "repository": "youarer1ght/TheWitnessPuzzle",
@@ -370,7 +468,16 @@
       "url": "https://github.com/chi-feng/zip-solver",
       "family": "witness-and-zip",
       "reviewStatus": "readme+metadata",
-      "relevance": "Conditional Hamiltonian path with ordered obligations, parity and degree forcing, tests"
+      "relevance": "Conditional Hamiltonian path with ordered obligations, parity and degree forcing, tests",
+      "mechanicFacets": [
+        "ordered-obligations",
+        "global-connectivity",
+        "exact-resource-vectors"
+      ],
+      "sourceFiles": [
+        "README.md"
+      ],
+      "warning": "Hamiltonian/no crossing differs from Pathfinder."
     },
     {
       "repository": "CWSwastik/zip-solver",
@@ -447,7 +554,15 @@
       "url": "https://github.com/msoos/cryptominisat",
       "family": "general-sat-and-resource",
       "reviewStatus": "readme+metadata",
-      "relevance": "Incremental SAT plus native XOR/Gaussian elimination; candidate comparator not automatic speedup"
+      "relevance": "Incremental SAT plus native XOR/Gaussian elimination; candidate comparator not automatic speedup",
+      "mechanicFacets": [
+        "exact-resource-vectors",
+        "forced-facts"
+      ],
+      "sourceFiles": [
+        "README.md"
+      ],
+      "warning": "XOR/CNF engine, not a Pathfinder mechanic encoding."
     },
     {
       "repository": "Z3Prover/z3",
@@ -559,21 +674,47 @@
       "url": "https://github.com/wix-diesel/ZDD.Net",
       "family": "frontier-dd",
       "reviewStatus": "source+readme+metadata",
-      "relevance": "New Japanese C# ZDD.Net: graph path specs, degree/cardinality/linear constraints and frontier-width estimates; author performance claims unverified"
+      "relevance": "New Japanese C# ZDD.Net: graph path specs, degree/cardinality/linear constraints and frontier-width estimates; author performance claims unverified",
+      "mechanicFacets": [
+        "global-connectivity",
+        "exact-resource-vectors",
+        "whole-solution-family"
+      ],
+      "sourceFiles": [
+        "README.md",
+        "bench/comparison/tdzdd/grid_paths.cpp"
+      ]
     },
     {
       "repository": "logic-pad/grilops",
       "url": "https://github.com/logic-pad/grilops",
       "family": "puzzle-csp-native-graph",
       "reviewStatus": "source+readme+metadata",
-      "relevance": "TypeScript Z3/grilops port; README explicitly warns paths module is buggy; do not adopt without tests"
+      "relevance": "TypeScript Z3/grilops port; README explicitly warns paths module is buggy; do not adopt without tests",
+      "mechanicFacets": [
+        "global-connectivity",
+        "directed-order"
+      ],
+      "sourceFiles": [
+        "README.md",
+        "src/examples/numberlink.ts"
+      ],
+      "warning": "Repository README explicitly flags paths module as buggy."
     },
     {
       "repository": "leymbda/numberlink",
       "url": "https://github.com/leymbda/numberlink",
       "family": "trails-and-revisits",
       "reviewStatus": "source+readme+metadata",
-      "relevance": "F# Z3 BridgeLane identity/disequality for crossing strands, but source contains TODO shadow-cycle prevention and returns Flow.empty on SAT; model reference only"
+      "relevance": "F# Z3 BridgeLane identity/disequality for crossing strands, but source contains TODO shadow-cycle prevention and returns Flow.empty on SAT; model reference only",
+      "mechanicFacets": [
+        "crossing-lanes",
+        "global-connectivity"
+      ],
+      "sourceFiles": [
+        "Numberlink.Solver/SmtSolver.fs"
+      ],
+      "warning": "Source has TODO to prevent shadow cycles and returns empty flow on SAT; reference fragment, not a complete solver."
     },
     {
       "repository": "hakank/hakank",
@@ -595,6 +736,269 @@
       "family": "puzzle-csp-native-graph",
       "reviewStatus": "code-search",
       "relevance": "Code search surfaced numberLinkSolverZ3.py; unreviewed"
+    },
+    {
+      "repository": "T0nyX1ang/noqx",
+      "url": "https://github.com/T0nyX1ang/noqx",
+      "family": "crossing-and-turn-puzzles",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "Clingo/ASP directed and undirected crossing route, horizontal/vertical reachability, turn/straight predicates, region boundary-pass cardinality",
+      "mechanicFacets": [
+        "crossing-lanes",
+        "directed-order",
+        "mandatory-turns",
+        "region-boundary-counts",
+        "global-connectivity",
+        "forced-facts"
+      ],
+      "sourceFiles": [
+        "noqx/rule/route.py",
+        "solver/icebarn.py",
+        "solver/turnrun.py",
+        "solver/pipelink.py",
+        "solver/barns.py"
+      ]
+    },
+    {
+      "repository": "kevinychen/nikoli-puzzle-solver",
+      "url": "https://github.com/kevinychen/nikoli-puzzle-solver",
+      "family": "crossing-and-turn-puzzles",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "TypeScript Z3 Icebarn constraint encoding permits crossing cells, forces straight on ice and models segment order",
+      "mechanicFacets": [
+        "crossing-lanes",
+        "directed-order",
+        "mandatory-turns",
+        "global-connectivity"
+      ],
+      "sourceFiles": [
+        "src/solvers/icebarn.ts",
+        "src/solvers/masyu.ts"
+      ]
+    },
+    {
+      "repository": "SaitoTsutomu/OptForPuzzle",
+      "url": "https://github.com/SaitoTsutomu/OptForPuzzle",
+      "family": "crossing-and-turn-puzzles",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "Japanese PuLP/ortoolpy integer-programming notebook for Icebarn, direction-specific edge/flow and single-route condition",
+      "mechanicFacets": [
+        "crossing-lanes",
+        "directed-order",
+        "global-connectivity",
+        "exact-resource-vectors"
+      ],
+      "sourceFiles": [
+        "あ.アイスバーン.ipynb"
+      ]
+    },
+    {
+      "repository": "ProximaCentauri0/Icelom",
+      "url": "https://github.com/ProximaCentauri0/Icelom",
+      "family": "crossing-and-turn-puzzles",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "C++ IceLom rule propagation and edge-probe forced facts, independent Python model and official pzprjs validation, 65-case author benchmark; do not conflate with Pathfinder rules",
+      "mechanicFacets": [
+        "crossing-lanes",
+        "directed-order",
+        "global-connectivity",
+        "forced-facts",
+        "mandatory-turns",
+        "ordered-obligations",
+        "soundness-oracles"
+      ],
+      "sourceFiles": [
+        "icelom_solver.cpp",
+        "tools/deduce.py",
+        "tests/fuzz_diff.py",
+        "tests/verify.py",
+        "docs/算法说明.md",
+        "docs/测试与验证.md"
+      ]
+    },
+    {
+      "repository": "3892myamya/sdvx",
+      "url": "https://github.com/3892myamya/sdvx",
+      "family": "crossing-and-turn-puzzles",
+      "reviewStatus": "source+metadata",
+      "relevance": "Java Icebarn/Icelom solver; Icelom header explicitly documents unsupported entrance-exit crossing case and uncertain Icelom2 semantics",
+      "mechanicFacets": [
+        "crossing-lanes",
+        "global-connectivity",
+        "soundness-oracles"
+      ],
+      "sourceFiles": [
+        "src/main/java/myamya/other/solver/icebarn/IcebarnSolver.java",
+        "src/main/java/myamya/other/solver/icelom/IcelomSolver.java"
+      ]
+    },
+    {
+      "repository": "robx/pzprjs",
+      "url": "https://github.com/robx/pzprjs",
+      "family": "puzzle-mechanics-reference",
+      "reviewStatus": "source+metadata",
+      "relevance": "Current JavaScript puzzle editor/game rules check() for icebarn, icelom, pipelink and variants; referee semantics, not a solver",
+      "mechanicFacets": [
+        "crossing-lanes",
+        "directed-order",
+        "mandatory-turns",
+        "soundness-oracles"
+      ],
+      "sourceFiles": [
+        "src/variety/icebarn.js",
+        "src/variety/pipelink.js"
+      ]
+    },
+    {
+      "repository": "smynudop/pzprts",
+      "url": "https://github.com/smynudop/pzprts",
+      "family": "puzzle-mechanics-reference",
+      "reviewStatus": "source+metadata",
+      "relevance": "TypeScript port of puzzle rule/checker including icebarn and pipelink; largely related to pzprjs code lineage, not independent algorithm",
+      "mechanicFacets": [
+        "crossing-lanes",
+        "soundness-oracles"
+      ],
+      "sourceFiles": [
+        "packages/lib/src/variety/icebarn.ts"
+      ]
+    },
+    {
+      "repository": "vavavr00m/PuzzleSolver",
+      "url": "https://github.com/vavavr00m/PuzzleSolver",
+      "family": "global-constraint-examples",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "Python OR-Tools puzzle models including DoubleBack and EntryExit with exact region-border crossing quotas; author's puzzle benchmark figures unverified",
+      "mechanicFacets": [
+        "region-boundary-counts",
+        "global-connectivity",
+        "soundness-oracles"
+      ],
+      "sourceFiles": [
+        "src/puzzlekit/solvers/double_back.py",
+        "src/puzzlekit/solvers/entry_exit.py",
+        "src/puzzlekit/solvers/linesweeper.py"
+      ]
+    },
+    {
+      "repository": "tkasriel/Icebarn",
+      "url": "https://github.com/tkasriel/Icebarn",
+      "family": "crossing-and-turn-puzzles",
+      "reviewStatus": "metadata",
+      "relevance": "Repository explicitly describes solver attempt as incomplete; do not treat as full solver",
+      "mechanicFacets": [
+        "crossing-lanes"
+      ],
+      "sourceFiles": []
+    },
+    {
+      "repository": "berkeleymt/icebarn-rs",
+      "url": "https://github.com/berkeleymt/icebarn-rs",
+      "family": "puzzle-mechanics-reference",
+      "reviewStatus": "readme+metadata",
+      "relevance": "README is still Leptos/Axum starter template; not verified as a solver; low research priority",
+      "mechanicFacets": [],
+      "sourceFiles": []
     }
-  ]
+  ],
+  "mechanicIndex": {
+    "crossing-lanes": [
+      "3892myamya/sdvx",
+      "ProximaCentauri0/Icelom",
+      "SaitoTsutomu/OptForPuzzle",
+      "T0nyX1ang/noqx",
+      "hana-hiro/graphillion-trails",
+      "kevinychen/nikoli-puzzle-solver",
+      "leymbda/numberlink",
+      "robx/pzprjs",
+      "smynudop/pzprts",
+      "tkasriel/Icebarn"
+    ],
+    "directed-order": [
+      "ProximaCentauri0/Icelom",
+      "SaitoTsutomu/OptForPuzzle",
+      "T0nyX1ang/noqx",
+      "kevinychen/nikoli-puzzle-solver",
+      "logic-pad/grilops",
+      "obijywk/grilops",
+      "robx/pzprjs"
+    ],
+    "global-connectivity": [
+      "3892myamya/sdvx",
+      "Overv/TheWitnessSolver",
+      "ProximaCentauri0/Icelom",
+      "RainbowwPhoenixx/witness-solver",
+      "SaitoTsutomu/OptForPuzzle",
+      "T0nyX1ang/noqx",
+      "chi-feng/zip-solver",
+      "hana-hiro/graphillion-trails",
+      "junkawahara/frontier_basic_tdzdd",
+      "kevinychen/nikoli-puzzle-solver",
+      "kunisura/TdZdd",
+      "leymbda/numberlink",
+      "logic-pad/grilops",
+      "obijywk/grilops",
+      "praveenkulkarni1996/slitherlinky",
+      "semiexp/cspuz",
+      "semiexp/cspuz_core",
+      "thomasahle/numberlink",
+      "vavavr00m/PuzzleSolver",
+      "wix-diesel/ZDD.Net",
+      "xzy06/slitherlink_solver",
+      "ytakata69/yajilin-sat"
+    ],
+    "mandatory-turns": [
+      "ProximaCentauri0/Icelom",
+      "T0nyX1ang/noqx",
+      "kevinychen/nikoli-puzzle-solver",
+      "robx/pzprjs",
+      "ytakata69/yajilin-sat"
+    ],
+    "ordered-obligations": [
+      "ProximaCentauri0/Icelom",
+      "chi-feng/zip-solver"
+    ],
+    "region-boundary-counts": [
+      "Overv/TheWitnessSolver",
+      "RainbowwPhoenixx/witness-solver",
+      "T0nyX1ang/noqx",
+      "semiexp/cspuz_core",
+      "vavavr00m/PuzzleSolver"
+    ],
+    "exact-resource-vectors": [
+      "SaitoTsutomu/OptForPuzzle",
+      "chi-feng/zip-solver",
+      "graphillion/graphillion",
+      "msoos/cryptominisat",
+      "wix-diesel/ZDD.Net"
+    ],
+    "forced-facts": [
+      "Overv/TheWitnessSolver",
+      "ProximaCentauri0/Icelom",
+      "RainbowwPhoenixx/witness-solver",
+      "T0nyX1ang/noqx",
+      "msoos/cryptominisat",
+      "semiexp/cspuz",
+      "semiexp/cspuz_core"
+    ],
+    "whole-solution-family": [
+      "graphillion/graphillion",
+      "junkawahara/frontier_basic_tdzdd",
+      "kunisura/TdZdd",
+      "thomasahle/numberlink",
+      "wix-diesel/ZDD.Net"
+    ],
+    "abstraction-refinement": [
+      "praveenkulkarni1996/slitherlinky",
+      "xzy06/slitherlink_solver"
+    ],
+    "soundness-oracles": [
+      "3892myamya/sdvx",
+      "ProximaCentauri0/Icelom",
+      "robx/pzprjs",
+      "smynudop/pzprts",
+      "vavavr00m/PuzzleSolver"
+    ]
+  },
+  "reviewDisclaimer": "Existing candidates not re-reviewed remain at their previous verification grade. Facets are selective/curated, not exhaustive tags for 90+ repo names."
 }
