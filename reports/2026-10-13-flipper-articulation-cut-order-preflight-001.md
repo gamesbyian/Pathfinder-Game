@@ -46,7 +46,7 @@ For a 4 × 3 board passable only along middle row, gate (1,2), goal (4,2), reqLe
 | V,H | first flipper needs V, corridor forces H | parity contradiction / reject |
 | V,V | first flipper needs V; second would need H | parity contradiction / reject |
 
-The standalone Node test exhausts **all 62 declared-axis patterns across 1–5 flippers**, comparing a separate direct-corridor symbolic oracle to the certificate. It also verifies optional-flipper abstention, nonlocal portal abstention, and multi-gate non-rejection when another gate remains unresolved. The tests were executed on Node 22 in an isolated temporary environment and passed **5/5**; the exact committed GitHub files await normal checkout execution/CI verification, so this is **not** yet a canonical referee-validated Pathfinder LIVE/DEAD pair.
+The standalone Node test exhausts **all 62 declared-axis patterns across 1–5 flippers**, comparing a separate direct-corridor symbolic oracle to the certificate. In addition, the **exact committed script's pure functions** were extracted and executed in the isolated GitHub-tool JavaScript runtime against both retrieved corpora and all 62 patterns: **0 disagreements**. This does not replace running the Node CLI or canonical gameplay referee. It also verifies optional-flipper abstention, nonlocal portal abstention, and multi-gate non-rejection when another gate remains unresolved. The tests were executed on Node 22 in an isolated temporary environment and passed **5/5**; the exact committed GitHub files await normal checkout execution/CI verification, so this is **not** yet a canonical referee-validated Pathfinder LIVE/DEAD pair.
 
 Reproduce after checkout:
 
@@ -60,13 +60,15 @@ The preflight uses plain Node only and does not import code into the production 
 
 ## 4. Exhaustive eligible-population opportunity census
 
-A separate one-shot JS scan inside the connected GitHub environment inspected the raw corpus documents with the same static-cut and axis-compatibility predicates. We did **not** invoke the above exact checked-in CLI in a full local repository checkout; the commands are provided to reproduce and audit the numbers.
+The **exact committed source's pure functions** (with the Node file imports and CLI entrypoint omitted, no algorithmic edits) were executed directly in the connected GitHub JavaScript environment against the retrieved raw corpus documents. The 62 synthetic pattern cases were also rechecked and all agreed with the independent direct-corridor oracle. The full Node CLI was **not** run in a local repository checkout; the commands below are provided to reproduce these observations. The source-level evaluation yielded these denominators:
 
 | Measured structural event | Published | Random Corpus-2 |
 |---|---:|---:|
 | Total levels | 160 | 1,700 |
 | Have flipping filters | 13 | 957 |
 | Flipper levels without portal pairs | 8 | 418 |
+| Flipper levels excluded for portal pairs | 5 | 539 |
+| Eligible gate cases (not necessarily compulsory) | 11 | 418 |
 | Gate cases with ≥1 mandatory flipper | 2 (P00157, two gates) | 5 (five levels) |
 | Gate cases where **all** flippers are mandatory | **0** | **0** |
 | Eligible full forced-order parity contradictions | **0** | **0** |
