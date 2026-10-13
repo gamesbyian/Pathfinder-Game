@@ -39,6 +39,16 @@
       "candidate": "reports/2026-10-07-controlled-technique-response-neighborhoods-plan-001.md",
       "disposition": "reuse",
       "reason": "Existing parent-family technique×variation discovery and independence methodology."
+    },
+    {
+      "candidate": "reports/2026-08-24-external-solver-code-census.md and reports/2026-08-24-frontier-zdd-pilot-spec.md",
+      "disposition": "reuse",
+      "reason": "Historical prior-art census and cancelled frontier pilot already own H/V split, ZDD applicability and deferred interface gate; do not mistake them for a new lane."
+    },
+    {
+      "candidate": "reports/2026-10-12-algebraic-decoding-external-code-repo-audit-001.md",
+      "disposition": "reuse",
+      "reason": "Primary-source and multilingual 75-repo catalogue, distinguishing trail, native graph propagator and incremental SAT examples with explicit evidence grades."
     }
   ],
   "impactDomains": {
@@ -64,7 +74,8 @@
       "Existing PR CI runs unchanged; Stage 2 reuses established oracle workflows only when earned."
     ],
     "generatedArtifacts": [
-      "Stage-0 bounded stdout/JSON summary, subsequent dated proof and A/B reports if earned."
+      "Stage-0 bounded stdout/JSON summary, subsequent dated proof and A/B reports if earned.",
+      "Evidence-graded 75-repository candidates JSON and reconciled new-vs-known external-code audit."
     ],
     "testsValidatorsGuards": [
       "Exhaustive tiny parity micrographs, double-bridge walk, disconnected/two-gate/portal abstention."
@@ -79,7 +90,8 @@
       "docs/solver-small-exact-projections-program.md"
     ],
     "registriesCatalogues": [
-      "Existing tools and research asset indexes inspected; no Stage-0 schema addition."
+      "Existing tools and research asset indexes inspected; no Stage-0 schema addition.",
+      "External code candidate index is a research artifact, not a scientific authority or stable question registry."
     ],
     "researchSystem": [
       "Premise discovery without new treatment; independent parent/unit and oracle witness lineage preserved."
@@ -178,6 +190,22 @@
           "reason": "Independent semantic completeness judgment cannot be established solely by a syntactic repo guard."
         }
       ]
+    },
+    {
+      "id": "algebra-external-repos",
+      "claim": "External solver repository search is reconciled with existing sources and graded by actual verification depth before technique selection.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "reports/2026-10-12-algebraic-decoding-code-repo-candidates-001.json",
+          "expected": "75 unique repository URLs, concept families and source-review grades without search-only entries represented as source inspected."
+        },
+        {
+          "type": "artifact",
+          "locator": "reports/2026-10-12-algebraic-decoding-external-code-repo-audit-001.md",
+          "expected": "New code mechanisms vs August census distinguished, graph/trail semantics and license exceptions documented, and no technique promoted by discovery alone."
+        }
+      ]
     }
   ],
   "phases": [
@@ -189,7 +217,8 @@
       ],
       "outputs": [
         "Research-only graph-parity prototype",
-        "Tiny tests and bounded real-level structural census"
+        "Tiny tests and bounded real-level structural census",
+        "Cross-checked 75-repository multilingual source discovery catalogue and prior-census reconciliation"
       ],
       "affectedDomains": [
         "definitionsSchemas",
@@ -198,7 +227,8 @@
       ],
       "exitProofIds": [
         "algebra-stage0",
-        "algebra-sample"
+        "algebra-sample",
+        "algebra-external-repos"
       ]
     },
     {
