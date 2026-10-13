@@ -2,7 +2,7 @@
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
 > **Program state:** **ONE EARNED TREATMENT (BC1-VX, 2X) AWAITING ITS PRODUCTION A/B; PREMISE-DISCOVERY LANES B AND G ACTIVE.** BC1-V/VX (volume consequences of theorem BC1) earned the production gate on 2026-10-02; the first production arm was cancelled by the maintainer. PG-B's prospective arms were also cancelled and await re-dispatch. PG-G (controlled technique-response neighborhoods) was opened 2026-10-07 as a research-only premise generator using existing family/census infrastructure; it has no treatment authority.
-> **Reconciled:** 2026-10-07.
+> **Reconciled:** 2026-10-12 (algebraic-decoding Stage-0 premise note only; existing treatment/PG-B/PG-G gates unchanged).
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 > **Historical snapshots:** [2026-09-25](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md) · [2026-10-02](../reports/2026-10-02-solver-optimization-workstreams-precompaction-snapshot-002.md) (full closed-record narratives, including the retracted WS1 negative).
 
@@ -22,7 +22,7 @@ The [post-exhaustion premise refresh](../reports/2026-10-01-post-exhaustion-solv
 | PG-B | Intervention-response atlas | active | built from 25 retained Corpus-2 capability runs the feasibility audit missed; retrospective: no shared soft-residual regime (BC1 gains not enriched for other capabilities' nominations, OR 1.26 p 0.72); predictions pre-registered for current-main control vs BC1-off full-corpus arms, which also price the BC1-off dead-last retry (GHA 37049775397 / 37049784486 were cancelled by the maintainer at ~40 min, before any shard finished; re-dispatch awaits their go-ahead) ([atlas](../reports/2026-10-02-intervention-response-atlas-result-001.md)) |
 | PG-E | WS1 transfer-failure analysis | withdrawn | the failure was an instrument defect; corrected re-run is positive (WS1 below) |
 | PG-C | First-loss refresh | not executed | needs causal labels A/B/E did not supply |
-| PG-D | Cut/resource sibling mining | not executed | needs a sound candidate fact with a proof sketch first |
+| PG-D | Cut/resource sibling mining | not executed | incidence-only graph algebra is sound but has no novel production fact; a *coupled-resource* consequence with a current-prune-nonredundant tiny witness remains necessary ([plan](solver-algebraic-decoding-research-plan.md); [160-level structural baseline](../reports/2026-10-12-algebraic-incidence-decoding-baseline-001.md)) |
 | PG-F | Local-forcedness descriptor | closed | null on 42 solved levels ([result](../reports/2026-10-01-forcedness-winner-descriptor-result-001.md)) |
 | PG-G | Controlled technique-response neighborhoods | active | compose existing controlled parent/variant families with isolated equal-work technique cells; current gate is a 6-12 independent-parent pilot, with only nominated cliffs sent to the existing pair-divergence microscope ([plan](../reports/2026-10-07-controlled-technique-response-neighborhoods-plan-001.md)) |
 
