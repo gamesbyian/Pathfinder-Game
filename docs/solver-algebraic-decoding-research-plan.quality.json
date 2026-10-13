@@ -54,6 +54,11 @@
       "candidate": "reports/2026-10-13-mechanic-first-crossing-decoder-source-audit-001.md",
       "disposition": "reuse",
       "reason": "Source archaeology of independent Z3, ASP, ILP and C++ crossing/path-order encodings, forced-edge deduction, CP-SAT border quotas and documented false-dead bugs; new technique still unearned."
+    },
+    {
+      "candidate": "reports/2026-10-13-flipper-articulation-cut-order-preflight-001.md",
+      "disposition": "reuse",
+      "reason": "Negative root-only opportunity census: 0 all-compulsory-flipper gates across published and random Corpus-2 portal-free levels; no generic flipper-order architecture earned."
     }
   ],
   "impactDomains": {
@@ -80,7 +85,8 @@
     ],
     "generatedArtifacts": [
       "Stage-0 bounded stdout/JSON summary, subsequent dated proof and A/B reports if earned.",
-      "Evidence-graded 91-repository candidates JSON and reconciled new-vs-known external-code audit."
+      "Evidence-graded 91-repository candidates JSON and reconciled new-vs-known external-code audit.",
+      "Research-only flipper cut-order preflight Node CLI, focused Node test, and dated negative opportunity report; no production import."
     ],
     "testsValidatorsGuards": [
       "Exhaustive tiny parity micrographs, double-bridge walk, disconnected/two-gate/portal abstention."
@@ -217,6 +223,27 @@
           "expected": "Curated, source-confirmed mechanics x algorithm comparison, Pathfinder current-prune reconciliation, unsupported-mechanic and false-UNSAT hazards, no earned production path."
         }
       ]
+    },
+    {
+      "id": "algebra-flipper-static-negative",
+      "claim": "First bounded static root flipper-order model is proved as a necessary condition, tests abstentions, and closes on honest corpus opportunity rather than production gain.",
+      "proofs": [
+        {
+          "type": "test",
+          "locator": "node --test scripts/stress/flipper-cut-order-preflight-node-test.mjs",
+          "expected": "All 62 1..5 flipper corridor axis patterns and portal/optional-flipper/multi-gate abstentions agree with independent small oracle."
+        },
+        {
+          "type": "command",
+          "locator": "node scripts/stress/flipper-cut-order-preflight.mjs --corpus=data/levels.json && node scripts/stress/flipper-cut-order-preflight.mjs --corpus=data/stress/stress-levels-random.json",
+          "expected": "Published 160/8 portal-free flipper levels, Corpus-2 1700/418 portal-free flipper levels; allCompulsory=0 and parityRejectedGates=0 in each."
+        },
+        {
+          "type": "artifact",
+          "locator": "reports/2026-10-13-flipper-articulation-cut-order-preflight-001.md",
+          "expected": "Explicit cut proof, independent and source-verified small fixture, supported/abstained populations, no true gameplay solver/referee claim, no treatment."
+        }
+      ]
     }
   ],
   "phases": [
@@ -230,7 +257,8 @@
         "Research-only graph-parity prototype",
         "Tiny tests and bounded real-level structural census",
         "Cross-checked 91-repository multilingual source discovery catalogue and prior-census reconciliation",
-        "Mechanic-first Icebarn/Icelom/ASP/Z3/ILP source review with source/semantics/validator contrasts"
+        "Mechanic-first Icebarn/Icelom/ASP/Z3/ILP source review with source/semantics/validator contrasts",
+        "Flipper-articulation fixed-order parity certificate plus 62 synthetic corridor pattern checks and negative root-opportunity census"
       ],
       "affectedDomains": [
         "definitionsSchemas",
@@ -240,7 +268,8 @@
       "exitProofIds": [
         "algebra-stage0",
         "algebra-sample",
-        "algebra-external-repos"
+        "algebra-external-repos",
+        "algebra-flipper-static-negative"
       ]
     },
     {
