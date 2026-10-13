@@ -1,0 +1,337 @@
+{
+  "schemaVersion": 1,
+  "plan": "docs/solver-algebraic-decoding-research-plan.md",
+  "status": "active",
+  "reconciledMainRef": "3cdbb1fc169827b1efb411e190fd7c76096bf02d",
+  "premises": [
+    {
+      "question": "Does algebraic constraint decoding infer previously unavailable, economically useful Pathfinder facts, or merely restate graph parity/connectivity?",
+      "evidence": [
+        "Main solver already uses parity, connectivity, per-mechanic bounds and BC1; existing offline CP-SAT/replay machinery supports exact labels.",
+        "Incidence parity Bx=e_g+e_t is sound as a relaxed walk invariant; its bridge consequences may be redundant.",
+        "Atlas identifies joint-feasibility and non-prefix search objects as gaps; evidence for a new consumer is not yet established."
+      ],
+      "alternatives": [
+        "Static parity is entirely redundant; close incidence-only form.",
+        "Coupled regional capacity or obligation matching yields sound incremental contradictions.",
+        "A plan decoder yields useful complete-path structure but at prohibitive reconstruction cost."
+      ],
+      "discriminator": "Tiny exact parity/cut witnesses and a dated baseline novelty audit versus current prunes; only an independent decision-bearing advantage earns a subsequent treatment probe."
+    }
+  ],
+  "repositoryPriorArt": [
+    {
+      "candidate": "docs/solver-small-exact-projections-program.md",
+      "disposition": "reuse",
+      "reason": "Theorem classes, mechanism matrix, novelty gate and economics already owned."
+    },
+    {
+      "candidate": "scripts/stress/offline-replay-harness.mjs plus CP-SAT probes",
+      "disposition": "reuse",
+      "reason": "Existing witness-verified LIVE/DEAD oracle and exact-model machinery; no duplicate harness."
+    },
+    {
+      "candidate": "scripts/stress/probes/separator-resource-probe.mjs",
+      "disposition": "reuse",
+      "reason": "An already tested necessary-condition chamber resource model that algebra must beat."
+    },
+    {
+      "candidate": "reports/2026-10-07-controlled-technique-response-neighborhoods-plan-001.md",
+      "disposition": "reuse",
+      "reason": "Existing parent-family technique×variation discovery and independence methodology."
+    }
+  ],
+  "impactDomains": {
+    "definitionsSchemas": [
+      "Standalone research-only GF(2) graph-parity projection; no domain/runtime schema changes."
+    ],
+    "producersWriters": [
+      "Stage-0 plain-Node structural projection; future only if earned: offline labelled probe."
+    ],
+    "transportsWorkers": [
+      "Stage 0 runs in plain Node; production workers/raced/search-state remain unchanged."
+    ],
+    "consumersReaders": [
+      "Research-only structural outputs; future existing offline replay harness."
+    ],
+    "persistenceStores": [
+      "No production saves/Firestore/hint migrations; optional dated research outputs only."
+    ],
+    "cliPackage": [
+      "Direct bounded Node CLI for Stage 0; no npm alias or required workflow."
+    ],
+    "workflowsTriggers": [
+      "Existing PR CI runs unchanged; Stage 2 reuses established oracle workflows only when earned."
+    ],
+    "generatedArtifacts": [
+      "Stage-0 bounded stdout/JSON summary, subsequent dated proof and A/B reports if earned."
+    ],
+    "testsValidatorsGuards": [
+      "Exhaustive tiny parity micrographs, double-bridge walk, disconnected/two-gate/portal abstention."
+    ],
+    "compatibilityHistory": [
+      "Historical CP-SAT relaxed counts and parity negatives retained without reinterpretation as canonical solution counts."
+    ],
+    "currentDocsAuthorities": [
+      "docs/solver-optimization-workstreams.md",
+      "docs/solver-future-work.md",
+      "docs/solver-reasoning-capability-atlas.md",
+      "docs/solver-small-exact-projections-program.md"
+    ],
+    "registriesCatalogues": [
+      "Existing tools and research asset indexes inspected; no Stage-0 schema addition."
+    ],
+    "researchSystem": [
+      "Premise discovery without new treatment; independent parent/unit and oracle witness lineage preserved."
+    ]
+  },
+  "solverQueueImpact": {
+    "classification": "observation-surface",
+    "authoritiesChecked": [
+      "docs/solver-optimization-workstreams.md",
+      "docs/solver-future-work.md",
+      "docs/solver-research-question-relations.json",
+      "docs/solver-opt-in-experiment-ledger.md"
+    ],
+    "items": [
+      "PG-D cut/resource sibling mining (conditional)",
+      "WS2-CUT-BALANCE-PROJECTION existing small-projection semantics",
+      "PG-G technique-response neighborhoods (potential later observation only)"
+    ],
+    "notes": "No reprioritization, no new stable-question ID or treatment; the current BC1-VX A/B remains first authority. Link bounded discovery only."
+  },
+  "definitionsOfDone": [
+    {
+      "id": "algebra-stage0",
+      "claim": "Graph incidence model is correct on supported micrographs and honestly labels unsupported mechanics.",
+      "proofs": [
+        {
+          "type": "test",
+          "locator": "node scripts/stress/path-parity-decode-preflight-node-test.mjs",
+          "expected": "Every parity bridge, cycle, two-gate, non-witness double-cross and abstention case passes."
+        }
+      ]
+    },
+    {
+      "id": "algebra-sample",
+      "claim": "Stage-0 bounded structural sample is reproducible and separated from actual Pathfinder solvability.",
+      "proofs": [
+        {
+          "type": "command",
+          "locator": "node scripts/stress/path-parity-decode-preflight.mjs --corpus=data/levels.json --limit=12",
+          "expected": "Print deterministic per-level structural summaries and explicit supported/unsupported counts, with no solve verdicts."
+        }
+      ]
+    },
+    {
+      "id": "algebra-novelty",
+      "claim": "A stronger algebraic theorem enters Stage 1 only after a smallest incremental decision witness.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "Future dated Stage-0/1 novelty decision report",
+          "expected": "Names supported mechanics, proof and counterexample, existing-prune comparator, unique actionable contradiction or an explicit closed-negative disposition."
+        }
+      ]
+    },
+    {
+      "id": "algebra-shadow",
+      "claim": "Any shadow probe preserves oracle identity and soundness/cost distinctions.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "Future replay report with exact witness identity",
+          "expected": "Independent parents, LIVE/DEAD/UNKNOWN/UNSUPPORTED and abstain, unique catches vs gauntlet, observer cost and versioned input."
+        }
+      ]
+    },
+    {
+      "id": "algebra-treatment",
+      "claim": "No production treatment is claimed before verified level-blind matched-work gain and referee safety.",
+      "proofs": [
+        {
+          "type": "workflow",
+          "locator": "Future earned matched-work production A/B and regression runs",
+          "expected": "Pinned aggregate workSpent and both benefit/safety populations, strict referee validity, explicit execution-family canary and disposition."
+        }
+      ]
+    },
+    {
+      "id": "algebra-splash",
+      "claim": "Closeout reconciles live authorities and consumer surfaces without rewriting frozen history.",
+      "proofs": [
+        {
+          "type": "command",
+          "locator": "npm run check:documentation-links && npm run research:integration-audit",
+          "expected": "Documentation and stable research-system cross-references valid after queue/asset reconciliation."
+        }
+      ]
+    },
+    {
+      "id": "algebra-hostile",
+      "claim": "An independent current-main audit reconstructs claim and implementation, or retains precise blocked reason.",
+      "proofs": [
+        {
+          "type": "manual-evidence",
+          "locator": "Stage-5 hostile reconstruction report",
+          "expected": "Lists observed source, consumer, workflow, persistence, compatibility, authority populations, missing witnesses and closeout disposition.",
+          "reason": "Independent semantic completeness judgment cannot be established solely by a syntactic repo guard."
+        }
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "stage-0",
+      "name": "Soundness and underdetermination preflight",
+      "entry": [
+        "Current main read; relevant exact/parity and probe owners identified."
+      ],
+      "outputs": [
+        "Research-only graph-parity prototype",
+        "Tiny tests and bounded real-level structural census"
+      ],
+      "affectedDomains": [
+        "definitionsSchemas",
+        "producersWriters",
+        "testsValidatorsGuards"
+      ],
+      "exitProofIds": [
+        "algebra-stage0",
+        "algebra-sample"
+      ]
+    },
+    {
+      "id": "stage-1",
+      "name": "Novel coupled constraint proof",
+      "entry": [
+        "Stage-0 closed with explicit redundancy/novelty classification."
+      ],
+      "outputs": [
+        "Smallest incremental witness or precise negative"
+      ],
+      "affectedDomains": [
+        "researchSystem",
+        "consumersReaders"
+      ],
+      "exitProofIds": [
+        "algebra-novelty"
+      ]
+    },
+    {
+      "id": "stage-2",
+      "name": "Witness-bound oracle shadow",
+      "entry": [
+        "Stage-1 supported proof plus nonredundant case and opportunity."
+      ],
+      "outputs": [
+        "Versioned per-parent replay evidence"
+      ],
+      "affectedDomains": [
+        "researchSystem",
+        "generatedArtifacts",
+        "consumersReaders"
+      ],
+      "exitProofIds": [
+        "algebra-shadow"
+      ]
+    },
+    {
+      "id": "stage-3",
+      "name": "Conditional abstract-plan reconstruction",
+      "entry": [
+        "Stage-2 identifies actionable reusable structure beyond runtime prune; otherwise skip with negative."
+      ],
+      "outputs": [
+        "Bounded reconstruction and refinement result, or explicit refusal to build"
+      ],
+      "affectedDomains": [
+        "definitionsSchemas",
+        "researchSystem"
+      ],
+      "exitProofIds": [
+        "algebra-novelty"
+      ]
+    },
+    {
+      "id": "stage-4",
+      "name": "Conditional production capability",
+      "entry": [
+        "Strong Stage-2/3 evidence and economics; queue grants treatment gate."
+      ],
+      "outputs": [
+        "Narrowest opt-in consumer plus matched-work evidence or no treatment"
+      ],
+      "affectedDomains": [
+        "transportsWorkers",
+        "workflowsTriggers",
+        "testsValidatorsGuards",
+        "solverQueueImpact"
+      ],
+      "exitProofIds": [
+        "algebra-treatment"
+      ]
+    },
+    {
+      "id": "stage-5",
+      "name": "Splash-zone and hostile closeout",
+      "entry": [
+        "Stage-0 evidence and any earned later phases are finished or explicitly closed."
+      ],
+      "outputs": [
+        "Reconciled queue, docs, tooling and exact evidence dispositions"
+      ],
+      "affectedDomains": [
+        "currentDocsAuthorities",
+        "registriesCatalogues",
+        "researchSystem"
+      ],
+      "exitProofIds": [
+        "algebra-splash",
+        "algebra-hostile"
+      ]
+    }
+  ],
+  "splashZone": {
+    "currentAuthorities": [
+      "solver architecture, plan and agent routing"
+    ],
+    "workflows": [
+      "Existing CP-SAT and replay workflow lifecycle if touched"
+    ],
+    "registriesSchemas": [
+      "Stable research question relations and opt-in ledger if scientific state changes"
+    ],
+    "generatedData": [
+      "No frozen result rewrites; generated output compatibility audited"
+    ],
+    "solverQueue": [
+      "BC1-VX and PG-G intact; reconcile future work only on novel findings"
+    ],
+    "researchSystem": [
+      "Asset/query/tool discoverability and evidence status checks"
+    ],
+    "retireOrArchive": [
+      "Unpromoted probes and unused scripts when question closes"
+    ],
+    "proofIds": [
+      "algebra-splash"
+    ]
+  },
+  "hostileCloseout": {
+    "independentReconstruction": true,
+    "inventories": [
+      "producers",
+      "consumers",
+      "workflows",
+      "persistence",
+      "compatibility-history",
+      "current-authorities",
+      "registries",
+      "solver-queue"
+    ],
+    "proofIds": [
+      "algebra-hostile"
+    ]
+  }
+}
