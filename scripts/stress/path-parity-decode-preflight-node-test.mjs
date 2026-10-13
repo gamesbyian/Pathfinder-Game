@@ -62,3 +62,30 @@ assert.throws(()=>checkWalkSyndrome(buildRelaxedGraph(square),['1,1','2,2']),/no
 assert.throws(()=>decodeIncidence({...square,gates:[]}),/missing gate/);
 
 console.log('algebraic incidence preflight tiny proof and adversarial cases passed');
+
+// Independent GF(2) truth-table oracle: enumerate EVERY small edge-parity
+// assignment and compare actual incidence solutions to inferred bridge fixings.
+for(const raw of [pendant,square]) {
+  const graph=buildRelaxedGraph(raw);
+  assert(graph.edges.length<=10);
+  const start=graph.gates[0],goal=graph.goal;
+  const expected=new Uint8Array(graph.vertices.length);
+  expected[start]^=1;expected[goal]^=1;
+  const solutions=[];
+  for(let mask=0;mask<2**graph.edges.length;mask++) {
+    const syndrome=new Uint8Array(graph.vertices.length);
+    graph.edges.forEach(([u,v],i)=>{
+      if((mask&(1<<i))!==0){syndrome[u]^=1;syndrome[v]^=1;}
+    });
+    if(syndrome.every((v,i)=>v===expected[i])) solutions.push(mask);
+  }
+  assert.equal(solutions.length,2**decodeIncidence(raw).nullity);
+  const projection=decodeIncidence(raw).gateResults[0];
+  graph.edges.forEach(([u,v],e)=>{
+    const fixedOdd=solutions.every(mask=>(mask&(1<<e))!==0);
+    const fixedEven=solutions.every(mask=>(mask&(1<<e))===0);
+    const label=graph.vertices[u]+'--'+graph.vertices[v];
+    assert.equal(projection.forcedOdd.includes(label),fixedOdd);
+    assert.equal(projection.forcedEven.includes(label),fixedEven);
+  });
+}
