@@ -9,7 +9,8 @@
       "reports/2026-08-24-external-solver-code-census.md",
       "reports/2026-08-24-frontier-zdd-pilot-spec.md",
       "reports/2026-08-24-external-research-pathfinder-synthesis.md"
-    ]
+    ],
+    "codeSearch": "GitHub public code symbol queries: FrontierSTPathSpec, active_edges_single_cycle, GraphSet.paths, Numberlink Z3, etc.; surfaced hidden TypeScript/F#/Japanese code families."
   },
   "readmeGrades": {
     "source+readme+metadata": "Named source files examined as well as repo description/readme.",
@@ -21,10 +22,11 @@
     "mentioned-in-verified-readme": "Explicit external cross-reference from a reviewed README.",
     "discovered-only": "GitHub search result, no primary source implementation audit.",
     "web-verified-gitlab": "Public GitLab page indexed by web; API freshness/licensing not independently checked.",
-    "web-source": "Web source inspected, not current repository source."
+    "web-source": "Web source inspected, not current repository source.",
+    "code-search": "Exact implementation code or file surfaced by GitHub public code search; repository implementation not yet reviewed."
   },
   "counts": {
-    "totalUnique": 75
+    "totalUnique": 81
   },
   "candidates": [
     {
@@ -551,6 +553,48 @@
       "family": "general-sat-and-resource",
       "reviewStatus": "discovered-only",
       "relevance": "Z3 spatial puzzle"
+    },
+    {
+      "repository": "wix-diesel/ZDD.Net",
+      "url": "https://github.com/wix-diesel/ZDD.Net",
+      "family": "frontier-dd",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "New Japanese C# ZDD.Net: graph path specs, degree/cardinality/linear constraints and frontier-width estimates; author performance claims unverified"
+    },
+    {
+      "repository": "logic-pad/grilops",
+      "url": "https://github.com/logic-pad/grilops",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "TypeScript Z3/grilops port; README explicitly warns paths module is buggy; do not adopt without tests"
+    },
+    {
+      "repository": "leymbda/numberlink",
+      "url": "https://github.com/leymbda/numberlink",
+      "family": "trails-and-revisits",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "F# Z3 BridgeLane identity/disequality for crossing strands, but source contains TODO shadow-cycle prevention and returns Flow.empty on SAT; model reference only"
+    },
+    {
+      "repository": "hakank/hakank",
+      "url": "https://github.com/hakank/hakank",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "metadata",
+      "relevance": "Picat flow_game.pi and enormous declarative constraint puzzle collection"
+    },
+    {
+      "repository": "MewMew0000/EnumeratingGraphOrientation",
+      "url": "https://github.com/MewMew0000/EnumeratingGraphOrientation",
+      "family": "frontier-dd",
+      "reviewStatus": "code-search",
+      "relevance": "Additional reuse of FrontierSTPathSpec found by cross-repo symbol search"
+    },
+    {
+      "repository": "newtomsoft/HumanTalkPuzzleSolver",
+      "url": "https://github.com/newtomsoft/HumanTalkPuzzleSolver",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "code-search",
+      "relevance": "Code search surfaced numberLinkSolverZ3.py; unreviewed"
     }
   ]
 }
