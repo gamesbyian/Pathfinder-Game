@@ -10,6 +10,34 @@ Searching only for `pathfinding` misses constraint-satisfaction, SAT/SMT encodin
 
 **Triage:** `A` = inspect first for a transferable mechanism or reference model; `B` = meaningful adjacent experiment; `C` = background, vocabulary, harnesses, duplicates or distant analogy. Grades do not imply correctness or runnable code.
 
+## Follow-up source review and second-wave discoveries (2026-10-12)
+
+**Verification update:** All 70 original repository URLs have now resolved successfully via GitHub's public repository metadata endpoint. This proves the link targets exist; it does **not** verify working code, algorithm correctness, licensing, or independent lineage. The first 70 are now an **existence-checked discovery corpus**. Inspect [the source-level research report](../reports/2026-10-12-external-pathfinding-source-inspection-001.md) for method and exact-source details, differences in problem semantics, caveats and six bounded falsification packets.
+
+**Important change in priorities:** A newly found ASP/clingo framework explicitly supports *directed crossings*, a closer relative of Pathfinder's must-cross mechanic than most Hamiltonian, simple-path or Numberlink solvers. Prioritize it before implementing any generalized frontier/ZDD machinery.
+
+### Additional extant GitHub candidates (verified, not included in the original 70)
+
+| Tier | Additional repository | What makes it useful / why to inspect |
+|---|---|---|
+| A | [T0nyX1ang/noqx](https://github.com/T0nyX1ang/noqx) | Python/clingo modular directed crossings, separate horizontal/vertical route connectivity, turning and exact segment length, portal adjacency. **Top new source-level lead.** |
+| B | [mstang107/noq](https://github.com/mstang107/noq) | Upstream parent of noqx, useful for a genuine novelty/lineage audit; do **not** count as independent method replication. |
+| B | [sosga/simon-tathams-portable-puzzle-collection](https://github.com/sosga/simon-tathams-portable-puzzle-collection) | Maintained source collection, especially Pearl/Masyu turn constraints, Loopy connectivity, Signpost ordered arrow chains and Inertia temporal motion. |
+| B | [sen-ltd/slitherlink](https://github.com/sen-ltd/slitherlink) | Compact pure TypeScript logic propagation plus explicit premature-subloop test, adversarial fixtures and uniqueness checking. |
+| C | [ssrkb/masyu-puzzle-solver](https://github.com/ssrkb/masyu-puzzle-solver) | Python constraint-programming turn/straight loop model; limited evidence and no verified benchmarking. |
+| B | [Huy1711/Numberlink-solver-SAT-approach](https://github.com/Huy1711/Numberlink-solver-SAT-approach) | SAT model and linked Vietnamese-origin Numberlink source lineage. |
+| B | [kieuvantuyen01/propagationAlgorithm](https://github.com/kieuvantuyen01/propagationAlgorithm) | SAT propagation improvement cited by the preceding solver, Java source and retained log artifacts. |
+| B | [TGStarGuardian/Hamiltonian-paths-in-grid-graphs](https://github.com/TGStarGuardian/Hamiltonian-paths-in-grid-graphs) | Serbian thesis and explicit efficient constructions for restricted rectangle/L/C/F/E grid geometries. |
+| B | [dumchevdev/voronoi-grid-prototype](https://github.com/dumchevdev/voronoi-grid-prototype) | Backbite/reptation Hamiltonian-path-preserving transformations and graph invariants; candidate controlled-level-family seeds. |
+| B | [d-krupke/cpsat-primer](https://github.com/d-krupke/cpsat-primer) | CP-SAT research method reference: explanation clauses, conflict analysis and constraint-model design, rather than a specific puzzle solver. |
+| C | [DominikPeters/HardnessReductionsLean](https://github.com/DominikPeters/HardnessReductionsLean) | Formalized graph-complexity reductions and mathematical modeling discipline; a distant background reference, not an immediate implementation candidate. |
+
+**Totals after this review: 81 distinct GitHub repository links (70 initial + 11 new), plus the previously listed secondary gist/lineage leads.** These are *repositories*, not 81 unique algorithms. No source-level execution or cross-Pathfinder experimental validation is claimed.
+
+**Additional naming/search vocabulary:** answer-set programming, ASP, clingo, clasp, Noq, noqx, route and crossing-route, directed route, portal loop, Turn and Run, Shingoki, exact straight segment length, subtour elimination, flow decomposition, channel-separated reachability, state-space augmentation, time-indexed walks, repeated vertex, ordered traversals, finite automata and temporal CSP. Combine these with local puzzle terms in the 20-language table below.
+
+---
+
 ## Real repository candidates
 
 ### A. Ordered paths, grid coverage and game-puzzle analogues
@@ -112,7 +140,7 @@ Searching only for `pathfinding` misses constraint-satisfaction, SAT/SMT encodin
 | C | [joaopauloaramuni/fundamentos-de-projeto-e-analise-de-algoritmos](https://github.com/joaopauloaramuni/fundamentos-de-projeto-e-analise-de-algoritmos) | Portuguese Hamiltonian/Knight-tour examples |
 | B | [dsagman/picat](https://github.com/dsagman/picat) | Picat CP/SAT/planner models with finite automaton constraints |
 
-**70 concrete repository candidates**, plus four follow-up lineage/code leads below. A number of them are necessarily distant analogues rather than direct implementations of Pathfinder semantics.
+**70 original concrete repository candidates (plus 11 additional repositories verified in the follow-up section above)**, plus four follow-up lineage/code leads below. A number of them are necessarily distant analogues rather than direct implementations of Pathfinder semantics.
 
 ### Secondary leads not independently verified as repositories in this pass
 
