@@ -1,5 +1,19 @@
 # External source inspection: crossing routes, graph-set search and exact constraint models
 
+> **Status:** inconclusive
+> **Last evidence:** 2026-10-12 — source inspection of external public GitHub repositories and their algorithm files
+> **Decision:** Retain 81 external repository candidates and the crossing-route/constraint-model hypotheses as discovery evidence only; no solver treatment or proven transferable prune is authorized
+> **Remaining gate:** Establish a referee-checked, semantics-preserving distinguishing witness and opportunity/economics preflight for any proposed transfer
+> **Research question:** none
+> **Premise refs:** none
+> **Measurement opportunity:** none
+> **Evidence role:** discovery
+> **Selection:** selected after inspecting search hits and candidate source files
+> **Population identity:** 70 original externally identified repository URLs plus 11 follow-up repository URLs, as listed in the paired scout document
+> **Selection history:** convenience discovery via multilingual search, then targeted source inspection; not a prespecified representative population of GitHub methods
+> **Inference scope:** existence and source observations for inspected public repositories only; no external implementation or Pathfinder transfer has been executed
+> **Proposal provenance:** multilingual GitHub prior-art reconnaissance and source-code inspection; hypotheses developed before any Pathfinder experimental evaluation
+
 **Date:** 2026-10-12. **Status:** source-level reconnaissance, not independently executed or validated solver experiments. Companion to [the 70-repository multilingual scout](../docs/solver-external-repository-scout-2026-10-12.md). All **70 original GitHub repository URLs resolved** in a fresh public repository-metadata verification; their implementations, independence, licenses and claims are not thereby proven.
 
 **Authority:** Current [solver workstreams](../docs/solver-optimization-workstreams.md) own priority, [research question intake](../docs/research-question-intake.md) owns whether a newly framed question deserves registration, and the [invention program](../docs/solver-capability-invention-program.md) owns capability gates. This document changes none of those. Source links below resolve to files at inspected revisions.
