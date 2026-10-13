@@ -115,7 +115,7 @@ A *useful inverse* to every proposed decoder is to measure false algebraic deter
 
 ## 6. Follow-on discovery limits and anti-boondoggle rule
 
-The 81-entry catalogue is **deliberately heterogeneous**: deep source-verified, README-verified, metadata-only, historical and search-only entries are labeled, not presented as 81 fully audited tools. Its 81 names are not 75 distinct algorithms. We also did not exhaust all forks, GitLab/Codeberg/SourceHut hosts, non-indexed code in Japanese/Chinese, or published non-code research implementations. Further repository sweeps are justified by a **specific missing mechanism class or semantic discriminator**, not by a round target of 200 or 500 repo URLs.
+The 81-entry catalogue is **deliberately heterogeneous**: deep source-verified, README-verified, metadata-only, historical and search-only entries are labeled, not presented as 81 fully audited tools. Its 81 names are not 81 distinct algorithms. We also did not exhaust all forks, GitLab/Codeberg/SourceHut hosts, non-indexed code in Japanese/Chinese, or published non-code research implementations. Further repository sweeps are justified by a **specific missing mechanism class or semantic discriminator**, not by a round target of 200 or 500 repo URLs.
 
 Useful search expansions *if* a live discriminator requires them:
 - author/organization/fork snowballing from Graphillion/TdZdd/cspuz_core and puzzle archives;
