@@ -11,7 +11,8 @@
       "reports/2026-08-24-external-research-pathfinder-synthesis.md"
     ],
     "codeSearch": "GitHub public code symbol queries: FrontierSTPathSpec, active_edges_single_cycle, GraphSet.paths, Numberlink Z3, etc.; surfaced hidden TypeScript/F#/Japanese code families.",
-    "mechanicSearch": "Added 2026-10-13 source-level Icebarn/Icelom, Noqx/ASP, CP-SAT region-border cardinality and code-symbol inspection. Facets represent source affordances, not proven Pathfinder semantic equivalence."
+    "mechanicSearch": "Added 2026-10-13 source-level Icebarn/Icelom, Noqx/ASP, CP-SAT region-border cardinality and code-symbol inspection. Facets represent source affordances, not proven Pathfinder semantic equivalence.",
+    "unmatchedSourceStatus": "As of Oct 13: null findings limited to inspected repositories and code symbols, not formal global nonexistence claims."
   },
   "readmeGrades": {
     "source+readme+metadata": "Named source files examined as well as repo description/readme.",
@@ -1000,5 +1001,37 @@
       "vavavr00m/PuzzleSolver"
     ]
   },
-  "reviewDisclaimer": "Existing candidates not re-reviewed remain at their previous verification grade. Facets are selective/curated, not exhaustive tags for 90+ repo names."
+  "reviewDisclaimer": "Existing candidates not re-reviewed remain at their previous verification grade. Facets are selective/curated, not exhaustive tags for 90+ repo names.",
+  "unmatchedPathfinderMechanics": [
+    {
+      "key": "free-forced-portal-jumps",
+      "description": "Forced nonlocal transition counted as zero ordinary steps and resets next move's turn entry-axis context",
+      "sourceStatus": "No exact external puzzle-solver implementation confirmed in inspected code; Pathfinder CP-SAT already models it",
+      "doNotInfer": "Absence from inspected candidates is not global absence."
+    },
+    {
+      "key": "global-use-order-flipper-parity",
+      "description": "Visit a distinct flipper once, with permitted entry direction depending on parity of previously used different flippers",
+      "sourceStatus": "No source-confirmed external analogue",
+      "doNotInfer": "May exist under state-machine/finite automaton or puzzle variant nomenclature."
+    },
+    {
+      "key": "exact-target-self-intersections",
+      "description": "Precisely K revisits via orthogonal straight-through crossings while preserving direction and edge-axis history",
+      "sourceStatus": "IceLom admits crossings and has two-visit capacity; no source-confirmed off-the-shelf complete encoding of Pathfinder exact global reqInt",
+      "doNotInfer": "ZDD/CP-SAT length/cardinality features are not automatically exact intersection counters."
+    },
+    {
+      "key": "crossing-with-turn-landmark-history",
+      "description": "MustTurn and adjacent-turn constraints after entry-axis resets, chirality and flipper state",
+      "sourceStatus": "Local turn/straight encodings source-confirmed; joint Pathfinder-specific dynamic-history combination not found",
+      "doNotInfer": "No known direct port without proof."
+    },
+    {
+      "key": "joint-cut-axis-intersection-budget",
+      "description": "Regional flow obligations competing for directional lane capacity and exact remaining resource counts",
+      "sourceStatus": "Pieces found in Noqx cut counts and IceLom lane capacity; no single external code theorem confirmed as nonredundant to Pathfinder BC1/MC bounds",
+      "doNotInfer": "Candidate for smallest witness; not earned treatment."
+    }
+  ]
 }
