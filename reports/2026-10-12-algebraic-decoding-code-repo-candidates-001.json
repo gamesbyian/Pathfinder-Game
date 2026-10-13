@@ -1,0 +1,556 @@
+{
+  "schema": "pathfinder.external-solver-code-repo-candidates/v1",
+  "capturedDate": "2026-10-12",
+  "scope": "External code and libraries relevant to constraint decoding of Pathfinder paths, including prior-census references and unverified discovery candidates.",
+  "provenance": {
+    "nativeRepoSearch": "GitHub repository name/description search through connected GitHub; 50+ lexical queries, including Japanese/Chinese/English",
+    "webSearch": "Public web search for non-indexed project names and GitLab; results distinguished from GitHub source verification.",
+    "internalPriorArt": [
+      "reports/2026-08-24-external-solver-code-census.md",
+      "reports/2026-08-24-frontier-zdd-pilot-spec.md",
+      "reports/2026-08-24-external-research-pathfinder-synthesis.md"
+    ]
+  },
+  "readmeGrades": {
+    "source+readme+metadata": "Named source files examined as well as repo description/readme.",
+    "readme+metadata": "Project README and GitHub metadata examined.",
+    "source-doc": "Docs/source examined.",
+    "metadata": "GitHub repository metadata examined, implementation not inspected.",
+    "web-readme": "Web indexed README viewed, not source inspected.",
+    "prior-census": "Verified in historical Pathfinder census, not reverified this turn.",
+    "mentioned-in-verified-readme": "Explicit external cross-reference from a reviewed README.",
+    "discovered-only": "GitHub search result, no primary source implementation audit.",
+    "web-verified-gitlab": "Public GitLab page indexed by web; API freshness/licensing not independently checked.",
+    "web-source": "Web source inspected, not current repository source."
+  },
+  "counts": {
+    "totalUnique": 75
+  },
+  "candidates": [
+    {
+      "repository": "graphillion/graphillion",
+      "url": "https://github.com/graphillion/graphillion",
+      "family": "frontier-dd",
+      "reviewStatus": "readme+metadata+source-doc",
+      "relevance": "Prior DD family; efficient graph sets, simple paths and cost-bounded solutions"
+    },
+    {
+      "repository": "kunisura/TdZdd",
+      "url": "https://github.com/kunisura/TdZdd",
+      "family": "frontier-dd",
+      "reviewStatus": "readme+metadata",
+      "relevance": "Prior family; frontier decision diagrams, MIT"
+    },
+    {
+      "repository": "junkawahara/frontier_basic_tdzdd",
+      "url": "https://github.com/junkawahara/frontier_basic_tdzdd",
+      "family": "frontier-dd",
+      "reviewStatus": "readme+metadata",
+      "relevance": "Prior family; s-t paths and Hamiltonian paths"
+    },
+    {
+      "repository": "kunisura/algorithms2012",
+      "url": "https://github.com/kunisura/algorithms2012",
+      "family": "frontier-dd",
+      "reviewStatus": "prior-census",
+      "relevance": "Prior MIT Numberlink frontier implementation; preexisting Pathfinder audit"
+    },
+    {
+      "repository": "junkawahara/frontier",
+      "url": "https://github.com/junkawahara/frontier",
+      "family": "frontier-dd",
+      "reviewStatus": "prior-census",
+      "relevance": "Prior general frontier implementation"
+    },
+    {
+      "repository": "AndreVRibeiro/zdd_graph_enumeration",
+      "url": "https://github.com/AndreVRibeiro/zdd_graph_enumeration",
+      "family": "frontier-dd",
+      "reviewStatus": "readme+metadata",
+      "relevance": "New source-verified example; educational frontier ZDD path construction"
+    },
+    {
+      "repository": "junkawahara/reliability_tdzdd",
+      "url": "https://github.com/junkawahara/reliability_tdzdd",
+      "family": "frontier-dd",
+      "reviewStatus": "discovered-only",
+      "relevance": "Reliability/frontier example, not path solver"
+    },
+    {
+      "repository": "lan496/pyzdd",
+      "url": "https://github.com/lan496/pyzdd",
+      "family": "frontier-dd",
+      "reviewStatus": "discovered-only",
+      "relevance": "Python ZDD bindings"
+    },
+    {
+      "repository": "jgremmen/zbdd",
+      "url": "https://gitlab.com/jgremmen/zbdd",
+      "family": "frontier-dd",
+      "reviewStatus": "web-verified-gitlab",
+      "relevance": "Java ZBDD, alternative host"
+    },
+    {
+      "repository": "scce/add-lib",
+      "url": "https://gitlab.com/scce/add-lib",
+      "family": "frontier-dd",
+      "reviewStatus": "web-verified-gitlab",
+      "relevance": "Java DD library supporting BDD/ZDD/ADD; backend CUDD/Sylvan"
+    },
+    {
+      "repository": "hana-hiro/graphillion-trails",
+      "url": "https://github.com/hana-hiro/graphillion-trails",
+      "family": "trails-and-revisits",
+      "reviewStatus": "readme+metadata",
+      "relevance": "New: enumerates trails with repeated vertices allowed; line-graph conversion"
+    },
+    {
+      "repository": "thomasahle/numberlink",
+      "url": "https://github.com/thomasahle/numberlink",
+      "family": "trails-and-revisits",
+      "reviewStatus": "readme+metadata",
+      "relevance": "Prior: diagonal sweep and corner representation; AGPL-3.0"
+    },
+    {
+      "repository": "asSqr/puzz_sqr",
+      "url": "https://github.com/asSqr/puzz_sqr",
+      "family": "trails-and-revisits",
+      "reviewStatus": "metadata",
+      "relevance": "Japanese-language Rust Numberlink and double-choco"
+    },
+    {
+      "repository": "semiexp/numlin-sat",
+      "url": "https://github.com/semiexp/numlin-sat",
+      "family": "trails-and-revisits",
+      "reviewStatus": "metadata",
+      "relevance": "Prior SAT Numberlink encoding, MIT"
+    },
+    {
+      "repository": "taylorjg/FlowFreeDlx",
+      "url": "https://github.com/taylorjg/FlowFreeDlx",
+      "family": "trails-and-revisits",
+      "reviewStatus": "metadata",
+      "relevance": "Dancing Links/exact-cover approach; likely different path identity"
+    },
+    {
+      "repository": "tuneerroy/numberlink",
+      "url": "https://github.com/tuneerroy/numberlink",
+      "family": "trails-and-revisits",
+      "reviewStatus": "prior-census",
+      "relevance": "Prior Numberlink reference"
+    },
+    {
+      "repository": "uguryavuz/numberlink-solver",
+      "url": "https://github.com/uguryavuz/numberlink-solver",
+      "family": "trails-and-revisits",
+      "reviewStatus": "prior-census",
+      "relevance": "Prior Numberlink encoding reference"
+    },
+    {
+      "repository": "imos/Puzzle",
+      "url": "https://github.com/imos/Puzzle",
+      "family": "trails-and-revisits",
+      "reviewStatus": "mentioned-in-verified-readme",
+      "relevance": "NumberLink solution-count path identified by thomasahle"
+    },
+    {
+      "repository": "nguacon90/numberlinkSatSolver",
+      "url": "https://github.com/nguacon90/numberlinkSatSolver",
+      "family": "trails-and-revisits",
+      "reviewStatus": "discovered-only",
+      "relevance": "SAT Numberlink implementation"
+    },
+    {
+      "repository": "Rohlik148/Numberlink-SAT-Solver",
+      "url": "https://github.com/Rohlik148/Numberlink-SAT-Solver",
+      "family": "trails-and-revisits",
+      "reviewStatus": "discovered-only",
+      "relevance": "SAT Numberlink implementation"
+    },
+    {
+      "repository": "ArtShp/numberlink-SAT-solver",
+      "url": "https://github.com/ArtShp/numberlink-SAT-solver",
+      "family": "trails-and-revisits",
+      "reviewStatus": "discovered-only",
+      "relevance": "SAT Numberlink implementation"
+    },
+    {
+      "repository": "khoivn/numberlink-sat-solver",
+      "url": "https://github.com/khoivn/numberlink-sat-solver",
+      "family": "trails-and-revisits",
+      "reviewStatus": "discovered-only",
+      "relevance": "SAT Numberlink implementation"
+    },
+    {
+      "repository": "Huy1711/Numberlink-solver-SAT-approach",
+      "url": "https://github.com/Huy1711/Numberlink-solver-SAT-approach",
+      "family": "trails-and-revisits",
+      "reviewStatus": "discovered-only",
+      "relevance": "SAT Numberlink implementation"
+    },
+    {
+      "repository": "anhpham197/SAT-Encoding-for-Numberlink",
+      "url": "https://github.com/anhpham197/SAT-Encoding-for-Numberlink",
+      "family": "trails-and-revisits",
+      "reviewStatus": "discovered-only",
+      "relevance": "SAT Numberlink encoding reference"
+    },
+    {
+      "repository": "kieuvantuyen01/SAT-Encoding-for-Numberlink",
+      "url": "https://github.com/kieuvantuyen01/SAT-Encoding-for-Numberlink",
+      "family": "trails-and-revisits",
+      "reviewStatus": "discovered-only",
+      "relevance": "SAT Numberlink encoding reference"
+    },
+    {
+      "repository": "s5bug/flowsolver",
+      "url": "https://github.com/s5bug/flowsolver",
+      "family": "trails-and-revisits",
+      "reviewStatus": "metadata",
+      "relevance": "C++ and Z3 Flow puzzle"
+    },
+    {
+      "repository": "PelleWhitebear/Flow-Free-Z3",
+      "url": "https://github.com/PelleWhitebear/Flow-Free-Z3",
+      "family": "trails-and-revisits",
+      "reviewStatus": "readme+metadata",
+      "relevance": "Python Z3 Flow Free encoding"
+    },
+    {
+      "repository": "MusadiqPasha/FlowFree-Solver",
+      "url": "https://github.com/MusadiqPasha/FlowFree-Solver",
+      "family": "trails-and-revisits",
+      "reviewStatus": "metadata",
+      "relevance": "Python Z3 Flow Free automation"
+    },
+    {
+      "repository": "vanseverk/PrologArukoneSolver",
+      "url": "https://github.com/vanseverk/PrologArukoneSolver",
+      "family": "trails-and-revisits",
+      "reviewStatus": "discovered-only",
+      "relevance": "Logic-programming Arukone solver"
+    },
+    {
+      "repository": "semiexp/cspuz_core",
+      "url": "https://github.com/semiexp/cspuz_core",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "New: Rust SAT/CSP with native graph division propagator and cross-border parity loop example"
+    },
+    {
+      "repository": "semiexp/cspuz",
+      "url": "https://github.com/semiexp/cspuz",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "Prior broad framework; active_edges_single_cycle / connected divisions / multiple backends"
+    },
+    {
+      "repository": "semiexp/cspuz-js",
+      "url": "https://github.com/semiexp/cspuz-js",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "metadata",
+      "relevance": "TypeScript puzzle CSP derivative"
+    },
+    {
+      "repository": "obijywk/grilops",
+      "url": "https://github.com/obijywk/grilops",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "Prior Z3 grid paths with explicit path symbols, open/closed path modelling"
+    },
+    {
+      "repository": "praveenkulkarni1996/slitherlinky",
+      "url": "https://github.com/praveenkulkarni1996/slitherlinky",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "Prior/nearby SAT loop; edge vars and connectivity checking"
+    },
+    {
+      "repository": "xzy06/slitherlink_solver",
+      "url": "https://github.com/xzy06/slitherlink_solver",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "source+readme+metadata",
+      "relevance": "New CN SAT with iterative multi-loop elimination, propagation, degree clauses"
+    },
+    {
+      "repository": "ytakata69/yajilin-sat",
+      "url": "https://github.com/ytakata69/yajilin-sat",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "metadata",
+      "relevance": "SAT Yajilin loop solver"
+    },
+    {
+      "repository": "Baorlog/pysat-slitherlink",
+      "url": "https://github.com/Baorlog/pysat-slitherlink",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "discovered-only",
+      "relevance": "Python SAT Slitherlink"
+    },
+    {
+      "repository": "Superstellar/SlitherLinkSolver",
+      "url": "https://github.com/Superstellar/SlitherLinkSolver",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "discovered-only",
+      "relevance": "Z3 Slitherlink"
+    },
+    {
+      "repository": "jan-g/slitherlink",
+      "url": "https://github.com/jan-g/slitherlink",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "discovered-only",
+      "relevance": "Z3 Slitherlink"
+    },
+    {
+      "repository": "YasuhikoKiuchi/OneStroke",
+      "url": "https://github.com/YasuhikoKiuchi/OneStroke",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "discovered-only",
+      "relevance": "Japanese one-stroke puzzle"
+    },
+    {
+      "repository": "takeshi-hariu/number-link-puzzle",
+      "url": "https://github.com/takeshi-hariu/number-link-puzzle",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "discovered-only",
+      "relevance": "Japanese Numberlink puzzle"
+    },
+    {
+      "repository": "asSqr/numberlink_page",
+      "url": "https://github.com/asSqr/numberlink_page",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "discovered-only",
+      "relevance": "Japanese Numberlink exploration"
+    },
+    {
+      "repository": "instr3/PuzzleExpert",
+      "url": "https://github.com/instr3/PuzzleExpert",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "discovered-only",
+      "relevance": "Chinese puzzle solver; investigate graph mechanics if nominated"
+    },
+    {
+      "repository": "xzf/OneLineSolver",
+      "url": "https://github.com/xzf/OneLineSolver",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "metadata",
+      "relevance": "Chinese 一笔画 / one-line algorithm"
+    },
+    {
+      "repository": "F-mM7/hamiltonian-path-puzzle",
+      "url": "https://github.com/F-mM7/hamiltonian-path-puzzle",
+      "family": "puzzle-csp-native-graph",
+      "reviewStatus": "metadata",
+      "relevance": "Japanese Hamiltonian grid-path puzzle"
+    },
+    {
+      "repository": "Overv/TheWitnessSolver",
+      "url": "https://github.com/Overv/TheWitnessSolver",
+      "family": "witness-and-zip",
+      "reviewStatus": "readme+metadata",
+      "relevance": "Incremental region validation; path is self-avoiding, not Pathfinder crossings"
+    },
+    {
+      "repository": "RainbowwPhoenixx/witness-solver",
+      "url": "https://github.com/RainbowwPhoenixx/witness-solver",
+      "family": "witness-and-zip",
+      "reviewStatus": "readme+metadata",
+      "relevance": "Rust partial-area early inference and work-count comparisons"
+    },
+    {
+      "repository": "youarer1ght/TheWitnessPuzzle",
+      "url": "https://github.com/youarer1ght/TheWitnessPuzzle",
+      "family": "witness-and-zip",
+      "reviewStatus": "web-readme",
+      "relevance": "Chinese Witness editor and BFS/backtracking"
+    },
+    {
+      "repository": "chi-feng/zip-solver",
+      "url": "https://github.com/chi-feng/zip-solver",
+      "family": "witness-and-zip",
+      "reviewStatus": "readme+metadata",
+      "relevance": "Conditional Hamiltonian path with ordered obligations, parity and degree forcing, tests"
+    },
+    {
+      "repository": "CWSwastik/zip-solver",
+      "url": "https://github.com/CWSwastik/zip-solver",
+      "family": "witness-and-zip",
+      "reviewStatus": "web-readme",
+      "relevance": "Multiple DFS versions, progressive pruning"
+    },
+    {
+      "repository": "rostbear/zip-solver",
+      "url": "https://github.com/rostbear/zip-solver",
+      "family": "witness-and-zip",
+      "reviewStatus": "discovered-only",
+      "relevance": "LinkedIn Zip path solver"
+    },
+    {
+      "repository": "barnardrc/ziply-solver",
+      "url": "https://github.com/barnardrc/ziply-solver",
+      "family": "witness-and-zip",
+      "reviewStatus": "discovered-only",
+      "relevance": "Constraint-focused Zip path solver"
+    },
+    {
+      "repository": "barrycohen/ttws",
+      "url": "https://github.com/barrycohen/ttws",
+      "family": "witness-and-zip",
+      "reviewStatus": "web-readme",
+      "relevance": "Python Witness solver, dated Python 2"
+    },
+    {
+      "repository": "gerasimenko/witness-puzzle-solver",
+      "url": "https://github.com/gerasimenko/witness-puzzle-solver",
+      "family": "witness-and-zip",
+      "reviewStatus": "discovered-only",
+      "relevance": "Witness solver"
+    },
+    {
+      "repository": "polyfish42/obelus",
+      "url": "https://github.com/polyfish42/obelus",
+      "family": "witness-and-zip",
+      "reviewStatus": "discovered-only",
+      "relevance": "Witness solver"
+    },
+    {
+      "repository": "pdikmann/witness-solver",
+      "url": "https://github.com/pdikmann/witness-solver",
+      "family": "witness-and-zip",
+      "reviewStatus": "discovered-only",
+      "relevance": "Witness solver"
+    },
+    {
+      "repository": "SirGnip/witness_solvers",
+      "url": "https://github.com/SirGnip/witness_solvers",
+      "family": "witness-and-zip",
+      "reviewStatus": "discovered-only",
+      "relevance": "Witness algorithm variants"
+    },
+    {
+      "repository": "294Ryan/OneLine-Game-solver",
+      "url": "https://github.com/294Ryan/OneLine-Game-solver",
+      "family": "witness-and-zip",
+      "reviewStatus": "discovered-only",
+      "relevance": "One-line game"
+    },
+    {
+      "repository": "jbum/zigzag",
+      "url": "https://github.com/jbum/zigzag",
+      "family": "witness-and-zip",
+      "reviewStatus": "discovered-only",
+      "relevance": "Zigzag puzzle"
+    },
+    {
+      "repository": "msoos/cryptominisat",
+      "url": "https://github.com/msoos/cryptominisat",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "readme+metadata",
+      "relevance": "Incremental SAT plus native XOR/Gaussian elimination; candidate comparator not automatic speedup"
+    },
+    {
+      "repository": "Z3Prover/z3",
+      "url": "https://github.com/Z3Prover/z3",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "metadata",
+      "relevance": "SMT baseline already available via grilops/current tooling"
+    },
+    {
+      "repository": "google/or-tools",
+      "url": "https://github.com/google/or-tools",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "metadata",
+      "relevance": "Existing Pathfinder CP-SAT engine, compare no redundant backend"
+    },
+    {
+      "repository": "pysathq/pysat",
+      "url": "https://github.com/pysathq/pysat",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "metadata",
+      "relevance": "Python SAT prototyping, Glucose/PB encodings"
+    },
+    {
+      "repository": "d-krupke/cpsat-primer",
+      "url": "https://github.com/d-krupke/cpsat-primer",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "web-source",
+      "relevance": "Documentation and modelling guidance for CP-SAT, not a solver dependency"
+    },
+    {
+      "repository": "j-danner/2xnf_sat_solving",
+      "url": "https://github.com/j-danner/2xnf_sat_solving",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "discovered-only",
+      "relevance": "XOR normal-form SAT techniques"
+    },
+    {
+      "repository": "vardigroup/FourierSAT",
+      "url": "https://github.com/vardigroup/FourierSAT",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "discovered-only",
+      "relevance": "XOR/Fourier-based SAT"
+    },
+    {
+      "repository": "j-danner/2-Xornado",
+      "url": "https://github.com/j-danner/2-Xornado",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "discovered-only",
+      "relevance": "XOR solver family"
+    },
+    {
+      "repository": "dsagman/picat",
+      "url": "https://github.com/dsagman/picat",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "web-readme",
+      "relevance": "Picat constraint vocabulary includes path/path_d and regular automata"
+    },
+    {
+      "repository": "pholser/minizinc-python-puzzles",
+      "url": "https://github.com/pholser/minizinc-python-puzzles",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "discovered-only",
+      "relevance": "MiniZinc grid-puzzle models"
+    },
+    {
+      "repository": "josedanielchg/tracks-constraint-solver",
+      "url": "https://github.com/josedanielchg/tracks-constraint-solver",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "discovered-only",
+      "relevance": "Grid tracks CSP"
+    },
+    {
+      "repository": "copa-uniandes/ESPPRC-jPulse",
+      "url": "https://github.com/copa-uniandes/ESPPRC-jPulse",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "discovered-only",
+      "relevance": "Resource-constrained elementary path solver"
+    },
+    {
+      "repository": "OpResCodes/SPPRC",
+      "url": "https://github.com/OpResCodes/SPPRC",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "discovered-only",
+      "relevance": "Shortest path with resource constraints"
+    },
+    {
+      "repository": "erthium/hashiwokakero",
+      "url": "https://github.com/erthium/hashiwokakero",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "discovered-only",
+      "relevance": "Graph bridge/count puzzle"
+    },
+    {
+      "repository": "ctbo/hashi",
+      "url": "https://github.com/ctbo/hashi",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "discovered-only",
+      "relevance": "Graph bridge puzzle"
+    },
+    {
+      "repository": "benediktwerner/taiji-z3-solver",
+      "url": "https://github.com/benediktwerner/taiji-z3-solver",
+      "family": "general-sat-and-resource",
+      "reviewStatus": "discovered-only",
+      "relevance": "Z3 spatial puzzle"
+    }
+  ]
+}
