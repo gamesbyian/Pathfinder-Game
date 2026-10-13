@@ -48,6 +48,14 @@ Potential stronger forms to test separately: (i) coupled cut-crossing parity wit
 
 Discovery limitation: the linked repo has an unindexed GitHub code-search surface; inspection used the recursive main tree and explicit source/authority fetches, not an empty code-search result as an absence proof. Before any new runtime capability, run local `tooling-census`, `research-status-index`, `research-asset-query`, and stable-question dossier joins from a full checkout.
 
+## 3A. External repository search before any solver lane
+
+A broad [2026-10-12 source-code search and reconciliation](../reports/2026-10-12-algebraic-decoding-external-code-repo-audit-001.md) has now inspected/reconciled 75 [evidence-graded candidate repositories](../reports/2026-10-12-algebraic-decoding-code-repo-candidates-001.json). It revisits the [2026-08-24 external code census](../reports/2026-08-24-external-solver-code-census.md) and [cancelled frontier/ZDD pilot](../reports/2026-08-24-frontier-zdd-pilot-spec.md). **Do not treat frontier/ZDD, SAT/SMT, or global graph connectivity as newly discovered.**
+
+The search added *specific* new reference code: `hana-hiro/graphillion-trails` for repeated-vertex/edge-disjoint trail diagrams; `semiexp/cspuz_core` for conflict-reason-producing native graph division and parity-loop modelling; `xzy06/slitherlink_solver` for iterative global-loop elimination; plus source comparisons of Graphillion, TdZdd, Grilops, Witness/Zip and CryptoMiniSat. Source-grade labels matter: a search hit is not a verified algorithm; claimed external speeds are not Pathfinder measurements.
+
+Before Stage 1, choose **no implementation lane by default**. First form a Pathfinder-specific smallest discriminator and a mechanic-support matrix; compare the appropriate external source against canonical parity/connectivity/BC1, existing separator/joint-obligation probes and retained CP-SAT. In particular test whether trail/DD encodings admit every legal Pathfinder crossing and whether their spurious/false forced edge assignments are manageable. The external-code search by itself does not re-open the cancelled frontier pilot or grant a production treatment.
+
 ## 4. Stages and executable gates
 
 ### Stage 0 — algebraic validity and novelty preflight (started)
@@ -101,6 +109,7 @@ Stop on: no novelty witness against existing inference, broad underdetermination
 ## 7. Current handoff
 
 1. Stage-0 source, tests, a reproducible bounded structural preflight and honest initial report.
+   - The source-code reconnaissance is now documented as a separate bounded evidence report; it cannot count as a Stage-1 nonredundant theorem or trigger architecture work.
 2. Only after inspecting the Stage-0 observations and existing probe/CP-SAT records: identify one *specific* coupled fact and stage-1 discriminating tiny witness, or close the incidence-only form as redundant.
 3. Do not preempt pending BC1-VX production A/B or PG-G pilot. Any queue change must stay premise-discovery / method, with **no treatment entitlement**.
 
