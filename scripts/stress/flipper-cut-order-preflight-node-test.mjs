@@ -41,6 +41,17 @@ test('optional flipper must abstain on global order',()=>{
   assert.equal(r.gateResults[0].reason,'optional-flippers-can-change-global-parity');
 });
 
+test('mandatory first flipper parity remains fixed with optional flippers beyond its cut',()=>{
+  const lv=corridor([2,1],{extraOptional:true});
+  const result=checkFlipperCutOrder(lv);
+  assert.equal(result.status,'reject', 'optional elsewhere cannot repair first-flipper V versus forced H');
+  const head=result.gateResults[0].details.find(d=>d.cell==='2,2');
+  assert.equal(head.rankFixed,true);
+  assert.equal(head.rank,0);
+  assert.deepEqual(head.allowedAxes,[1]);
+  assert.equal(head.requiredAxis,2);
+});
+
 test('portals disable ordinary-graph-cut inference',()=>{
   const r=checkFlipperCutOrder(corridor([1,1],{portal:true}));
   assert.equal(r.status,'unsupported');
