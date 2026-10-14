@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
  * Research-only root flipper-cut parity certificate. NEVER a production prune.
- * A flipper separating gate from goal is compulsory. If ALL flippers are
- * compulsory, their first-use order is fixed by the graph cuts, so the global
- * axis parity may contradict every legal gate-to-goal continuation.
+ * A flipper separating gate from goal is compulsory. Its prior-flipper
+ * rank is fixed when all flippers on the gate-side of its cut are compulsory,
+ * even if optional flippers remain strictly beyond the cut. Its required
+ * straight axis may then contradict every legal gate-to-goal continuation.
  *
  * Ordinary static graph is a SUPERSET of Pathfinder legal transitions:
  * ignore turn/filter/resource restrictions and allow unused gates as transit.
@@ -72,20 +73,29 @@ export function checkFlipperCutOrder(raw){
     if(dead)return {gate,verdict:'reject',
       reason:'compulsory-flipper-no-straight-gate-to-goal-transition',
       culprit:dead.cell,compulsory:compulsory.length,flippers:fs.length};
-    if(compulsory.length!==fs.length)return {gate,verdict:'unknown',
-      reason:'optional-flippers-can-change-global-parity',
-      compulsory:compulsory.length,flippers:fs.length};
-    // Every compulsory flipper is single-visit. When f is removed, compulsory
-    // flippers on the gate-side must have occurred before f in any completion.
+    // For a mandatory flipper f, any flipper visited before f MUST lie on
+    // the gate-side of G - f: crossing to its goal-side would already use f,
+    // and f is single-use. All *mandatory* flippers on that gate-side must
+    // occur before f. If those account for EVERY flipper in that side, rank
+    // parity is fixed even when other flippers are optional AFTER f.
+    // A flipper in a detached third component cannot precede f either.
     const details=compulsory.map(c=>{
-      const rank=compulsory.filter(f=>f.cell!==c.cell&&c.gateSide.has(f.cell)).length;
-      const requiredAxis=rank%2===0?c.declaredAxis:c.declaredAxis===1?2:1;
-      return {cell:c.cell,rank,declaredAxis:c.declaredAxis,requiredAxis,allowedAxes:c.axes};
+      const definitelyEarlier=compulsory.filter(f=>f.cell!==c.cell&&c.gateSide.has(f.cell)).length;
+      const potentiallyEarlier=fs.filter(f=>c.gateSide.has(key(f))).length;
+      const rankFixed=definitelyEarlier===potentiallyEarlier;
+      const rank=rankFixed?definitelyEarlier:null;
+      const requiredAxis=rankFixed
+        ?(rank%2===0?c.declaredAxis:c.declaredAxis===1?2:1):null;
+      return {cell:c.cell,rank,rankFixed,declaredAxis:c.declaredAxis,
+        requiredAxis,allowedAxes:c.axes};
     });
-    const conflict=details.find(d=>!d.allowedAxes.includes(d.requiredAxis));
-    return {gate,verdict:conflict?'reject':'possible',
-      reason:conflict?'compulsory-flipper-order-parity-conflict':'cut-order-compatible-not-a-solve',
+    const conflict=details.find(d=>d.rankFixed&&!d.allowedAxes.includes(d.requiredAxis));
+    return {gate,verdict:conflict?'reject':compulsory.length===fs.length?'possible':'unknown',
+      reason:conflict?'compulsory-flipper-order-parity-conflict'
+        :compulsory.length===fs.length?'cut-order-compatible-not-a-solve'
+        :'optional-flippers-can-change-global-parity',
       compulsory:compulsory.length,flippers:fs.length,
+      rankFixedMandatory:details.filter(d=>d.rankFixed).length,
       ...(conflict?{culprit:conflict.cell}:{}),details};
   });
   return {id,status:gateResults.every(g=>g.verdict==='reject')?'reject':'unresolved',gateResults,
@@ -94,7 +104,7 @@ export function checkFlipperCutOrder(raw){
 
 export function summarizeFlipperCutOrder(levels){
   const stats={levels:levels.length,flipperLevels:0,portalFreeFlipperLevels:0,
-    gateCases:0,atLeastOneCompulsory:0,allCompulsory:0,parityRejectedGates:0,
+    gateCases:0,atLeastOneCompulsory:0,allCompulsory:0,rankFixedMandatoryGates:0,parityRejectedGates:0,
     geometricRejectedGates:0,staticDisconnectedGates:0,allGatesRejectedLevels:0,
     unsupportedPortalLevels:0};
   const examples=[];
@@ -109,6 +119,7 @@ export function summarizeFlipperCutOrder(levels){
       stats.gateCases++;
       if(g.compulsory>0)stats.atLeastOneCompulsory++;
       if(g.compulsory===g.flippers)stats.allCompulsory++;
+      if(g.rankFixedMandatory>0)stats.rankFixedMandatoryGates++;
       if(g.reason==='compulsory-flipper-order-parity-conflict')stats.parityRejectedGates++;
       if(g.reason==='compulsory-flipper-no-straight-gate-to-goal-transition')stats.geometricRejectedGates++;
       if(g.reason==='static-disconnection-existing-connectivity')stats.staticDisconnectedGates++;
