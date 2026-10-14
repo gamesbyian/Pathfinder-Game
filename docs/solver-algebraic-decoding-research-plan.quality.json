@@ -58,7 +58,7 @@
     {
       "candidate": "reports/2026-10-13-flipper-articulation-cut-order-preflight-001.md",
       "disposition": "reuse",
-      "reason": "Negative root-only opportunity census: 0 all-compulsory-flipper gates across published and random Corpus-2 portal-free levels; no generic flipper-order architecture earned."
+      "reason": "Static root-only proof expanded to fixed individual compulsory-flipper rank before optional later flippers; only one rank-fixed stress gate case and no parity contradictions in inspected data. Don't promote."
     }
   ],
   "impactDomains": {
@@ -226,22 +226,22 @@
     },
     {
       "id": "algebra-flipper-static-negative",
-      "claim": "First bounded static root flipper-order model is proved as a necessary condition, tests abstentions, and closes on honest corpus opportunity rather than production gain.",
+      "claim": "Static root cut-flipper order parity proof covers both all-mandatory and individually rank-fixed compulsory flippers and is closed on measured null opportunity after exact pattern and abstention controls.",
       "proofs": [
         {
           "type": "test",
           "locator": "node --test scripts/stress/flipper-cut-order-preflight-node-test.mjs",
-          "expected": "All 62 1..5 flipper corridor axis patterns and portal/optional-flipper/multi-gate abstentions agree with independent small oracle."
+          "expected": "62 axis patterns for 1..5 compulsory flippers, an optional-flipper-downstream conflict, and portal/optional-rank/multi-gate abstentions match explicit small controls."
         },
         {
           "type": "command",
           "locator": "node scripts/stress/flipper-cut-order-preflight.mjs --corpus=data/levels.json && node scripts/stress/flipper-cut-order-preflight.mjs --corpus=data/stress/stress-levels-random.json",
-          "expected": "Published 160/8 portal-free flipper levels, Corpus-2 1700/418 portal-free flipper levels; allCompulsory=0 and parityRejectedGates=0 in each."
+          "expected": "Published 160/8 portal-free flipper levels, Corpus-2 1700/418; allCompulsory=0 both, rankFixedMandatoryGates=0 published and 1 stress, parityRejectedGates=0 both."
         },
         {
           "type": "artifact",
           "locator": "reports/2026-10-13-flipper-articulation-cut-order-preflight-001.md",
-          "expected": "Explicit cut proof, independent and source-verified small fixture, supported/abstained populations, no true gameplay solver/referee claim, no treatment."
+          "expected": "Explicit gate-goal cut theorem including optional-downstream rank criterion, source-tested corridor controls, 0/1 eligible rank-fixed cases in published/random corpora, no referee or treatment claims."
         }
       ]
     }
