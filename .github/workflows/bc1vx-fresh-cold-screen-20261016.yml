@@ -1,0 +1,165 @@
+# One-shot branch-local paired development screen; intentionally does not promote flags.
+name: BC1-VX fresh cold-solve screen
+on:
+  push:
+    branches:
+      - chatgpt/bc1vx-fresh-cold-solve-2026-10-16
+    paths:
+      - .github/workflows/bc1vx-fresh-cold-screen-20261016.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bc1vx-fresh-cold-20261016
+  cancel-in-progress: false
+
+jobs:
+  paired-solve:
+    name: Paired cold solve shard ${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    env:
+      SHARD: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Resolve same frozen outcome-blind IDs for both arms
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/bc1vx-fresh-screen
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { createHash } from 'node:crypto';
+          const levelsDocument = JSON.parse(readFileSync('data/stress/stress-levels-random.json', 'utf8'));
+          const levels = Array.isArray(levelsDocument) ? levelsDocument : levelsDocument.levels;
+          const prior = new Set(readFileSync('data/stress/bc1-prune-ab-001-ids.txt', 'utf8').split(/\s+/).filter(Boolean));
+          const salt = 'pathfinder-bc1vx-fresh-cold-20261016-001';
+          const eligible = levels.map((level, i) => ({
+            id: level.id, position: i + 1,
+            hash: createHash('sha256').update(salt + '|' + level.id).digest('hex')
+          })).filter(row => row.id && !prior.has(row.id));
+          eligible.sort((a, b) => a.hash.localeCompare(b.hash) || a.id.localeCompare(b.id));
+          if (eligible.length < 64) throw Error('Not enough disjoint rows');
+          const selected = eligible.slice(0, 64);
+          if (new Set(selected.map(row => row.id)).size !== 64) throw Error('Nonunique selection');
+          const shard = Number(process.env.SHARD);
+          if (!Number.isInteger(shard) || shard < 0 || shard >= 16) throw Error('Bad shard');
+          const thisShard = selected.filter((_, i) => i % 16 === shard);
+          if (thisShard.length !== 4) throw Error('Invalid shard cardinality');
+          const manifest = {
+            schema: 'pathfinder.bc1vx-fresh-paired-screen/v1',
+            salt, population: 'Corpus 2 minus previous representative random-300',
+            priorExcluded: prior.size, sourceCount: levels.length,
+            selectedFullPopulation: selected.map(({id,position}) => ({id,position})),
+            shard, selectedShard: thisShard
+          };
+          writeFileSync('tmp/bc1vx-fresh-screen/manifest.json', JSON.stringify(manifest, null, 2) + '\n');
+          writeFileSync('tmp/bc1vx-fresh-screen/positions.txt', 'pos:' + thisShard.map(row => row.position).join(','));
+          console.log('Disjoint outcome-blind shard', JSON.stringify({shard, ids: thisShard.map(row=>row.id)}));
+          NODE
+      - name: Solve both arms with equivalent production budgets
+        shell: bash
+        run: |
+          set -euo pipefail
+          POSITIONS="$(cat tmp/bc1vx-fresh-screen/positions.txt)"
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels="$POSITIONS" \
+            --budget-ms=86400000 \
+            --node-budget=50000000 \
+            --work-budget=67000000 \
+            --workers=2 \
+            --out=tmp/bc1vx-fresh-screen/control.json \
+            --summary-out=tmp/bc1vx-fresh-screen/control.md
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels="$POSITIONS" \
+            --budget-ms=86400000 \
+            --node-budget=50000000 \
+            --work-budget=67000000 \
+            --workers=2 \
+            --enable-flags=STRATEGY_BC1_VERTEX_VOLUME_PRUNE \
+            --out=tmp/bc1vx-fresh-screen/treatment.json \
+            --summary-out=tmp/bc1vx-fresh-screen/treatment.md
+      - name: Validate pairing/referee and report candidate gains
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const base='tmp/bc1vx-fresh-screen/';
+          const manifest=JSON.parse(readFileSync(base+'manifest.json','utf8'));
+          const c=JSON.parse(readFileSync(base+'control.json','utf8'));
+          const t=JSON.parse(readFileSync(base+'treatment.json','utf8'));
+          const assert=(ok,msg)=>{if(!ok) throw Error(msg)};
+          assert(c.summary.corpusSha256===t.summary.corpusSha256,'Corpus mismatch');
+          assert(c.summary.sampleSha256===t.summary.sampleSha256,'Sample mismatch');
+          assert(c.summary.levelBlind===true && t.summary.levelBlind===true,'Not level blind');
+          assert(c.summary.nodeBudget===50000000 && t.summary.nodeBudget===50000000,'Node mismatch');
+          assert(c.summary.workBudget===67000000 && t.summary.workBudget===67000000,'Work mismatch');
+          assert(c.summary.strictTotalWorkBudget===false && t.summary.strictTotalWorkBudget===false,'Budget semantics mismatch');
+          assert(c.summary.schedulerMode==='production' && t.summary.schedulerMode==='production','Wrong scheduler');
+          assert(c.summary.levelsRun===4 && t.summary.levelsRun===4,'Incomplete shard');
+          assert(c.summary.levelsRequested===4 && t.summary.levelsRequested===4,'Selection not used');
+          assert(c.summary.enableFlags.length===0 && c.summary.disableFlags.length===0,'Bad control');
+          assert(t.summary.enableFlags.join(',')==='STRATEGY_BC1_VERTEX_VOLUME_PRUNE','Bad treatment');
+          assert(t.summary.disableFlags.length===0,'Bad treatment disable');
+          const cProjected=structuredClone(c.summary.solverRequestProjection);
+          const tProjected=structuredClone(t.summary.solverRequestProjection);
+          const flag='STRATEGY_BC1_VERTEX_VOLUME_PRUNE';
+          assert(cProjected.ablation?.flags?.[flag]===false,'Control effective flag not disabled');
+          assert(tProjected.ablation?.flags?.[flag]===true,'Treatment effective flag not enabled');
+          cProjected.ablation.flags[flag]=true;
+          assert(JSON.stringify(cProjected)===JSON.stringify(tProjected),'Unexpected effective solver-request difference beyond BC1-VX');
+          const cRows=new Map(c.levels.map(row=>[row.id,row]));
+          const tRows=new Map(t.levels.map(row=>[row.id,row]));
+          const expected=manifest.selectedShard.map(row=>row.id);
+          assert(cRows.size===4 && tRows.size===4,'Duplicate or incomplete rows');
+          assert(JSON.stringify([...cRows.keys()].sort())===JSON.stringify(expected.slice().sort()),'Control ID mismatch');
+          assert(JSON.stringify([...tRows.keys()].sort())===JSON.stringify(expected.slice().sort()),'Treatment ID mismatch');
+          const rows=expected.map(id=>{
+            const a=cRows.get(id), b=tRows.get(id);
+            assert(typeof a.ok==='boolean' && typeof b.ok==='boolean','Missing result');
+            assert(!a.ok || a.refereeValid===true,'Invalid control success: '+id);
+            assert(!b.ok || b.refereeValid===true,'Invalid treatment success: '+id);
+            return {id, controlSolved:a.ok, treatmentSolved:b.ok,
+              controlStatus:a.status, treatmentStatus:b.status,
+              controlWork:a.workSpent ?? a.totalWorkSpent ?? null,
+              treatmentWork:b.workSpent ?? b.totalWorkSpent ?? null,
+              refereeValid: b.ok?b.refereeValid:null};
+          });
+          const verdict={
+            schema:'pathfinder.bc1vx-fresh-paired-verdict/v1',
+            shard:manifest.shard, commit:c.summary.commit,
+            corpusSha256:c.summary.corpusSha256,
+            sampleSha256:c.summary.sampleSha256,
+            requested:4,
+            solvedControl:rows.filter(row=>row.controlSolved).length,
+            solvedTreatment:rows.filter(row=>row.treatmentSolved).length,
+            gains:rows.filter(row=>!row.controlSolved && row.treatmentSolved).map(row=>row.id),
+            losses:rows.filter(row=>row.controlSolved && !row.treatmentSolved).map(row=>row.id),
+            rows
+          };
+          writeFileSync(base+'verdict.json', JSON.stringify(verdict,null,2)+'\n');
+          console.log('PAIRED VERDICT '+JSON.stringify(verdict));
+          NODE
+      - name: Save exact arm evidence and selected population
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bc1vx-fresh-screen-shard-${{ matrix.shard }}
+          path: tmp/bc1vx-fresh-screen/
+          if-no-files-found: warn
+          retention-days: 90
