@@ -1,9 +1,9 @@
 # PG-G symmetry ordering microscope plan (2026-10-15)
 
-> **Status:** active
-> **Last evidence:** 2026-10-15 — recovered PG-G pilot plus current-main source audit of neighbour generation, DFS/admissible ordering and repair seeding.
-> **Decision:** run a five-case path-replay diagnostic before any treatment experiment; test whether semantically mapped symmetry siblings diverge only in coordinate/order policy and record repair seed drift separately.
-> **Remaining gate:** complete the frozen five-case replay; if mapped legal/scoring/slack facts agree while raw/tied order differs, promote the narrow ordering/seed premise to a smallest-consumer design. Otherwise inspect the first non-equivariant semantic fact.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-10-15 — one-shot run 38856550278 completed all five frozen mapped-path cases: 393 prefixes, zero legal-set/DFS-score/admissible-slack mismatches, tie-order divergence in every case, and repair seed drift in every case.
+> **Decision:** the selected symmetry cliffs localize to non-equivariant stable tie ordering, with a separate repair seed-identity seam; advance to a bounded selected-pair factorial separating those two mechanisms.
+> **Remaining gate:** run the selected-pair equivariant-order × fixed-repair-seed factorial; no production treatment or untouched-parent confirmation before causal attribution.
 > **Evidence role:** forensic.
 > **Selection:** cases selected after inspecting the PG-G pilot response cliffs; mechanism localization only, not prevalence or confirmation.
 > **Population identity:** exact five cases and paths in `reports/2026-10-15-pg-g-symmetry-ordering-microscope-spec-001.json`.
@@ -68,3 +68,12 @@ If the path replay instead finds score/slack or legal-set non-equivariance, that
 ## Stop rule
 
 Do not build a symmetry-normalized treatment from this diagnostic alone. If ordering is localized, first identify the smallest reversible seam (tie order, research seed, or both) and run matched selected-pair tests. Only a mechanism that survives those tests may nominate untouched-parent confirmation or a production consumer.
+
+
+## Closeout
+
+Completed result: [2026-10-15 PG-G symmetry ordering microscope result](2026-10-15-pg-g-symmetry-ordering-microscope-result-001.md).
+
+The preregistered positive condition was met cleanly. All five mapped paths validate; across 393 checked prefixes, mapped legal candidate sets, default DFS scores and admissible slacks remain equivariant. Every selected case nevertheless contains raw-order divergence, DFS tie-order divergence and admissible tie-order divergence. Repair's deterministic primary seed also changes on every selected transform.
+
+The next gate is therefore causal attribution between ordering and repair-seed identity, not additional descriptive microscopy.
