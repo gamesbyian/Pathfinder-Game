@@ -50,3 +50,10 @@ The strongest attribution would be combined convergence where neither single fac
 - Before solver execution, the script replays the frozen successful mapped paths and proves the order hook makes variant candidate order equal to mapped parent candidate order at every checked prefix.
 - Every returned solution is referee-validated.
 - No additive multi-orientation portfolio, canonicalization subsystem, production flag or selector is earned by this selected-pair run.
+
+
+## Instrument recovery
+
+The first execution attempt, run `38863341481`, exposed a harness defect before any result was promoted. DFS and repair respected the nominal 10M work ceiling, but this purpose-built runner had set only `prep._workCap`. Canonical admissible-order/IDA intentionally obeys `prep._strictWorkCap` instead; the maintained equal-work technique-census runner sets both. Three admissible rows therefore ran past the frozen dose, in the worst case to 368M work.
+
+That first attempt is **instrument-invalid as a decision-bearing factorial**. Its DFS/repair rows are useful debugging observations only and are not being mixed with the corrected experiment. The runner now mirrors the maintained census contract by setting both caps to the same absolute 10M-work ceiling, and both the runner and workflow reject any row exceeding the nominal budget by more than the small 1% atomic-work overshoot guard. The corrected execution must replace the first attempt wholesale for the scientific result.
