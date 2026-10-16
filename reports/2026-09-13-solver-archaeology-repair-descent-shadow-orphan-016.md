@@ -3,7 +3,7 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-13 — archived July repair-stagnation plan reconciled against August-September repair reachability/reconstructability work and current WS6 authority
 > **Decision:** preserve the July descent-aware shadow probe as an unresolved diagnostic question, not as a repair operator. Later WS6 work classified reconstruction from already-live prefixes and showed most exact-live repair cases are operator-incapable, but it did not identify which earlier descent commitments make a later near-miss unreconstructable.
-> **Remaining gate:** only if current repair/first-loss evidence again indicates an interior/early-commitment deficit, run a bounded read-only descent observer before designing a new operator. A null or heterogeneous result closes the descendant.
+> **Remaining gate (updated 2026-10-16):** the condition has been met strongly enough for **diagnostic** work: WS6 retained R03147 evidence nominates bounded dependency families, while PG-C reactivates first-loss analysis. PG-P therefore authorizes the bounded read-only descent observer now. The 12-parent exact-pair floor still gates reusable-interface confirmation, and a null/heterogeneous observer closes the descendant.
 > **Evidence role:** archaeology / premise recovery
 > **Selection:** explicit "one avenue not yet shown to hit the wall" in the archived repair-stagnation plan, then traced against every later repair-reachability descendant found in history.
 
@@ -72,7 +72,7 @@ Current workstream authority already gives WS6 the correct reopen boundary:
 
 The descent-shadow orphan is a cheap way to decide whether that boundary has actually been crossed.
 
-It should therefore remain supporting archaeology rather than a new queue item. If current Class-5 or handoff evidence produces a recurring repair-relevant phenotype, this observer can be rejoined before implementing an interior-edit mechanism.
+Historically this remained supporting archaeology rather than a queue item. **2026-10-16:** current WS6/PG-C evidence is sufficient to rejoin it as PG-P, still read-only and still subordinate to confirmation requirements before any reusable repair interface or interior-edit mechanism.
 
 Conversely, if current evidence remains dominated by failures that no native repair operator can reconstruct even from exact-live prefixes, generic interior editing is not earned merely because the July plan once mentioned it.
 
