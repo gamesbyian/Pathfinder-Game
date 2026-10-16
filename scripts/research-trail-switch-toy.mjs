@@ -60,6 +60,29 @@ function switchRouteExists(grid,start,goal,mask){
  return false;
 }
 
+function connectedWithCorrectDegrees(grid,start,goal,mask){
+ const selected=grid.adj.map(es=>es.filter(e=>(mask&e.bit)!==0));
+ for(let v=0;v<grid.n;v++){
+  const d=selected[v].length;
+  if(v===start||v===goal){if(d!==1)return false;}
+  else if(d!==0&&d!==2&&d!==4)return false;
+  if(d===4&&selected[v].filter(e=>e.axis===1).length!==2)return false;
+ }
+ const reached=new Set([start]),stack=[start];
+ while(stack.length){for(const e of selected[stack.pop()])if(!reached.has(e.to)){reached.add(e.to);stack.push(e.to);}}
+ return selected.every((es,v)=>es.length===0||reached.has(v));
+}
+
+function maskFromEdgePairs(grid,pairs){
+ let mask=0;
+ for(const [a,b] of pairs){
+  const edge=grid.adj[a]?.find(e=>e.to===b);
+  if(!edge)throw new Error(`No orthogonal edge: ${a}-${b}`);
+  mask|=edge.bit;
+ }
+ return mask;
+}
+
 function testShape(width,height){
  const grid=buildGrid(width,height);
  if(grid.edgeCount>20)throw new Error("Tiny projection only; avoid exponential broad enumeration");
@@ -82,6 +105,14 @@ function testShape(width,height){
 function main(){
  const results=[testShape(3,3),testShape(4,3)];
  for(const item of results)console.log(JSON.stringify(item));
+ // Connectedness alone misses a pair of locally straight-through crossing strands.
+ // The selected 11-edge graph is connected and degree-correct, yet the switch
+ // traversal from 0 to 11 leaves the separate 6-edge cycle unconsumed.
+ const grid=buildGrid(4,3);
+ const witness=maskFromEdgePairs(grid,[[0,4],[1,2],[1,5],[2,6],[4,5],[5,6],[5,9],[6,7],[6,10],[7,11],[9,10]]);
+ if(!connectedWithCorrectDegrees(grid,0,11,witness)||switchRouteExists(grid,0,11,witness))
+  throw new Error("connected-but-switch-disconnected witness no longer discriminates");
+ console.log(JSON.stringify({kind:"connected-but-switch-disconnected",width:4,height:3,start:0,goal:11,edges:11}));
  if(results.some(x=>x.disagreements!==0||x.edgeSetCollisions!==0))throw new Error("switch route projection disagrees with toy walk enumeration");
 }
 
