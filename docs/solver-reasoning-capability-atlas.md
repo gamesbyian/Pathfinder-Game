@@ -5,6 +5,14 @@
 > **Priority owner:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md). Deferred descendants: [`solver-future-work.md`](solver-future-work.md).
 > **Evidence companions:** [`solver-capability-evidence.md`](solver-capability-evidence.md), [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md), [`mechanic-state-contracts.md`](mechanic-state-contracts.md), [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md).
 
+## 2026-10-16 evidence reconciliation
+
+PG-G turned symmetry sensitivity from a descriptive family effect into a **causal search-policy seam**: stable tied candidate order restored 6/6 selected solve-state cliffs at fixed work, while repair seed normalization alone restored 0/1. This strengthens causal first-loss analysis, current-input canonicalization and basin/trajectory measurement; it does not license historical-family routing.
+
+The multilingual source search and trail/forbidden-transition follow-up identified a closer mathematical object for ordinary Pathfinder movement: an **edge-simple trail with local vertex transition constraints**. The restricted switch-route model matches 903/903 independently enumerated tiny walks and exposes a connected edge set that is nevertheless transition-incompatible. This strengthens joint-feasibility / completion-regime work, but does not earn a frontier/ZDD/ASP engine.
+
+Several older deferred questions also have changed blockers. Literal forced-work economics is closed, so hidden semantic forcedness can run; retained counterfactual material is now rich enough to reactivate first-loss work; LIVE commutativity and topology positives have bounded descendants. The canonical queue now carries those descendants directly in [workstreams](solver-optimization-workstreams.md).
+
 ## Why this exists
 
 The repository already has several maps of solver capability, but each answers a different question:
@@ -216,16 +224,15 @@ Current evidence strengthens or narrows these intersections:
 
 ## Current premise-generation re-entry
 
-The solver-treatment queue is exhausted, but premise discovery is active. The current retained-evidence order is:
+The treatment queue has one earned execution gate (BC1-VX), while the premise queue is deliberately repopulated. Conceptually:
 
-1. BC1 gain/loss perturbation microscope;
-2. intervention-response residual atlas across independent treatments;
-3. WS1 historical-to-fresh generalization-unit failure analysis;
-4. counterfactual first-loss synthesis after those lanes add causal labels;
-5. materially different cut/resource siblings only if retained topology evidence nominates them;
-6. local-forcedness reinterpretation only as a distinct descriptor/handoff question.
+1. **Causal localization and cheap retained-data discriminators:** PG-G independent symmetry confirmation, PG-C first-loss refresh and PG-I fragile/robust family-response analysis.
+2. **Measure hidden decision structure before inventing consumers:** PG-H semantic-forcedness census and PG-D canonical trail/switch discriminator.
+3. **Test categorical futures:** PG-J topology/completion regimes and PG-K DEAD/near-miss commutativity; select joint-obligation matching/Hall/resource siblings only when they have a smallest novelty witness.
+4. **Study control and memory only after a useful fact exists:** PG-L basin/action overlap, then PG-M solve-local reason recurrence for a newly earned proof family.
+5. **Keep alternative search objects explicit but downstream:** PG-N first falsifies compact interface sufficiency; only positive compression/fidelity can earn frontier/ZDD, backward/interface or abstract-plan architecture.
 
-See [workstreams](solver-optimization-workstreams.md) for gates and the [post-exhaustion refresh](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md) for evidence-state reconciliation.
+This order maximizes premise information while keeping compute near ordinary budgets: retained evidence and <=hundreds-case exact falsifiers precede broad campaigns. See [workstreams](solver-optimization-workstreams.md) for live gates.
 
 ## Premise-generation protocol
 
