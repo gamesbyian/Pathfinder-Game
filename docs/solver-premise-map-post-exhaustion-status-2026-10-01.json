@@ -5,9 +5,9 @@
   "basePropositionCount": 148,
   "classificationCount": 148,
   "boundary": "Retrospective evidence-state overlay only. It does not mutate the frozen v2 proposition inventory or claim independent preregistration. Unchanged entries mean no material post-v2 change was identified in the reviewed evidence, not that the premise is closed.",
-  "reviewedEvidenceWindow": "2026-09-18 through 2026-10-01, emphasizing decision-bearing solver-science results and queue closeouts",
+  "reviewedEvidenceWindow": "2026-09-18 through 2026-10-16, emphasizing decision-bearing solver-science results, queue closeouts, PG-G causal work, and the October external/trail source audit",
   "newPremiseIdsAdmitted": [],
-  "conclusion": "No genuinely new semantic parent premise was required by the reviewed post-v2 evidence. The principal changes are evidence-state updates and newly actionable retained-evidence opportunities on existing premises.",
+  "conclusion": "No genuinely new semantic parent premise is required by evidence through 2026-10-16. The principal changes are stronger causal evidence, a closer constrained-trail representation, and several previously deferred descendants becoming executable under existing premises; live priority is reconciled in solver-optimization-workstreams.md.",
   "entries": [
     {
       "id": "P001",
@@ -121,9 +121,11 @@
       "id": "P015",
       "proposition": "Current-input symmetries/canonical forms can collapse repeated equivalent work soundly.",
       "v2Status": "deferred",
-      "postExhaustionClassification": "standing-no-material-post-v2-change",
-      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
-      "evidenceRefs": [],
+      "postExhaustionClassification": "causal-coordinate-order-seam-positive-cold-canonicalization-open",
+      "postV2Interpretation": "PG-G's factorial shows arbitrary coordinate-frame tied ordering can flip finite-work outcomes: parent-frame ordering restored 6/6 selected symmetry cliffs, while repair seed alone restored 0/1. A real symmetry/canonical tie-policy seam exists, but parent-frame ancestry is not a cold production canonicalizer.",
+      "evidenceRefs": [
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md"
+      ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
     {
@@ -175,11 +177,13 @@
       "id": "P024",
       "proposition": "For each unsolved level, is an accepted solution absent from the candidate graph, present but unreachable, or reached and lost later?",
       "v2Status": "major under-observed question",
-      "postExhaustionClassification": "evidence-now-richer-still-open",
-      "postV2Interpretation": "Failure-response, exact-label, routing and intervention evidence now provide more stages of the lineage, but no universal source-to-validation first-loss partition exists.",
+      "postExhaustionClassification": "active-causal-lineage-refresh",
+      "postV2Interpretation": "BC1 gain/loss pairs, exact topology/relational siblings and PG-G's causally restored symmetry cliffs now provide enough controlled counterfactual material for a bounded source-to-first-loss refresh.",
       "evidenceRefs": [
         "reports/2026-09-21-response-guided-premise-nominations-001.md",
-        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
+        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md",
+        "reports/2026-10-15-controlled-technique-response-pilot-recovery-result-001.md",
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -208,10 +212,11 @@
       "id": "P032",
       "proposition": "Several individually feasible remaining obligations can be jointly unrealizable in a way current scalar bounds fail to detect.",
       "v2Status": "high-value open",
-      "postExhaustionClassification": "narrowed-static-forms-negative-parent-open",
-      "postV2Interpretation": "Static parity phase-distance, checkerboard capacity and frozen compact event vocabularies have negligible incremental incidence, but shared-resource/joint-feasibility parent questions remain open.",
+      "postExhaustionClassification": "strengthened-joint-feasibility-new-representation",
+      "postV2Interpretation": "Trail-with-switches is a more faithful ordinary-route relaxation: ordinary transitions are edge-simple, degree-4 revisits are paired H/V strands, and a connected 4x3 edge set can still be impossible under switch-compatible traversal. This opens a new discriminator beyond closed static parity/event vocabularies; no production consequence is yet proved.",
       "evidenceRefs": [
-        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md"
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md",
+        "reports/2026-10-15-trail-transition-system-prior-art-and-toy-falsifier.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -668,10 +673,12 @@
       "id": "P113",
       "proposition": "The residual corpus contains distinct latent regimes that should be modeled separately rather than as one unsolved population.",
       "v2Status": "strongly suggested / ongoing",
-      "postExhaustionClassification": "strengthened-regime-heterogeneity",
-      "postV2Interpretation": "BC1 gains and all representative-sample losses concentrate in the intersection-heavy regime; multi-portal remains disproportionately unsolved and little helped by BC1.",
+      "postExhaustionClassification": "strengthened-intervention-response-regimes",
+      "postV2Interpretation": "BC1 response already concentrated by routing regime; PG-G adds parent-local technique-response heterogeneity with 39/125 genuine parent-to-variant solve-state flip edges, including symmetry cliffs causally localized to tied ordering.",
       "evidenceRefs": [
-        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
+        "reports/2026-10-15-controlled-technique-response-pilot-recovery-result-001.md",
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -775,11 +782,13 @@
       "id": "P135",
       "proposition": "For each current miss, what is the first irreversible loss event relative to an exact accepted continuation?",
       "v2Status": "major missing organizing question",
-      "postExhaustionClassification": "evidence-now-available-for-bounded-refresh",
-      "postV2Interpretation": "Recent exact relational contrasts, WS6 divergence pairs, sound BC1 gain/loss perturbations and failure-response capsules create substantially richer retained material for causal first-loss mining, though no universal lineage exists.",
+      "postExhaustionClassification": "active-bounded-first-loss-refresh",
+      "postV2Interpretation": "PG-G supplies unusually clean minimal counterfactual decisions: legality and semantic score/slack remain equivariant while tied ordering alone restores six selected symmetry cliffs. Together with BC1/topology/relational pairs, this earns the bounded first-loss/operational-divergence study.",
       "evidenceRefs": [
         "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md",
-        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md",
+        "reports/2026-10-15-pg-g-symmetry-ordering-microscope-result-001.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -843,10 +852,12 @@
       "id": "P144",
       "proposition": "Which solved levels are only accidentally solved by the current pipeline and would become failures under small perturbation?",
       "v2Status": "underasked",
-      "postExhaustionClassification": "evidence-now-rich",
-      "postV2Interpretation": "BC1 produced reproducible losses of previously solved levels despite sound pruning, yielding a concrete fragile-winner population for perturbation analysis rather than a hypothetical audit target.",
+      "postExhaustionClassification": "strengthened-controlled-fragility-evidence",
+      "postV2Interpretation": "The controlled technique-response pilot produced 39/125 real parent-to-variant solve-state flip edges, while symmetry-order intervention explained selected cliffs exactly. Perturbation fragility is now a concrete diagnostic of search-policy dependence and supports a modern robust-vs-fragile family census.",
       "evidenceRefs": [
-        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
+        "reports/2026-10-15-controlled-technique-response-pilot-recovery-result-001.md",
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -854,11 +865,12 @@
       "id": "P145",
       "proposition": "Which unsolved levels are near a phase transition where one local policy change creates a solve, versus structurally outside current capability?",
       "v2Status": "underasked synthesis",
-      "postExhaustionClassification": "evidence-now-rich",
-      "postV2Interpretation": "Recent single-mechanism interventions convert many control-unsolved rows to solves (BC1, CID exposures, repair dose), providing a retained counterfactual basis for distinguishing near-boundary misses from deeper capability gaps.",
+      "postExhaustionClassification": "strengthened-phase-transition-causal-evidence",
+      "postV2Interpretation": "PG-G demonstrates a local phase transition: for selected symmetric puzzles, changing only stable tied candidate order restores the parent's solved/unsolved state in 6/6 cliffs at the same 10M work dose.",
       "evidenceRefs": [
         "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
-        "reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md"
+        "reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md",
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -973,11 +985,12 @@
       "id": "P157",
       "proposition": "Hardness may be driven by competition for shared future resources across mechanics.",
       "v2Status": "major underasked parent premise",
-      "postExhaustionClassification": "narrow-static-siblings-negative-parent-open",
-      "postV2Interpretation": "Parity/checkerboard static resource forms add negligible incidence, but BC1 demonstrates that a different exact topology/resource fact can matter strongly; shared-resource parent remains fertile.",
+      "postExhaustionClassification": "strengthened-trail-switch-resource-route",
+      "postV2Interpretation": "Static parity/checkerboard forms remain closed, but trail/switch exposes a different joint resource: local transition compatibility can invalidate an otherwise connected selected-edge set. Real-prefix novelty remains to be proved.",
       "evidenceRefs": [
         "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md",
-        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
+        "reports/2026-10-15-trail-transition-system-prior-art-and-toy-falsifier.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -1032,11 +1045,12 @@
       "id": "P163",
       "proposition": "Future obligations may compete for spatial, axis, corridor, or intersection capacity even when each scalar bound passes.",
       "v2Status": "major high-value open",
-      "postExhaustionClassification": "narrow-static-siblings-negative-parent-open",
-      "postV2Interpretation": "Static parity/checkerboard capacities failed, but BC1 proves spatial cut structure can expose otherwise-hidden future resource infeasibility; broader resource competition remains open.",
+      "postExhaustionClassification": "strengthened-switch-compatible-capacity-route",
+      "postV2Interpretation": "The trail/switch model shows ordinary graph connectivity is insufficient even in a stripped Pathfinder-like route: H/V strand pairing and one switch-compatible gate-to-goal traversal add a distinct capacity/compatibility constraint. Real-prefix novelty beyond BC1/BC1-VX is the next gate.",
       "evidenceRefs": [
         "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md",
-        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
+        "reports/2026-10-15-trail-transition-system-prior-art-and-toy-falsifier.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -1053,9 +1067,11 @@
       "id": "P165",
       "proposition": "Seed and restart sensitivity can distinguish rugged search basins from semantic or representation gaps.",
       "v2Status": "underasked / historical evidence exists",
-      "postExhaustionClassification": "standing-no-material-post-v2-change",
-      "postV2Interpretation": "No post-2026-09-17 evidence reviewed in this refresh materially changes the v2 disposition; retain the v2 proposition/status and its existing reopen conditions.",
-      "evidenceRefs": [],
+      "postExhaustionClassification": "strengthened-order-vs-seed-causal-separation",
+      "postV2Interpretation": "PG-G separates order and seed sensitivity. Coordinate-derived repair seed drift is real but seed normalization alone restores 0/1 selected repair cliff; ordering restores the solve, and order+seed reproduces exact parent repair work.",
+      "evidenceRefs": [
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md"
+      ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
     {
@@ -1089,8 +1105,8 @@
       "id": "P169",
       "proposition": "Partial-order commutativity can eliminate redundant obligation permutations without claiming full state equivalence.",
       "v2Status": "underasked / historical tool incomplete",
-      "postExhaustionClassification": "phenomenon-positive-capability-unproven",
-      "postV2Interpretation": "Residual-interface commutativity is empirically real, but no feasibility restoration/work reduction/solve consumer has been demonstrated.",
+      "postExhaustionClassification": "phenomenon-positive-live-capability-test-promoted",
+      "postV2Interpretation": "Residual-interface commutativity is real (1,453/3,121 length-matched LIVE->LIVE substitutions referee-valid) and is now promoted to a bounded DEAD/near-miss capability test.",
       "evidenceRefs": [
         "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
       ],
@@ -1227,11 +1243,12 @@
       "id": "P183",
       "proposition": "For a missed solve, can the earliest irreversible loss be tied to a minimal counterfactual decision change rather than merely a timestamped divergence from one witness?",
       "v2Status": "major parent refinement",
-      "postExhaustionClassification": "evidence-now-rich",
-      "postV2Interpretation": "BC1 gain/loss pairs and WS6 matched divergence pairs provide unusually clean counterfactual material for separating causal loss from harmless divergence.",
+      "postExhaustionClassification": "strengthened-minimal-counterfactual-evidence",
+      "postV2Interpretation": "PG-G provides a clean minimal counterfactual: mapped legality and semantic scoring remain equivalent, while stable tied ordering alone causally restores all six selected symmetry cliffs. This calibrates first-loss taxonomy against harmless divergence.",
       "evidenceRefs": [
         "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
-        "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md"
+        "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md",
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -1372,11 +1389,13 @@
       "id": "P198",
       "proposition": "A solver idea progresses through distinct maturity gates: phenomenon existence, representability, semantic soundness or fidelity, real-search participation, useful-work effect, complementary matched-cost value, schedulability, and production promotion.",
       "v2Status": "governing research ladder / newly explicit",
-      "postExhaustionClassification": "strongly-confirmed-maturity-ladder",
-      "postV2Interpretation": "BC1-G is sound but too low-incidence for a consumer; relational feasibility is real but useless at one seam; BC1 itself advanced through multiple gates to promotion. Maturity stages are empirically distinct.",
+      "postExhaustionClassification": "strongly-confirmed-maturity-ladder-october",
+      "postV2Interpretation": "October reinforces the maturity ladder twice: trail/switch has tiny-model semantic fidelity but no real-prefix novelty yet; PG-G progressed from response association to seam localization to causal intervention and still stops before cold production pending independent-parent transfer and a current-input consumer.",
       "evidenceRefs": [
         "reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md",
-        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
+        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md",
+        "reports/2026-10-15-trail-transition-system-prior-art-and-toy-falsifier.md",
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -1384,11 +1403,13 @@
       "id": "P199",
       "proposition": "What is the correct identity-free unit over which solver knowledge should generalize: static level features, dynamic failure states, search trajectories, obligation configurations, causal loss classes, or some combination?",
       "v2Status": "major underasked parent premise",
-      "postExhaustionClassification": "evidence-now-points-to-dynamic-unit-question",
-      "postV2Interpretation": "BC1 treatment response is concentrated in a routing regime; the WS1 historical signal transfers to fresh parents (corrected re-run), so the generalization-unit failure reading is withdrawn; the correct identity-free generalization unit remains unresolved.",
+      "postExhaustionClassification": "strengthened-dynamic-response-unit",
+      "postV2Interpretation": "PG-G shows technique response can vary under symmetry even when puzzle semantics are preserved, with a causal seam in coordinate ordering rather than surface difficulty. Dynamic causal response/trajectory is therefore a stronger candidate generalization unit, though the correct identity-free unit remains unresolved.",
       "evidenceRefs": [
         "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md",
-        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
+        "reports/2026-10-15-controlled-technique-response-pilot-recovery-result-001.md",
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -1434,11 +1455,13 @@
       "id": "P204",
       "proposition": "An observation supports a causal research conclusion only to the extent that the observation could discriminate that conclusion from materially different rival explanations.",
       "v2Status": "governing causal-discriminability premise / admitted post-v1",
-      "postExhaustionClassification": "strongly-confirmed-causal-discriminability",
-      "postV2Interpretation": "Forced-work local prevalence did not imply global compressibility, and exact relational positives did not imply beam consumer value; post-v2 work repeatedly separated phenomenon from rival causal interpretations.",
+      "postExhaustionClassification": "strongly-confirmed-causal-discriminability-october",
+      "postV2Interpretation": "PG-G is a worked causal-discrimination example: the microscope separated legality, semantic score/slack, stable order and repair seed; the factorial showed ordering restores 6/6 selected cliffs while seed alone does not. Trail/switch remains below this bar until canonical differential and real-prefix novelty are shown.",
       "evidenceRefs": [
         "reports/2026-09-25-forced-work-capture-economics-phase-census-result-001.md",
-        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
+        "reports/2026-09-21-relational-query-next-question-reconciliation-001.md",
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md",
+        "reports/2026-10-15-trail-transition-system-prior-art-and-toy-falsifier.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
