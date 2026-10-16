@@ -3,7 +3,7 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-17 — bounded audit reconciled candidate missing observables against canonical v2, independent peer-map construction, shadow mining, and cross-reconciliation.
 > **Decision:** add a non-premise measurement-opportunity representation; do not create new premise IDs or reopen broad mining.
-> **Remaining gate:** integrate this overlay into the later representation-hardening / successor-map landing pass and preserve its distinction from canonical premise admission.
+> **Remaining gate:** satisfied. The measurement-opportunity overlay is integrated into the research relation system and remains distinct from canonical premise admission. Future measurement opportunities follow the same representation rule; this completed integration is not a live blocker.
 
 ## Question
 
