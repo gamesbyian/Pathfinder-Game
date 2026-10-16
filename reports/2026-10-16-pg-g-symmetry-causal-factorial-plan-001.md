@@ -1,9 +1,9 @@
 # PG-G symmetry causal factorial plan (2026-10-16)
 
-> **Status:** active
-> **Last evidence:** 2026-10-16 — the completed PG-G symmetry microscope found mapped legal sets and semantic DFS/admissible ranking values equivariant across 393 checked prefixes, while stable tied order and repair seed identity changed in every selected pair.
-> **Decision:** execute the frozen selected-pair order A/B plus the repair order × seed factorial at the original 10M-work isolated-technique dose; this is causal attribution only, not treatment promotion.
-> **Remaining gate:** advance only a causal survivor to untouched-parent confirmation; otherwise close or move to the next explicitly unmeasured non-equivariant seam.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-10-16 — corrected strict-work run 38864229664 completed the selected-pair factorial: parent-frame ordering resolved 6/6 solve-state cliffs; repair fixed-seed alone resolved 0/1 repair cliff.
+> **Decision:** stable coordinate-dependent candidate ordering is causal for every selected PG-G symmetry solve-state cliff. The selected-pair mechanism survives and advances to outcome-blind independent-parent confirmation; no production treatment is yet authorized.
+> **Remaining gate:** confirm the ordering effect on independent parents, then and only then design a cold-legal current-input canonical tie-order consumer.
 > **Evidence role:** selected-pair causal attribution only. This cannot establish prevalence, unseen-parent transfer or production value.
 > **Treatment authority:** none.
 
@@ -57,3 +57,10 @@ The strongest attribution would be combined convergence where neither single fac
 The first execution attempt, run `38863341481`, exposed a harness defect before any result was promoted. DFS and repair respected the nominal 10M work ceiling, but this purpose-built runner had set only `prep._workCap`. Canonical admissible-order/IDA intentionally obeys `prep._strictWorkCap` instead; the maintained equal-work technique-census runner sets both. Three admissible rows therefore ran past the frozen dose, in the worst case to 368M work.
 
 That first attempt is **instrument-invalid as a decision-bearing factorial**. Its DFS/repair rows are useful debugging observations only and are not being mixed with the corrected experiment. The runner now mirrors the maintained census contract by setting both caps to the same absolute 10M-work ceiling, and both the runner and workflow reject any row exceeding the nominal budget by more than the small 1% atomic-work overshoot guard. The corrected execution must replace the first attempt wholesale for the scientific result.
+
+
+## Result
+
+Decision-bearing result: [PG-G symmetry ordering × repair-seed causal factorial result](2026-10-16-pg-g-symmetry-causal-factorial-result-001.md).
+
+The corrected run found six control solve-state cliffs and restored all six with parent-frame candidate ordering. All five DFS/admissible comparisons reproduced the parent exact status/work. Repair seed normalization alone did not rescue the selected repair loss; ordering did, while ordering + parent-mapped seed reproduced the parent work exactly. This plan is closed positive and its successor is independent-parent confirmation.
