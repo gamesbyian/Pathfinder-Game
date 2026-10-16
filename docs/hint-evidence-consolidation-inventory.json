@@ -524,27 +524,6 @@
       "partialFailureUpload": true,
       "hintIngestionDisposition": "experiment-only-no-hint-ingestion",
       "rationale": "Canonical portfolio producer metadata remains historyAware=true, but this invocation asserts baseline/prime/attempt-cache absent and saveHints=false; central harvest persists decision-bearing experiment evidence only."
-    },
-    {
-      "workflow": "pg-g-symmetry-ordering-microscope-one-shot.yml",
-      "currentHintMode": "explicitly excluded from canonical hint harvest",
-      "centralHarvester": false,
-      "target": "remain forensic experiment evidence only",
-      "partialFailureEvidence": false,
-      "executionClass": "selected symmetry path-replay ordering/seed diagnostic",
-      "artifactSufficientForFutureSemanticHint": "intentionally irrelevant",
-      "migrationTarget": "remain experiment-only",
-      "producerEntrypoint": "scripts/stress/symmetry-ordering-seam-audit.mjs",
-      "levelBlind": true,
-      "historyAware": false,
-      "currentHintPersistence": "none; path replay does not discover canonical Hint observations",
-      "exactSuccessfulPath": "pre-existing frozen paths are replay inputs, not discoveries",
-      "winningAttemptConfig": "not applicable",
-      "levelRevision": "current parent fingerprint plus pinned historical family dataset",
-      "effectiveExecutionConfig": "frozen five-case microscope spec",
-      "sourceRunLineage": "one-shot source run",
-      "partialFailureUpload": false,
-      "hintIngestionDisposition": "experiment-only-no-hint-ingestion"
     }
   ],
   "provenanceMissingness": [
