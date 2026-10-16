@@ -17,7 +17,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: pg-g-symmetry-causal-factorial
+  group: pg-g-symmetry-causal-factorial-strict-v2
   cancel-in-progress: false
 
 jobs:
