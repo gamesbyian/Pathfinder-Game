@@ -3,7 +3,7 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-13 — archived July repair-stagnation plan reconciled against August-September repair reachability/reconstructability work and current WS6 authority
 > **Decision:** preserve the July descent-aware shadow probe as an unresolved diagnostic question, not as a repair operator. Later WS6 work classified reconstruction from already-live prefixes and showed most exact-live repair cases are operator-incapable, but it did not identify which earlier descent commitments make a later near-miss unreconstructable.
-> **Remaining gate (updated 2026-10-16):** the condition has been met strongly enough for **diagnostic** work: WS6 retained R03147 evidence nominates bounded dependency families, while PG-C reactivates first-loss analysis. PG-P therefore authorizes the bounded read-only descent observer now. The 12-parent exact-pair floor still gates reusable-interface confirmation, and a null/heterogeneous observer closes the descendant.
+> **Remaining gate:** updated 2026-10-16: the condition has been met strongly enough for **diagnostic** work. WS6 retained R03147 evidence nominates bounded dependency families, while PG-C reactivates first-loss analysis. PG-P therefore authorizes the bounded read-only descent observer now. The 12-parent exact-pair floor still gates reusable-interface confirmation, and a null/heterogeneous observer closes the descendant.
 > **Evidence role:** archaeology / premise recovery
 > **Selection:** explicit "one avenue not yet shown to hit the wall" in the archived repair-stagnation plan, then traced against every later repair-reachability descendant found in history.
 
