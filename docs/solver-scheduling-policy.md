@@ -139,7 +139,7 @@ Use legal static features and a fixed aggregate envelope. Begin with a small det
 
 ### Dynamic
 
-Only after static scheduling shows confirmed value and residual headroom, add current-solve telemetry such as exhaustion, progress, repair plateau, frontier pressure, or resource state. Each dynamic feature needs a concrete conditional-value hypothesis, cheap computation, controlled predecessor semantics, and held-out incremental policy value.
+**Do not make static-policy success a prerequisite for observing dynamic value.** A bounded production-inert observer may measure exhaustion, progress, repair plateau, frontier pressure, resource state, trajectory overlap or action novelty whenever that is the cheapest discriminator for a live scheduling question. Static policies remain the required simple comparator. A **production dynamic policy** still needs a concrete conditional-value hypothesis, cheap computation, controlled predecessor semantics, held-out incremental value over the static comparator, and matched-work economics.
 
 Empirical tranche tables precede survival/hazard models; bandit/value-of-computation control is later still.
 
@@ -147,7 +147,7 @@ The 2026-09-03 dynamic tranche pilot exposed an execution constraint: a predicti
 
 ### Typed producer signals
 
-Only after one stage demonstrably emits useful information another action cannot cheaply rediscover should a typed artifact enter scheduler state. Follow the producer→consumer contract in [`solver-research-operating-model.md`](solver-research-operating-model.md); no general blackboard.
+A typed artifact may enter a **research-only shadow state** earlier if that is the cheapest way to measure whether another action can cheaply rediscover it. Persistent scheduler state or a behavioral handoff still requires demonstrated non-redundant producer information, bounded cost and the producer→consumer contract in [`solver-research-operating-model.md`](solver-research-operating-model.md); no general blackboard.
 
 ## Fallback
 
