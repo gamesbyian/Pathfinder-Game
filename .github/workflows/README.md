@@ -148,8 +148,6 @@ Use the narrowest workflow whose evidence semantics match the question. Capabili
 
 ## One-shot diagnostics (delete after use)
 
-`pg-g-symmetry-causal-factorial-one-shot.yml` is the temporary PG-G selected-pair ordering × repair-seed causal experiment. It publishes artifact-only selected-pair evidence, has no production-treatment authority, and must be deleted after its result is durably recorded and the owning workstream is reconciled.
-
 
 Delete a bespoke one-shot workflow once its execution surface is no longer needed, but treat workflow retirement and evidence reconstructability as separate decisions. Before deletion, apply the ordinary investigation closeout rule: if artifact-bound or branch-bound primary rows are materially required to support or later audit a durable decision, capability/future-work premise, reusable exact/reference resource, or row-sensitive mechanism claim, preserve the smallest existing-compatible evidence bundle or explicitly record what will expire and which later re-analysis will no longer be possible. Merely recording the aggregate answer is sufficient when row-level reconstruction is not material; this rule does not require archiving every one-shot artifact.
 
