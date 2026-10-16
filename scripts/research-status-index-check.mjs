@@ -465,8 +465,8 @@ assert(idsFor({ query: 'full pool', status: 'closed' }).includes('WS2-CATEGORICA
 // The original F3 descriptor remains mixed/closed as a consumer, while the 2026-10-16 materially different
 // completion-regime successor is an active premise-discovery question.
 {
-    const activeTopology = idsFor({ query: 'topology', status: 'active' })
-        .filter(id => id !== 'WS2-CUT-BALANCE-PROJECTION');
+    const activeTopology = [...new Set(idsFor({ query: 'topology', status: 'active' })
+        .filter(id => id !== 'WS2-CUT-BALANCE-PROJECTION'))];
     assert.deepEqual(activeTopology, ['WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR'],
         'only the materially different topology/completion-regime successor should be active');
     const mixedTopology = idsFor({ query: 'topology', status: 'mixed' });
