@@ -4,8 +4,8 @@
 > **Last evidence:** 2026-10-12 — static 160-level portal-free graph-parity census at main `3cdbb1fc169827b1efb411e190fd7c76096bf02d`
 > **Decision:** Incidence-only decoding is mathematically sound as a necessary-condition relaxation but is **not a new earned prune or solving method**. Most eligible boards retain substantial cycle freedom; investigate joint resource constraints only after a novelty witness against existing pruning.
 > **Remaining gate:** validate the committed preflight CLI/tests under the full repo environment; then exhibit one coupled-resource contradiction on a tiny supported instance which current parity/connectivity/BC1 and existing separator/joint-obligation probes cannot derive, or close that exact form.
-> **Research question:** none (pre-ID small-exact-projection premise)
-> **Premise refs:** none (do not infer stable IDs)
+> **Research question:** none
+> **Premise refs:** none
 > **Measurement opportunity:** none
 > **Evidence role:** discovery
 > **Selection:** observational, all currently published raw levels in canonical order
