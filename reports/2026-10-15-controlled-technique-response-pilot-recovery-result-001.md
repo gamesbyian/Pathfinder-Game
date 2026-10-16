@@ -3,7 +3,7 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-10-15 — recovered the complete 715-cell matrix from GitHub Actions run 37712397687, repaired the failed post-processing identity join offline, and verified all 36 retained family inputs byte-for-byte against pinned dataset commit `32132d6ba60f1203ee013ed0d475f46061eddd49`.
 > **Decision:** PG-G's first bounded discovery pilot is scientifically usable and positive: controlled perturbations do change technique-specific solve state and work, with whole-level symmetry exposing especially clean orientation/search-order sensitivity.
-> **Remaining gate:** inspect a small preregistered set of symmetry and local-mutation cliffs with the existing pair-divergence microscope, then confirm any generalized mechanism on untouched whole-parent families.
+> **Remaining gate:** symmetry microscopy is complete and localizes a stable-tie ordering seam plus repair seed drift; next run the selected-pair equivariant-order × fixed-repair-seed factorial before any untouched-family confirmation.
 > **Evidence role:** discovery.
 > **Owner:** `docs/solver-optimization-workstreams.md`.
 
@@ -131,7 +131,9 @@ The counts are too selected and small for prevalence claims, but several edges a
 
 ## Preregistered microscope shortlist
 
-The next step should not be another bulk run. Use the existing pair-divergence microscope on a small frozen shortlist:
+**2026-10-15 update:** the five symmetry cases below have now been completed by the dedicated mapped-path microscope and localize the strongest symmetry signal to non-equivariant stable tie ordering, with separate repair seed drift. See [the symmetry microscope result](2026-10-15-pg-g-symmetry-ordering-microscope-result-001.md). The three local-mutation cases remain valid later microscopes, but they are no longer the immediate gate because the cleaner symmetry instrument has already earned a causal ordering/seed follow-up.
+
+The original frozen shortlist was:
 
 1. **P00146 → F00146-sym-01**: DFS gain + admissible loss under a rotation. This is the cleanest opposite-sign symmetry edge.
 2. **P00146 → F00146-sym-05**: DFS gain + admissible loss under a reflection, providing a second transform class on the same parent.

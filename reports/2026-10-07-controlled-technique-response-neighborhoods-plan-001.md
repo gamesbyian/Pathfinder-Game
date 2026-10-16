@@ -3,7 +3,7 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-10-15 — recovered complete 715-cell run 37712397687; 39/125 controlled edges contain an actual solve-state flip, including 16/42 whole-level symmetry edges.
 > **Decision:** the bounded pilot succeeded as premise discovery; coordinate/search-order sensitivity under semantically equivalent symmetry transforms is the strongest earned mechanism lead.
-> **Remaining gate:** inspect the frozen symmetry/local-mutation shortlist with the existing pair-divergence microscope, then confirm any generalized mechanism on untouched whole-parent families.
+> **Remaining gate:** the symmetry microscope is complete and localizes stable tie-order asymmetry plus repair seed drift; run the selected-pair equivariant-order × fixed-repair-seed factorial before any untouched-parent confirmation.
 > **Evidence role:** discovery / method-enabling.
 > **Selection:** the initial cohort is deliberately information-rich and historically repair-response-enriched; it estimates mechanisms, not population prevalence.
 > **Treatment authority:** none. Interesting interactions nominate premises; they do not promote solver behavior.
@@ -143,3 +143,10 @@ Result authority: [2026-10-15 controlled technique-response pilot recovery](2026
 The pilot contains 125 parent→variant edges / 715 isolated-technique cells. Broad transition heterogeneity appears on 108 edges, but only 39 edges contain a genuine parent→variant solve-state gain/loss. Future analysis must keep those concepts separate. Whole-level symmetry is the cleanest mechanism instrument: 16/42 symmetry edges flip at least one technique despite preserving puzzle semantics, with additional multi-order-of-magnitude work cliffs for repair and admissible-order.
 
 No treatment is promoted from this selected-on discovery cohort. The next activity is microscope-scale mechanism localization, not another bulk family run.
+
+
+## Mechanism successor (2026-10-15)
+
+The strongest symmetry nomination has completed its next gate: [PG-G symmetry ordering microscope result](2026-10-15-pg-g-symmetry-ordering-microscope-result-001.md).
+
+Across five frozen symmetry cliffs / 393 mapped prefixes, legal candidate sets, default DFS scores and admissible slacks remain equivariant while tied candidate order diverges in every case. Repair's deterministic primary seed also changes in every selected pair. The next gate is a selected-pair causal factorial separating equivariant tie ordering from fixed repair-seed identity.
