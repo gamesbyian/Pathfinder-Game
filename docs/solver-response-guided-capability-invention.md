@@ -30,7 +30,7 @@ Historical winners remain offline labels, never runtime routing inputs.
    - relaxed feasibility or capacity;
    - one-way dominance;
    - exact quotient/equivalence.
-5. **Stage-0 attack.** Require mechanic scope, novelty witness against current reasoning, redundancy witness and smallest counterexamples before observer code.
+5. **Stage-0 attack.** Require mechanic scope, a concrete novelty question against current reasoning, redundancy target and smallest counterexamples before **durable/broad observer code**. When the missing novelty witness can only be obtained by computing the proposed relation, permit the smallest branch-local disposable observer as the Stage-0 instrument instead of demanding its own answer in advance.
 6. **Consumer upper-bound check.** Before implementing behavior, replay existing decisions/candidate sets where possible and ask:
    > if this fact had been free here, could it have changed the actual decision?
 7. **Smallest consumer.** Only then consider prune, order, retain, repair, route, allocate or handoff.
@@ -99,7 +99,7 @@ Prefer existing evidence in this order:
 2. capability-evidence complementary signatures, used only to nominate explanatory contrasts;
 3. first-loss/search-loss decision observations;
 4. within-level accepted-path technique contrasts;
-5. new production-inert telemetry only after existing evidence cannot answer the discriminator.
+5. new production-inert telemetry when existing evidence cannot answer the discriminator **or when a tiny observer is cheaper/more faithful than constructing a proxy from mismatched retained fields**; promotion to standing telemetry still requires recurring consumer value.
 
 Historical identity never becomes a runtime feature.
 
