@@ -116,7 +116,7 @@ This apparatus is supporting evidence. It does not outrank a live gate and must 
 | **WS4 beam retention / representation sensitivity** | Generate matched parent descendants around a solve cliff, track known-live lineage survival, require recurrence across independent parents and held-out-parent prediction before intervention. |
 | **WS6 repair reachability** | Move or reorder obligations while preserving solvability to isolate which early/interior commitments make append-only continuation irrecoverable. |
 | **WS0 restart/randomization / basin overlap** | Use controlled descendants to test whether restart value or basin separation is structurally stable rather than one-row seed luck. |
-| **WS7 architecture/speed** | Validation/scaling laboratory only after a speed mechanism is independently earned; do not generate levels to justify speculative optimization. |
+| **WS7 architecture/speed** | A durable validation/scaling corpus is justified only after a speed mechanism is independently earned. A tiny question-scoped adversarial construction may still be used earlier as development evidence when it is the cheapest way to expose algorithmic scaling/pathology; synthetic speed wins do not create production entitlement. |
 | **WS5 exact/reference** | Use small descendant neighborhoods to cheaply exact-label causal boundaries and translate exact truth into runtime hypotheses. |
 
 The same routing applies to deferred future-work items such as future-intersection feasibility, cross-attempt basin overlap, dependency-conditioned repair descent, partial-order/commuting excursions, richer static selectors, counterfactual displaced-capability recurrence, and representation-sensitivity lineage survival.
