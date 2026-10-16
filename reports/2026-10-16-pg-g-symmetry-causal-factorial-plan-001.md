@@ -1,10 +1,11 @@
 # PG-G symmetry causal factorial plan (2026-10-16)
 
-> **Status:** active bounded experiment.
-> **Decision source:** the completed PG-G symmetry microscope found mapped legal sets and semantic DFS/admissible ranking values equivariant across 393 checked prefixes, while stable tied order and repair seed identity changed in every selected pair.
+> **Status:** active
+> **Last evidence:** 2026-10-16 — the completed PG-G symmetry microscope found mapped legal sets and semantic DFS/admissible ranking values equivariant across 393 checked prefixes, while stable tied order and repair seed identity changed in every selected pair.
+> **Decision:** execute the frozen selected-pair order A/B plus the repair order × seed factorial at the original 10M-work isolated-technique dose; this is causal attribution only, not treatment promotion.
+> **Remaining gate:** advance only a causal survivor to untouched-parent confirmation; otherwise close or move to the next explicitly unmeasured non-equivariant seam.
 > **Evidence role:** selected-pair causal attribution only. This cannot establish prevalence, unseen-parent transfer or production value.
 > **Treatment authority:** none.
-> **Remaining gate:** execute the frozen selected-pair order A/B plus the repair order × seed factorial, then advance only a causal survivor to untouched-parent confirmation.
 
 ## Question
 
