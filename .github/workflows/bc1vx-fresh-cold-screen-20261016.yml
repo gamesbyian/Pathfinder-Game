@@ -66,7 +66,7 @@ jobs:
             shard, selectedShard: thisShard
           };
           writeFileSync('tmp/bc1vx-fresh-screen/manifest.json', JSON.stringify(manifest, null, 2) + '\n');
-          writeFileSync('tmp/bc1vx-fresh-screen/positions.txt', 'pos:' + thisShard.map(row => row.position).join(','));
+          writeFileSync('tmp/bc1vx-fresh-screen/positions.txt', thisShard.map(row => 'pos:' + row.position).join(','));
           console.log('Disjoint outcome-blind shard', JSON.stringify({shard, ids: thisShard.map(row=>row.id)}));
           NODE
       - name: Solve both arms with equivalent production budgets
