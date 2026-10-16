@@ -459,3 +459,66 @@ test('cell.corpusFile supports arbitrary family corpora and preserves familyCont
     assert.deepEqual(result.familyContext, familyContext);
     assert.equal(result.status, 'node-budget-reached');
 });
+
+
+test('candidateOrderResearch installs parent-frame ordering only for an explicit research cell', async () => {
+    let observedKey = null;
+    const pack = (x, y) => (y << 16) | x;
+    const { runAttemptForTesting } = stubRunner((call, prep) => {
+        observedKey = prep._candidateOrderResearchKey;
+        assert.equal(typeof observedKey, 'function');
+        // orientation=1 maps parent E/W/S/N to variant S/N/W/E respectively.
+        const from = pack(1, 1);
+        assert.equal(observedKey(from, pack(1, 2)), 0, 'variant S is parent-frame E');
+        assert.equal(observedKey(from, pack(1, 0)), 1, 'variant N is parent-frame W');
+        assert.equal(observedKey(from, pack(0, 1)), 2, 'variant W is parent-frame S');
+        assert.equal(observedKey(from, pack(2, 1)), 3, 'variant E is parent-frame N');
+        prep._metrics.nodesExpanded += 10;
+        return { path:null, outcome:'exhausted' };
+    });
+    const { runCell } = await createCellRunner({ runAttemptForTesting });
+    const candidateOrderResearch = {
+        kind:'symmetry-parent-frame',
+        orientation:1,
+        parentWidth:4,
+        parentHeight:3,
+    };
+    const result = await runCell({
+        ...baseCell,
+        nodeBudget:5,
+        candidateOrderResearch,
+    });
+    assert.equal(typeof observedKey, 'function');
+    assert.deepEqual(result.candidateOrderResearch, candidateOrderResearch);
+    assert.equal(result.status, 'node-budget-reached');
+});
+
+test('ordinary cells leave the candidate-order research hook untouched', async () => {
+    const { runAttemptForTesting } = stubRunner((call, prep) => {
+        assert.equal(prep._candidateOrderResearchKey, undefined);
+        prep._metrics.nodesExpanded += 10;
+        return { path:null, outcome:'exhausted' };
+    });
+    const { runCell } = await createCellRunner({ runAttemptForTesting });
+    const result = await runCell({ ...baseCell, nodeBudget:5 });
+    assert.equal(result.candidateOrderResearch, null);
+});
+
+test('runCellSafe preserves invalid candidate-order treatment identity on validation failure', async () => {
+    const { runCellSafe } = await createCellRunner();
+    const candidateOrderResearch = {
+        kind:'symmetry-parent-frame',
+        orientation:99,
+        parentWidth:4,
+        parentHeight:3,
+    };
+    const result = await runCellSafe({
+        ...baseCell,
+        levelId:'bad-order-fixture',
+        nodeBudget:5,
+        candidateOrderResearch,
+    });
+    assert.equal(result.status, 'error');
+    assert.deepEqual(result.candidateOrderResearch, candidateOrderResearch);
+    assert.match(result.error, /orientation 1\.\.7/);
+});
