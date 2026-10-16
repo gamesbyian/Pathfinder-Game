@@ -1,7 +1,7 @@
 # Solver blocker suspicion audit 001
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-10-16 - all 82 current non-archive `solver-*` / research Markdown authorities and references in the audited scope, including architecture/evidence/correctness docs beyond the initial 56 plan-like surfaces; the stable research-question registry; and historical evidence only where a current blocker explicitly depended on it.
+> **Last evidence:** 2026-10-16 — all 82 current non-archive `solver-*` / research Markdown authorities and references in the audited scope, including architecture/evidence/correctness docs beyond the initial 56 plan-like surfaces; the stable research-question registry; and historical evidence only where a current blocker explicitly depended on it.
 > **Decision:** several research blockers were over-scoped. Preserve soundness, legality, independence, evidence-identity and production-economics gates, but stop using promotion thresholds, sample-size thresholds, durable-resource requirements or historical sequencing as blanket permission gates on cheaper diagnostics. Activate the bounded blocker-bypass descendants listed below.
 > **Remaining gate:** execute the newly active diagnostics under their own stop rules; production behavior still requires the ordinary soundness, matched-work, confirmation and collateral gates.
 > **Evidence role:** research-state / methodology reconciliation.
