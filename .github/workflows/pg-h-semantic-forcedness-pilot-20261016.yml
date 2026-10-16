@@ -1,0 +1,188 @@
+# One-shot PG-H reference pilot. No production solver changes.
+name: PG-H semantic forcedness reference pilot
+on:
+  push:
+    branches:
+      - chatgpt/pg-h-semantic-forcedness-falsifier-2026-10-16
+    paths:
+      - .github/workflows/pg-h-semantic-forcedness-pilot-20261016.yml
+permissions:
+  contents: read
+concurrency:
+  group: pg-h-semantic-forcedness-20261016
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Freeze eight outcome-blind parent levels
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/pg-h
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          const source='data/stress/stress-levels-random.json';
+          const buf=readFileSync(source);
+          const parsed=JSON.parse(buf.toString('utf8'));
+          const levels=Array.isArray(parsed)?parsed:parsed.levels;
+          const salt='pg-h-semantic-forcedness-20261016-pilot-001';
+          const entries=levels.map((row,i)=>({
+            id:row.id,position:i+1,
+            hash:createHash('sha256').update(salt+'|'+row.id).digest('hex')
+          }));
+          entries.sort((a,b)=>a.hash.localeCompare(b.hash)||a.id.localeCompare(b.id));
+          const selected=entries.slice(0,8);
+          if(selected.length!==8||new Set(selected.map(row=>row.id)).size!==8)throw Error('Invalid parent selection');
+          const manifest={source,sourceCommit:process.env.GITHUB_SHA,
+            sha256:createHash('sha256').update(buf).digest('hex'),
+            salt,selection:'hash rank independent of exact labels',parents:selected};
+          writeFileSync('tmp/pg-h/manifest.json',JSON.stringify(manifest,null,2)+'\n');
+          writeFileSync('tmp/pg-h/levels.json',JSON.stringify({levelIds:selected.map(x=>x.id)},null,2)+'\n');
+          console.log('PG-H FROZEN PARENTS',JSON.stringify(selected.map(x=>x.id)));
+          NODE
+      - name: Observe hard-prune survivors (research-only, fixed work)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/run-bundled.mjs scripts/stress/semantic-forcedness-capture.mjs -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels-file=tmp/pg-h/levels.json \
+            --profile=objectiveFirst --width=500 \
+            --work-budget=500000 --budget-ms=600000 \
+            --min-children=2 --max-children=4 --max-states-per-gate=2 \
+            --out=tmp/pg-h/capture.json --cases-out=tmp/pg-h/cases.json
+      - name: Validate exact-case grammar and 320-case cap
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import {extractExplicitPrefixCases} from './scripts/stress/cpsat-explicit-prefix-reference-lib.mjs';
+          const c=JSON.parse(readFileSync('tmp/pg-h/capture.json','utf8'));
+          const raw=JSON.parse(readFileSync('tmp/pg-h/cases.json','utf8'));
+          const x=extractExplicitPrefixCases(raw,{format:'cases'});
+          if(x.length===0||x.length>320||x.length!==c.summary.childCases)throw Error('Invalid child case count '+x.length);
+          if(c.summary.parents!==8||new Set(x.map(row=>row.id)).size!==x.length)throw Error('Invalid identity');
+          if(x.some(row=>row.prefix.some(([a,b])=>!Number.isInteger(a)||!Number.isInteger(b)||a<1||b<1)))throw Error('Invalid raw prefix');
+          writeFileSync('tmp/pg-h/preflight.json',JSON.stringify({cases:x.length,states:c.summary.selectedStates,parents:8},null,2)+'\n');
+          console.log('PG-H PREFLIGHT VERIFIED',JSON.stringify({cases:x.length,states:c.summary.selectedStates}));
+          NODE
+      - name: Preserve frozen input evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-h-frozen-capture-001
+          path: tmp/pg-h/
+          if-no-files-found: warn
+          retention-days: 90
+
+  exact:
+    needs: capture
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard: [1,2,3,4,5,6,7,8]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - run: |
+          npm ci
+          pip install ortools
+      - uses: actions/download-artifact@v8
+        with:
+          name: pg-h-frozen-capture-001
+          path: tmp/pg-h/
+      - name: Exact classification of shard ${{ matrix.shard }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/pg-h/exact
+          nn=$(printf '%03d' "${{ matrix.shard }}")
+          node scripts/run-bundled.mjs scripts/stress/cpsat-explicit-prefix-reference.mjs -- \
+            --cases=tmp/pg-h/cases.json --format=cases \
+            --time-limit=20 --max-cases=320 \
+            --shard-index=${{ matrix.shard }} --shard-count=8 \
+            --out="tmp/pg-h/exact/cpsat-explicit-prefix-reference-shard-$nn.json"
+      - name: Preserve reference labels, including abstentions
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-h-exact-shard-${{ matrix.shard }}
+          path: tmp/pg-h/exact/
+          if-no-files-found: warn
+          retention-days: 90
+
+  reconcile:
+    needs: [capture, exact]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v8
+        with:
+          name: pg-h-frozen-capture-001
+          path: tmp/pg-h/
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: pg-h-exact-shard-*
+          path: tmp/pg-h/exact/
+          merge-multiple: true
+      - name: Combine with strict case coverage and classify groups
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/combine-cpsat-explicit-prefix-reference-shards.mjs \
+            --in-dir=tmp/pg-h/exact --shards=8 --out=tmp/pg-h/reference.json
+          node scripts/stress/semantic-forcedness-reconcile.mjs \
+            --capture=tmp/pg-h/capture.json \
+            --reference=tmp/pg-h/reference.json --out=tmp/pg-h/result.json
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('tmp/pg-h/capture.json','utf8'));
+          const r=JSON.parse(readFileSync('tmp/pg-h/result.json','utf8'));
+          const ref=JSON.parse(readFileSync('tmp/pg-h/reference.json','utf8'));
+          const count=c.summary.childCases;
+          if(r.summary.referenceRows!==count||ref.summary.cases!==count||r.summary.missingCases||r.summary.correctnessAlarms||ref.summary.inputAlarms)throw Error('Reference identity or completeness alarm');
+          const verdict={sourceCommit:process.env.GITHUB_SHA,parents:c.summary.parents,
+            states:r.summary.states,resolved:r.summary.resolvedStates,
+            unresolved:r.summary.unresolvedStates,
+            hiddenForced:r.summary.semanticallyForcedStates,
+            genuinelyBranching:r.summary.genuinelyBranchingStates,
+            semanticallyDead:r.summary.semanticallyDeadStates,
+            forcedParents:r.summary.forcedParents,
+            referenceLabels:ref.summary,evidenceRole:'development',newColdSolves:0};
+          writeFileSync('tmp/pg-h/verdict.json',JSON.stringify(verdict,null,2)+'\n');
+          console.log('PG-H VERDICT',JSON.stringify(verdict));
+          NODE
+      - name: Save all evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-h-semantic-forcedness-pilot-result-001
+          path: tmp/pg-h/
+          if-no-files-found: warn
+          retention-days: 90
