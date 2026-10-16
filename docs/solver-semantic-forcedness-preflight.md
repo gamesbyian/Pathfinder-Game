@@ -1,11 +1,11 @@
 <!-- agent-context-budget: warn=7000 max=9500 -->
 # Semantic forcedness / hidden branching preflight
 
-> **Status:** preregistered deferred opportunity-sizing question with production-inert capture/reconcile tooling implemented; no population dispatch or production change authorized.
+> **Status:** **ACTIVE / READY under PG-H.** Production-inert capture/reconcile tooling is implemented; the former forced-work priority blocker is closed. The bounded <=320-case census is authorized as opportunity sizing; no production change or production exact service is authorized.
 > **Date:** 2026-09-21.
 > **Priority authority:** `solver-optimization-workstreams.md`.
 > **Method authority:** `solver-research-operating-model.md`.
-> **Closest active work:** `WS2-FORCED-WORK-CAPTURE-ECONOMICS` on PR #1952. Its 25.33% literal one-successor work ceiling now outranks this more expensive semantic census.
+> **Predecessor disposition:** `WS2-FORCED-WORK-CAPTURE-ECONOMICS` completed and closed the identified literal forced-work consumers. That resolves the sequencing dependency and makes this semantically different census the active next question.
 > **Question class:** per-instance relational feasibility / bounded information acquisition.
 > **Production effect:** none.
 
@@ -110,7 +110,7 @@ npm run test:semantic-forcedness
 
 The capture uses the existing `includeParentExpansionWork` BeamResearch seam, retains only bounded eligible 2-4-child parent groups, and emits every surviving child as a generic explicit-prefix case. The reconciler joins the reference rows back to parent states and computes the preregistered classifications/rates. It treats missing/UNKNOWN/alarm-bearing child evidence as unresolved.
 
-PR #1952 already consumes the same beam research parent-expansion seam for a different question. Do not modify or depend on its implementation details; reconcile its final frozen parent population before dispatching this experiment.
+The old PR #1952 concurrency concern is historical: that predecessor is disposed. Reuse its retained population/telemetry only where identity is compatible; otherwise take the smallest fresh production-inert slice. There is no longer a reason to wait for that PR or reproduce its exact population before asking this question.
 
 After #1952 lands, extend or reuse that seam in the smallest separate extractor.
 
@@ -301,7 +301,7 @@ Do not merge the hypotheses or thresholds.
 
 #1952 is now strongly positive: one-successor parents carry 25.33% of measured parent-expansion work on its frozen 64-parent sample. Therefore literal forced-work capture/economics outranks this experiment.
 
-Reopen this semantic census after that successor is disposed, or earlier only if its capture study shows the literal reservoir is mostly unavoidable while hidden semantic branching remains decision-relevant.
+That reopen condition has occurred: the literal forced-work successor is disposed while hidden semantic branching remains a materially different question. PG-H now owns this census.
 
 ### PR #1954 pre-winner action selection
 
@@ -332,7 +332,7 @@ Do not delay BC1's already-earned economics experiment for this work.
 
 ## Implementation sequence if the pilot is eventually run
 
-1. Wait for #1952 to land or otherwise reconcile with its final frozen parent population.
+1. Use the retained predecessor population where identity/fields suffice; otherwise freeze the smallest current production-inert parent sample needed for the <=320-case contract. Do not wait on historical PR sequencing.
 2. Run the committed production-inert capture tool on at most 16 parents / 5 eligible states per gate/population rule.
 3. Commit/freeze the emitted generic child-prefix `cases` document before exact labels are opened.
 4. Dispatch <=320 cases through `cpsat-explicit-prefix-reference.yml`.
