@@ -180,7 +180,7 @@ For human/editor parents, use the dedicated human-parent contrast front door whe
 
 ## Adding a new full-level generator
 
-A fourth generator should be registered in `research-level-generation-lib.mjs` only after its own producer is independently sound. It must have:
+A fourth generator should be **registered as a durable shared generator** in `research-level-generation-lib.mjs` only after its own producer is independently sound. This does not forbid a question-scoped one-off constructor or transformation on a branch when construction itself is the cheapest falsifier; such output remains development evidence, carries its construction identity explicitly, and earns no shared-generator/transfer status until the ordinary requirements below hold. A registered generator must have:
 
 1. schema + structural + canonical-referee validation;
 2. explicit source regime/version/config;
