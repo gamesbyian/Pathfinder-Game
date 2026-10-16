@@ -84,6 +84,16 @@
       }
     },
     {
+      "id": "pg-g-symmetry-ordering-microscope-one-shot",
+      "workflow": ".github/workflows/pg-g-symmetry-ordering-microscope-one-shot.yml",
+      "disposition": "unsupported",
+      "reason": "Path-replay ordering/seed forensic diagnostic; it does not execute node/work-budget search attempts or produce ordinary attempt-response rows.",
+      "durability": {
+        "mode": "artifact-only",
+        "reason": "The bounded one-shot result is retained as mechanism evidence until its conclusion is recorded; compact solver failure-response semantics do not apply."
+      }
+    },
+    {
       "id": "search-loss-real-canary",
       "workflow": ".github/workflows/search-loss-real-canary.yml",
       "disposition": "unsupported",
