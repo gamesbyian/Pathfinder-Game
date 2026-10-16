@@ -37,7 +37,13 @@ export function resolveExpectedIds(baseShards, levelsFor) {
   const expectedIds = [];
   for (const shard of baseShards) {
     const levels = levelsFor(shard.corpus_key);
-    const positions = shard.levels.replace(/^pos:/, '').split(',').map(Number);
+    const positions = shard.levels.split(',').map(token => {
+      const match = /^pos:([1-9][0-9]*)$/i.exec(token.trim());
+      if (!match || !Number.isSafeInteger(Number(match[1]))) {
+        throw new Error(`${shard.corpus_key}: invalid explicit position token "${token}"`);
+      }
+      return Number(match[1]);
+    });
     for (const position of positions) {
       const level = levels[position - 1];
       if (!level) throw new Error(`${shard.corpus_key}: no level at position ${position}`);

@@ -1271,12 +1271,14 @@
       ],
       "answeredBy": [
         "reports/2026-10-15-pg-g-symmetry-ordering-microscope-result-001.md",
-        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md"
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md",
+        "reports/2026-10-16-pg-g-cold-d4-frame-feasibility-001.md"
       ],
-      "result": "Development causal result is positive: parent-frame ordering restores 6/6 selected solve-state cliffs at fixed 10M work; all five DFS/admissible rows reproduce parent status/work exactly. Repair seed alone restores 0/1 repair cliff. Independent-parent confirmation is required before any cold canonical consumer.",
+      "result": "Selected-pair causal ordering restoration remains 6/6. The 2026-10-16 current-input D4 frame screen is positive: exact unique frame on 137/160 published and 1700/1700 Corpus-2 puzzles, no invariance alarm; ambiguity on 23 published rows abstains. This removes the cold-geometric-identifiability obstacle, but not the independent-parent causality, setup cost, or fixed-work production solve-rate gates.",
       "constrains": [
         "Family ancestry/parent-frame mapping is forbidden production input.",
-        "Do not jump to an additive eight-orientation portfolio."
+        "Do not jump to an additive eight-orientation portfolio.",
+        "D4 unique-frame exposure is not a cold solve or valid orientation-parent lookup; do not infer improvement or generality from the 1700/1700 frame coverage."
       ],
       "reopensOn": null,
       "premiseRefs": [
