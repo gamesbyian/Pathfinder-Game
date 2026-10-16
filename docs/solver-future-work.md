@@ -4,7 +4,7 @@ Conditional descendants and tested-form reopen rules only. [Workstreams](solver-
 
 ## No-stranding boundary
 
-The 2026-10-16 reconciliation moved executable questions into PG-C through PG-N as appropriate. Keep something here only when a named dependency, changed population/premise, or tested-form reopen condition blocks execution. Once its cheapest falsifier is executable, move it to workstreams in the same reconciliation.
+The 2026-10-16 queue reconciliation plus blocker audit moved executable questions through PG-P as appropriate. Keep something here only when a named dependency, changed population/premise, or tested-form reopen condition blocks the **next scoped claim**. Once a cheaper falsifier/observer is executable, that diagnostic belongs in workstreams even if confirmation or production promotion remains blocked.
 
 ## Conditional descendants
 
@@ -14,19 +14,16 @@ The 2026-10-16 reconciliation moved executable questions into PG-C through PG-N 
 - **Production exact-query service:** materially different predicate/seam/population; tested future-intersection consumer was 0/120.
 - **Region / AND-OR decomposition:** a different frozen interface restores repeated outcome equivalence without near-unique/full-prefix state; C0-C2 closed representation-explosive.
 - **Targeted surgery / causal backjump:** independent evidence identifies an actionable causal interface smaller than naive divergence/rollback.
-- **Dependency-conditioned repair:** independent-parent replication on a new exact matched-pair population; prior replication reached only 2/24 eligible parents.
 - **BC1-off dead-last retry:** re-dispatch only frozen PG-B pricing; keep >=10 recoveries plus tail-tier-yield promotion rule. [atlas](../reports/2026-10-02-intervention-response-atlas-result-001.md)
-- **BC1-V/VX shared pipeline:** only after beam BC1-VX A/B is positive; charge connectivity work and preserve repair's seeded-survivor opt-out.
-- **Complete-path LNS:** production-frontier partials yield fair full relaxed candidates proven locally repairable.
 - **Per-level plan compiler:** two architectures show predictable current-input niches without historical identity.
 
 ## Architectural reopen rules
 
 - **Bidirectional/backward:** compact sound residual/interface signature from PG-D/PG-J/relational work; never full MITM by default.
 - **Choice-bearing macros:** repeated choice-bearing route structure plus semantics/accounting-preserving macro.
-- **Canonicalization/symmetry:** PG-G independently confirms ordering sensitivity, then one cold D4 key handles automorphism ties; no family ancestry/eight-orientation portfolio.
+- **Canonicalization/symmetry production use:** PG-G independent transfer plus a cold D4 key that handles automorphism ties. The branch-local current-input key feasibility prototype may run in parallel; no family ancestry/eight-orientation portfolio.
 - **Structural preprocessing:** active separator/topology/relational premise exposes a sound property with enough reuse to repay construction.
-- **Algebraic/trail/frontier/ZDD/SAT/CEGAR:** PG-D first produces a referee-valid, current-prune-nonredundant real-prefix fact with useful participation. Toy fidelity is insufficient.
+- **Durable/production algebraic/trail/frontier/ZDD/SAT/CEGAR architecture:** requires a referee-valid, current-prune-nonredundant fact with useful participation/economics. A tiny disposable architecture-shaped program is allowed earlier when it is itself the cheapest falsifier; PG-N now owns the interface-sufficiency attack.
 - **Cooperative engines:** two solver families expose complementary typed artifacts; begin with one bounded handoff.
 - **Mechanic automata:** repeated descendants require one shared mechanic-state contract strongly enough to justify migration.
 - **Adversarial generation:** attack a frozen semantic hypothesis via solver-belief versus exact-reality disagreement without construction leakage.
