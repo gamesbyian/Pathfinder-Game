@@ -258,7 +258,7 @@ jobs:
           for (const arm of ['control', 'treatment']) {
             for (let i = 0; i < shardCount; i++) {
               const slice = positions.filter((_, index) => index % shardCount === i);
-              if (slice.length) shards.push({ idx: \`\${arm}-\${String(i + 1).padStart(2, '0')}\`, arm, levels: \`pos:\${slice.join(',')}\` });
+              if (slice.length) shards.push({ idx: \`\${arm}-\${String(i + 1).padStart(2, '0')}\`, arm, levels: slice.map(position => 'pos:' + position).join(',') });
             }
           }
           console.log('shards=' + JSON.stringify({ shard: shards }));
