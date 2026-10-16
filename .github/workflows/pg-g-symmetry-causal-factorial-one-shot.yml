@@ -75,6 +75,12 @@ jobs:
           if (d.aggregate?.orderCanaryPrefixes !== 393) throw new Error('parent-frame order canary did not cover all 393 mapped prefixes');
           if (d.rows?.some(row => !row.parentControl?.validDeterministicEvidence)) throw new Error('invalid parent control row');
           if (d.rows?.some(row => Object.values(row.variantArms ?? {}).some(arm => !arm.validDeterministicEvidence))) throw new Error('invalid variant arm row');
+          const maxAllowed = d.workBudget * 1.01;
+          const allRuns = [
+            ...d.rows.map(row => row.parentControl),
+            ...d.rows.flatMap(row => Object.values(row.variantArms ?? {})),
+          ];
+          if (allRuns.some(run => run.workSpent > maxAllowed)) throw new Error('work-cap overshoot exceeds 1% guard');
           NODE
 
       - name: Publish standard solver result
