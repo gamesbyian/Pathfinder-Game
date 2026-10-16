@@ -10,7 +10,7 @@
 
 The current post-topology hypothesis ladder is exhausted. The controlled topology fork established that path history can change completion feasibility while matched ordinary mechanic-progress state remains fixed, but the later H1/H3/H2 and naive behavioral-quotient probes did not produce a reusable production descriptor. A decomposition census is therefore the smallest remaining test of whether the residual contains exploitable low-width interfaces rather than requiring another global forward-prefix heuristic.
 
-This is deliberately a census before architecture. Do not implement region DP, AND/OR search, separator contracts, backward interfaces, or topology-aware decomposition until the phenomenon exists at useful prevalence.
+This is deliberately a census before **durable architecture**. Do not promote region DP, AND/OR search, separator contracts, backward interfaces, or topology-aware decomposition until the phenomenon exists at useful prevalence. A tiny disposable interface/DP implementation is allowed earlier when executing it is the cheapest way to falsify sufficiency, measure compression, or produce a counterexample; PG-N owns that kind of bounded attack.
 
 ## Frozen population
 
