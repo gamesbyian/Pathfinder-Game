@@ -1,10 +1,10 @@
 # Solve-local fact rediscovery preflight
 
-> **Status:** Phase 0 EXECUTED / CONCLUDED-NEGATIVE (no Phase 1 observer earned). See [`result`](../reports/2026-09-17-lane-c-phase0-retained-evidence-rejoin-result-001.md).
+> **Status:** original 2026-09-17 Phase 0 EXECUTED / CONCLUDED-NEGATIVE on its tested retained material; **REOPENED 2026-10-16 under PG-M only on materially changed evidence**: the later fresh exact-DEAD sibling population and newer PG-D/PG-J/PG-K exact-query material. Do not rerun the old Phase 0 unchanged. See [`result`](../reports/2026-09-17-lane-c-phase0-retained-evidence-rejoin-result-001.md).
 > **Question:** does one cold solve repeatedly derive the same expensive sound or decision-useful current-instance facts across branches, attempts, or stages often enough that typed solve-local reuse could add capability or save material work?
-> **Priority:** supporting investigation only. Do not leapfrog the active solve-acquisition queue in `solver-optimization-workstreams.md`.
+> **Priority:** active retained-first PG-M, subordinate to the current ordering in `solver-optimization-workstreams.md`. Its first step is a **delta rejoin** against post-2026-09-17 evidence, not a new generic observer.
 > **Premise lineage:** [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md), [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md), and the August connectivity-certificate audits.
-> **Phase 0 result:** fact class A already closed. Fact class B's only real candidate (mustPass/mustCross lower-bound memo caches) is already production-shipped and already independently proven sound and valuable (2.3-4.8x speedup) -- not a new Lane C opportunity. Fact class C is confirmed correctly unmemoized (expected negative control). Fact class D found no opportunistic same-dependency-key recurrence across this session's own Lane A/B/D exact-query batches. No fact family clears the Phase-0 advance gate.
+> **Original Phase 0 result:** fact class A closed on the then-current population; B's lower-bound memo candidate was already shipped/valuable; C was a correct negative control; D found no recurrence in the then-available Lane A/B/D exact-query batches. **Reopen basis:** the preflight itself named the later fresh exact-DEAD sibling harvest as a materially changed population for A, and October PG-D/PG-J/PG-K now add exact/interface query families that did not exist in the original D census. PG-M asks only whether these new materials change the recurrence/economics verdict.
 
 ## Why this question is now worth asking
 
@@ -49,7 +49,7 @@ Examples: forced-neighbor consequences, portal parity facts, must-turn deadlock 
 
 If fresh sibling/topology/separator work already pays for an exact or bounded interface query, record its dependency key and ask whether another branch/attempt asks the same question. Do not create such queries for this study.
 
-## Phase 0: retained-evidence rejoin
+## Reopened Phase 0-delta: post-closeout evidence rejoin
 
 Before new compute, inspect retained August connectivity-rejection records and any current lifecycle/attempt telemetry that can answer:
 
