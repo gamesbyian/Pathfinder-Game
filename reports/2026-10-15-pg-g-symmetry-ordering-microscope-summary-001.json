@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-pg-g-symmetry-ordering-microscope-summary",
+  "sourceRunId": 38856550278,
+  "sourceRef": "bfb39a8ec25283640ac0e73255c96ab370f4705c",
+  "historicalDatasetRef": "32132d6ba60f1203ee013ed0d475f46061eddd49",
+  "rawArtifact": {
+    "id": 12027835361,
+    "zipSha256": "0dda63df9620680182abb802ce27c6230212682f8828a265937daea6c100d5e9"
+  },
+  "standardArtifact": {
+    "id": 12027845284
+  },
+  "aggregate": {
+    "cases": 5,
+    "checkedPrefixes": 393,
+    "casesWithLegalSetMismatch": 0,
+    "casesWithRawOrderMismatch": 5,
+    "casesWithDfsScoreNonEquivariance": 0,
+    "casesWithDfsTieOrderMismatch": 5,
+    "casesWithAdmissibleSlackNonEquivariance": 0,
+    "casesWithAdmissibleTieOrderMismatch": 5,
+    "casesWithRepairSeedDrift": 5
+  },
+  "cases": [
+    {
+      "id": "P00146__F00146-sym-01",
+      "orientation": 1,
+      "checkedPrefixes": 101,
+      "rawOrderMismatchCount": 71,
+      "dfsTieOrderMismatchCount": 26,
+      "admissibleTieOrderMismatchCount": 45,
+      "parentRepairSeed": 2019391921,
+      "variantRepairSeed": 2428919925
+    },
+    {
+      "id": "P00146__F00146-sym-05",
+      "orientation": 5,
+      "checkedPrefixes": 101,
+      "rawOrderMismatchCount": 23,
+      "dfsTieOrderMismatchCount": 7,
+      "admissibleTieOrderMismatchCount": 5,
+      "parentRepairSeed": 2019391921,
+      "variantRepairSeed": 4272716209
+    },
+    {
+      "id": "R02976__F02976-sym-01",
+      "orientation": 1,
+      "checkedPrefixes": 70,
+      "rawOrderMismatchCount": 41,
+      "dfsTieOrderMismatchCount": 2,
+      "admissibleTieOrderMismatchCount": 21,
+      "parentRepairSeed": 1983306278,
+      "variantRepairSeed": 2019391921
+    },
+    {
+      "id": "R00631__F00631-sym-02",
+      "orientation": 2,
+      "checkedPrefixes": 59,
+      "rawOrderMismatchCount": 21,
+      "dfsTieOrderMismatchCount": 1,
+      "admissibleTieOrderMismatchCount": 6,
+      "parentRepairSeed": 3041712678,
+      "variantRepairSeed": 969402052
+    },
+    {
+      "id": "P00144__F00144-sym-02",
+      "orientation": 2,
+      "checkedPrefixes": 62,
+      "rawOrderMismatchCount": 26,
+      "dfsTieOrderMismatchCount": 1,
+      "admissibleTieOrderMismatchCount": 6,
+      "parentRepairSeed": 2392834282,
+      "variantRepairSeed": 1618280448
+    }
+  ],
+  "interpretation": {
+    "localizedPremise": "Mapped legal sets and semantic DFS/admissible ranking values are equivariant; stable tie order is not. Repair also changes deterministic seed under every selected transform.",
+    "evidenceRole": "forensic-mechanism-localization",
+    "treatmentAuthority": "none",
+    "nextGate": "selected-pair factorial separating equivariant tie ordering and fixed repair seed"
+  }
+}
