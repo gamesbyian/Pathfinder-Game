@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-pg-g-symmetry-causal-factorial-spec",
+  "sourceMicroscope": "reports/2026-10-15-pg-g-symmetry-ordering-microscope-result-001.md",
+  "historicalDatasetRef": "32132d6ba60f1203ee013ed0d475f46061eddd49",
+  "evidenceRole": "selected-pair-causal-attribution",
+  "selection": "five symmetry pairs selected after the PG-G response pilot and ordering microscope; not prevalence or confirmation evidence",
+  "workBudget": 10000000,
+  "budgetMs": 600000,
+  "cases": [
+    {
+      "id": "P00146__F00146-sym-01",
+      "parentId": "P00146",
+      "familyToken": "symmetry",
+      "variantId": "F00146-sym-01",
+      "techniques": [
+        "dfs|score=default|bias=none",
+        "admissible-order|tieBreak=none|lds=off"
+      ],
+      "expectedControlSignal": "DFS gain and admissible loss on the rotated sibling"
+    },
+    {
+      "id": "P00146__F00146-sym-05",
+      "parentId": "P00146",
+      "familyToken": "symmetry",
+      "variantId": "F00146-sym-05",
+      "techniques": [
+        "dfs|score=default|bias=none",
+        "admissible-order|tieBreak=none|lds=off"
+      ],
+      "expectedControlSignal": "DFS gain and admissible loss on the reflected sibling"
+    },
+    {
+      "id": "R02976__F02976-sym-01",
+      "parentId": "R02976",
+      "familyToken": "symmetry",
+      "variantId": "F02976-sym-01",
+      "techniques": [
+        "admissible-order|tieBreak=none|lds=off"
+      ],
+      "expectedControlSignal": "admissible-order gain on the rotated sibling"
+    },
+    {
+      "id": "R00631__F00631-sym-02",
+      "parentId": "R00631",
+      "familyToken": "symmetry",
+      "variantId": "F00631-sym-02",
+      "techniques": [
+        "repair|score=repair|guidance=standard"
+      ],
+      "expectedControlSignal": "repair loss on the rotated sibling"
+    },
+    {
+      "id": "P00144__F00144-sym-02",
+      "parentId": "P00144",
+      "familyToken": "symmetry",
+      "variantId": "F00144-sym-02",
+      "techniques": [
+        "repair|score=repair|guidance=standard"
+      ],
+      "expectedControlSignal": "repair solves both but the rotated sibling was about 69.8x cheaper"
+    }
+  ]
+}
