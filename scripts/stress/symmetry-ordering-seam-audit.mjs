@@ -19,6 +19,7 @@ import { inverseTransformPoint, transformPoint } from '../../modules/domain/geom
 import { PACK, UNPACK } from '../../modules/domain/cell-key.ts';
 import { getLevelFingerprint } from '../../modules/domain/level-fingerprint.ts';
 import { rankByAdmissibleSlack } from '../../modules/solver/admissible-order-search.ts';
+import { admissibleRemainingBound } from '../../modules/solver/lower-bounds.ts';
 import { repairPrimarySeed } from '../../modules/solver/repair-search.ts';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 
@@ -105,6 +106,23 @@ function scoreRows(level, prep, state, candidates) {
     });
 }
 function admissibleRows(level, prep, state, candidates) {
+    // rankByAdmissibleSlack deliberately returns immediately for 0/1 candidates, before the
+    // research observer runs. Handle that cheap case directly with the SAME canonical bound
+    // helper rather than treating "nothing to rank" as missing evidence.
+    if (candidates.length <= 1) {
+        const slacks = candidates.map(candidate => {
+            const from = state.path.at(-1);
+            const portal = level.portalMap.get(from);
+            const isJump = !!(portal && !state.lastWasPortalJump && portal.dest === candidate);
+            const undo = api.applyMove(candidate, state, level, prep, isJump);
+            const rSteps = level.requiredLength - api.getRealLengthFromState(state);
+            const h = admissibleRemainingBound(candidate, state, level, prep);
+            const slack = Number.isFinite(h) ? rSteps - h : Number.POSITIVE_INFINITY;
+            api.undoMove(undo, state);
+            return { key:candidate, slack };
+        });
+        return { order:[...candidates], slacks };
+    }
     let observation = null;
     prep._orderingResearchObserver = {
         policies:[{ id:'none', scoringProfile:null }],
