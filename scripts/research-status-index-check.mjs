@@ -461,10 +461,15 @@ assert(idsFor({ query: 'admissible order', status: 'concluded-negative' })
     'reserve-starvation matched-work A/B is now concluded-negative (byte-identical solved set to control)');
 assert(idsFor({ query: 'full pool', status: 'closed' }).includes('WS2-CATEGORICAL-FULL-POOL'),
     'ordinary full-pool vocabulary must find the already-run categorical projection');
-// WS2-CUT-BALANCE-PROJECTION matches "topology" lexically and is active again for BC1-V (2026-10-02); it is not the microscope.
-assert.deepEqual(idsFor({ query: 'topology', status: 'active' }).filter(id => id !== 'WS2-CUT-BALANCE-PROJECTION'), [],
-    'the topology microscope is no longer active after the F3 descriptor/expansion closeout');
+// WS2-CUT-BALANCE-PROJECTION matches "topology" lexically and remains active for BC1-V; it is not the microscope.
+// The original F3 descriptor remains mixed/closed as a consumer, while the 2026-10-16 materially different
+// completion-regime successor is an active premise-discovery question.
 {
+    const activeTopology = new Set(idsFor({ query: 'topology', status: 'active' }));
+    assert(!activeTopology.has('WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR'),
+        'the closed/mixed F3 topology descriptor must not become active again');
+    assert(activeTopology.has('WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR'),
+        'the materially different topology/completion-regime successor should be active');
     const mixedTopology = idsFor({ query: 'topology', status: 'mixed' });
     assert(mixedTopology.includes('WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR'),
         'topology discovery must retain the qualified F3 descriptor disposition after its microscope ran');

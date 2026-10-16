@@ -16,10 +16,12 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`tooling-catalog.md`](tooling-catalog.md) | Broad tool/workflow discovery; query named tools first |
 | [`agent-context-routes.json`](agent-context-routes.json) | Required/optional agent-context routes and byte budgets |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |
-| [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Canonical solver-research priority, including the active premise-discovery lane while the solver-treatment queue is exhausted** |
+| [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Canonical solver-research priority: current treatment gates plus the repopulated premise-discovery queue** |
 | [`solver-premise-space-atlas.md`](solver-premise-space-atlas.md) | Premise-space orientation; current map is frozen v2 plus the post-exhaustion evidence overlay |
-| [`solver-premise-map-post-exhaustion-status-2026-10-01.json`](solver-premise-map-post-exhaustion-status-2026-10-01.json) | Machine-readable current evidence-state overlay for all 148 v2 premises |
+| [`solver-premise-map-post-exhaustion-status-2026-10-01.json`](solver-premise-map-post-exhaustion-status-2026-10-01.json) | Machine-readable evidence-state overlay for all 148 v2 premises; reconciled through 2026-10-16 while preserving the frozen v2 inventory |
 | [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) | Solver reasoning capability map; not a queue |
+| [`solver-first-loss-causal-taxonomy.md`](solver-first-loss-causal-taxonomy.md) | Causal first-loss vocabulary used by active PG-C counterfactual localization |
+| [`solver-semantic-forcedness-preflight.md`](solver-semantic-forcedness-preflight.md) | Preregistered <=320-case hidden semantic-forcedness census for active PG-H |
 | [`solver-capability-invention-program.md`](solver-capability-invention-program.md) | HARVEST / EXTENSION / INVENTION acquisition rules and demand pipeline |
 | [`solver-protocol-schema-contraction-plan.md`](solver-protocol-schema-contraction-plan.md) | Active contraction of overlapping solver/research schemas, protocols, identities, compatibility inputs, and mutable representations |
 | [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) | Reconciles historical experiment closure against capability gaps |
@@ -68,7 +70,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 
 Before broad catalogs, reports, corpora, or histories:
 
-- solver priority/state: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); when the treatment queue is empty, its premise-discovery section still owns active research order;
+- solver priority/state: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); its premise-discovery section owns active research order alongside any bounded treatment gate;
 - new/unregistered research question: [`research-question-intake.md`](research-question-intake.md), then `node scripts/research-status-index.mjs --compact --query=<term>`;
 - prior evidence / known question discovery: `node scripts/research-status-index.mjs --compact --query=<term>`;
 - research-system orientation: `npm run research:system-inventory -- --view=brief`;
@@ -89,7 +91,7 @@ For a conversational/unregistered idea, start with [`research-question-intake.md
 For an existing gate/question, default orientation is:
 
 1. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md)
-2. if the current gate is premise discovery, read [`solver-premise-map-post-exhaustion-status-2026-10-01.json`](solver-premise-map-post-exhaustion-status-2026-10-01.json) and [the refresh report](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md)
+2. if the current gate is premise discovery, read [`solver-premise-map-post-exhaustion-status-2026-10-01.json`](solver-premise-map-post-exhaustion-status-2026-10-01.json), [the October-1 refresh](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md), and the [October-16 no-stranding reconciliation](../reports/2026-10-16-solver-research-queue-exhumation-reconciliation-001.md)
 3. [`solver-research-operating-model.md`](solver-research-operating-model.md)
 3. the specialist doc for the current gate
 4. compact evidence/tool queries before broad artifacts
