@@ -3,7 +3,7 @@
   "kind": "pathfinder-pg-g-independent-symmetry-confirmation-spec",
   "historicalDatasetRef": "32132d6ba60f1203ee013ed0d475f46061eddd49",
   "evidenceRole": "confirmation",
-  "selection": "outcome-blind deterministic hash selection from the 22 root-level retained symmetry-family parents outside the PG-G discovery cohort",
+  "selection": "outcome-blind deterministic hash selection from the 48 direct root-level `symmetry` families outside the six-parent PG-G discovery cohort",
   "selectionNamespace": "pg-g-independent-symmetry-confirmation-v1",
   "selectionAlgorithm": "sha256(selectionNamespace + NUL + parentId), ascending; take first 12",
   "discoveryParents": [
@@ -14,10 +14,33 @@
     "R00792",
     "R02976"
   ],
+  "reservoirDefinition": {
+    "directory": "data/families",
+    "filenamePattern": "family-<parentId>-symmetry-manifest.json",
+    "totalDirectSymmetryFamilies": 54,
+    "excludedDiscoveryParents": 6,
+    "eligibleParents": 48,
+    "note": "Older root-level `-sym-` families and corpus1/corpus2 subdirectory families are excluded so the confirmation uses the same seven-sibling `symmetry` generator form as the PG-G discovery cohort."
+  },
   "reservoir": [
     {
       "parentId": "R00392",
       "selectionHash": "02fb11502785226f8822a3d3ef3b56e937d7e679c1c851856ae6077f2e76ead8",
+      "selected": true
+    },
+    {
+      "parentId": "R03180",
+      "selectionHash": "1184163b3034ddf426fd9b53ec2cf8b7ca4f8258539871abc508e323091d1ece",
+      "selected": true
+    },
+    {
+      "parentId": "R02962",
+      "selectionHash": "11986020c2e96479454956f66da9a8abba43d3699c629dbe736f41b73f6f57c5",
+      "selected": true
+    },
+    {
+      "parentId": "R02208",
+      "selectionHash": "1a031f7488c01e0448ebd64e3ae7e637d0b01b591de6207b49b2717c7fab2927",
       "selected": true
     },
     {
@@ -33,6 +56,11 @@
     {
       "parentId": "R00789",
       "selectionHash": "3068ab1bf5b962ca426580b128c776f2ab6a8e9cc63c72a2944938569f43bcfd",
+      "selected": true
+    },
+    {
+      "parentId": "R02841",
+      "selectionHash": "364c0ad2dd8554dfe6ac7e20be8cb5cf6ef04777077900207e732e61decbce98",
       "selected": true
     },
     {
@@ -56,24 +84,44 @@
       "selected": true
     },
     {
+      "parentId": "R02472",
+      "selectionHash": "4309b2269a0c9e2b0a5bc9f63d74fa187ed3716a6fde6379ca213357a292415a",
+      "selected": false
+    },
+    {
+      "parentId": "R02168",
+      "selectionHash": "431a7a71e6fae04abd2249b9b939c5ce71afe5389c7d9d03c77989ebda19dfd5",
+      "selected": false
+    },
+    {
       "parentId": "R01636",
       "selectionHash": "4e52e7842d181c4e7853a6b706f1992118d793d8496a1adc8e8484edde2d4f1c",
-      "selected": true
+      "selected": false
+    },
+    {
+      "parentId": "R02518",
+      "selectionHash": "50b41907a2ff5e9a72f2d64a9e4a1d05196534f8cb1f9ab190136d209adcca90",
+      "selected": false
     },
     {
       "parentId": "R01533",
       "selectionHash": "57e90fa113d304a8ff51802a05391b6650741e008b2b3370681e3982936bb415",
-      "selected": true
+      "selected": false
+    },
+    {
+      "parentId": "R02028",
+      "selectionHash": "580e1a61ae9c54550a5f3f34cb42f5679acad1d9da4737ed4f55b6bf84f327a5",
+      "selected": false
     },
     {
       "parentId": "R00134",
       "selectionHash": "60a9f964ee7baba426478b9cfb40c9de2ecb4a0643e74d42f5bc63ccbacfdc55",
-      "selected": true
+      "selected": false
     },
     {
       "parentId": "R00108",
       "selectionHash": "68fd281c4b75325b525cf31efeec372869a3e89f0dcdc394716793d50ca77a76",
-      "selected": true
+      "selected": false
     },
     {
       "parentId": "P00145",
@@ -96,6 +144,36 @@
       "selected": false
     },
     {
+      "parentId": "R02106",
+      "selectionHash": "93bbf11b65ab5d9f9b0d1a26ba1a51f4dcbb202e144c52752d6e42d559f9f040",
+      "selected": false
+    },
+    {
+      "parentId": "S00107",
+      "selectionHash": "96384c2edc186f6ca4e22fc68eb423d8b1b202ae7e6b9d3e5a70a82be31e58ee",
+      "selected": false
+    },
+    {
+      "parentId": "R02118",
+      "selectionHash": "9952fe106d8dac68318d9220db04cbf9d57568ba4b973148cef2dddafb7525f0",
+      "selected": false
+    },
+    {
+      "parentId": "R02563",
+      "selectionHash": "9e273e7a42913d08fe30bc789c751d9992da74625eaf48f75b0efb4786f669a5",
+      "selected": false
+    },
+    {
+      "parentId": "R02465",
+      "selectionHash": "a0b8cd56f2015343f51cfa3c3d2393e707b8c0341559a7bfd069128ecbf3b589",
+      "selected": false
+    },
+    {
+      "parentId": "R02909",
+      "selectionHash": "ac2174d906112061690bf461ef99a5d1332dc0f2a5f1ae4af37296a6dd1fff59",
+      "selected": false
+    },
+    {
       "parentId": "R00541",
       "selectionHash": "ac985f99f45dce5b7991a9c51dfb10797297bdfae8b312d152c1a389114d487c",
       "selected": false
@@ -111,6 +189,46 @@
       "selected": false
     },
     {
+      "parentId": "R03015",
+      "selectionHash": "b865f7ac54577f077ffd549340a1e7539968eb6d25879eeb5ee16c87c0730cd0",
+      "selected": false
+    },
+    {
+      "parentId": "R02825",
+      "selectionHash": "bbdb84c685630fd1a20f991b097ace8d21f6a4370b9aa20d1a34ff84de9d98c5",
+      "selected": false
+    },
+    {
+      "parentId": "R02341",
+      "selectionHash": "bc946e0bf2c05263cc53b2b82cd1d9d4be6c447abbee547b12557d3ef5aeae1f",
+      "selected": false
+    },
+    {
+      "parentId": "R02808",
+      "selectionHash": "c955ad39faaee96356a6f01e992ceb213e27b96b3eae98788853fcd01235c19a",
+      "selected": false
+    },
+    {
+      "parentId": "R02714",
+      "selectionHash": "ca2081ddb85f1f757014a7597e1af66108d4c7a05829049c7b4ffe981b69dc4a",
+      "selected": false
+    },
+    {
+      "parentId": "R02541",
+      "selectionHash": "d1e47fab1db4fdfac238fa372449c5c74193f02e8124f69bdf84821460a52e97",
+      "selected": false
+    },
+    {
+      "parentId": "R03341",
+      "selectionHash": "d6c3e203453ae551f91bb02286dd09720c19bd1caed2720a9702a105a8111717",
+      "selected": false
+    },
+    {
+      "parentId": "S00120",
+      "selectionHash": "d775bdf07d5f49c89e93d2ead33e120649052c4dbf7ca4deed2b713393d385c3",
+      "selected": false
+    },
+    {
       "parentId": "R01052",
       "selectionHash": "dc87af9999ad35db0d25ad61f2c8a6b806c31707d10247344ddabdcbb7b003a8",
       "selected": false
@@ -121,8 +239,28 @@
       "selected": false
     },
     {
+      "parentId": "R02248",
+      "selectionHash": "dfc89ed033a36c4b3c927bf6caf37877fc49631d154502ec4d5ae6016338a142",
+      "selected": false
+    },
+    {
+      "parentId": "R03140",
+      "selectionHash": "e745b580f8a29c7d00d430f3c73d6fc6adec9d2f93a47c067835c5bf4ea72612",
+      "selected": false
+    },
+    {
+      "parentId": "S00109",
+      "selectionHash": "e8c04a141325085921b1a26ee79376fab546eb4806f265700e5432b0adfba449",
+      "selected": false
+    },
+    {
       "parentId": "R00104",
       "selectionHash": "ea7c634108d7afb82a663228b9dc0f99b1a726584873cce83d03298052b1e92f",
+      "selected": false
+    },
+    {
+      "parentId": "S00114",
+      "selectionHash": "ef5704652ef10239b5bd5214f86c43cd9dee460379b8a81f4acdc94164dd2b1c",
       "selected": false
     }
   ],
@@ -130,6 +268,18 @@
     {
       "parentId": "R00392",
       "selectionHash": "02fb11502785226f8822a3d3ef3b56e937d7e679c1c851856ae6077f2e76ead8"
+    },
+    {
+      "parentId": "R03180",
+      "selectionHash": "1184163b3034ddf426fd9b53ec2cf8b7ca4f8258539871abc508e323091d1ece"
+    },
+    {
+      "parentId": "R02962",
+      "selectionHash": "11986020c2e96479454956f66da9a8abba43d3699c629dbe736f41b73f6f57c5"
+    },
+    {
+      "parentId": "R02208",
+      "selectionHash": "1a031f7488c01e0448ebd64e3ae7e637d0b01b591de6207b49b2717c7fab2927"
     },
     {
       "parentId": "R00082",
@@ -142,6 +292,10 @@
     {
       "parentId": "R00789",
       "selectionHash": "3068ab1bf5b962ca426580b128c776f2ab6a8e9cc63c72a2944938569f43bcfd"
+    },
+    {
+      "parentId": "R02841",
+      "selectionHash": "364c0ad2dd8554dfe6ac7e20be8cb5cf6ef04777077900207e732e61decbce98"
     },
     {
       "parentId": "R00050",
@@ -158,22 +312,6 @@
     {
       "parentId": "R00920",
       "selectionHash": "411a31a8855357c28382160be6e5a35ef8403c9cc041a973fb44bd522bcfb75c"
-    },
-    {
-      "parentId": "R01636",
-      "selectionHash": "4e52e7842d181c4e7853a6b706f1992118d793d8496a1adc8e8484edde2d4f1c"
-    },
-    {
-      "parentId": "R01533",
-      "selectionHash": "57e90fa113d304a8ff51802a05391b6650741e008b2b3370681e3982936bb415"
-    },
-    {
-      "parentId": "R00134",
-      "selectionHash": "60a9f964ee7baba426478b9cfb40c9de2ecb4a0643e74d42f5bc63ccbacfdc55"
-    },
-    {
-      "parentId": "R00108",
-      "selectionHash": "68fd281c4b75325b525cf31efeec372869a3e89f0dcdc394716793d50ca77a76"
     }
   ],
   "techniques": [
@@ -181,11 +319,86 @@
     "admissible-order|tieBreak=none|lds=off",
     "repair|score=repair|guidance=standard"
   ],
+  "families": [
+    {
+      "parentId": "R00392",
+      "modes": [
+        "symmetry"
+      ]
+    },
+    {
+      "parentId": "R03180",
+      "modes": [
+        "symmetry"
+      ]
+    },
+    {
+      "parentId": "R02962",
+      "modes": [
+        "symmetry"
+      ]
+    },
+    {
+      "parentId": "R02208",
+      "modes": [
+        "symmetry"
+      ]
+    },
+    {
+      "parentId": "R00082",
+      "modes": [
+        "symmetry"
+      ]
+    },
+    {
+      "parentId": "R00727",
+      "modes": [
+        "symmetry"
+      ]
+    },
+    {
+      "parentId": "R00789",
+      "modes": [
+        "symmetry"
+      ]
+    },
+    {
+      "parentId": "R02841",
+      "modes": [
+        "symmetry"
+      ]
+    },
+    {
+      "parentId": "R00050",
+      "modes": [
+        "symmetry"
+      ]
+    },
+    {
+      "parentId": "R01075",
+      "modes": [
+        "symmetry"
+      ]
+    },
+    {
+      "parentId": "P00010",
+      "modes": [
+        "symmetry"
+      ]
+    },
+    {
+      "parentId": "R00920",
+      "modes": [
+        "symmetry"
+      ]
+    }
+  ],
   "workBudget": 10000000,
   "budgetMs": 600000,
   "stageA": {
     "treatment": "current candidate order",
     "rowsPerParent": 24,
+    "expectedRows": 288,
     "description": "parent plus all seven D4 siblings under each of three isolated techniques",
     "opportunity": "variant solve state differs from its parent under the same technique"
   },
