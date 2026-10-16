@@ -4,7 +4,11 @@
 > **Last evidence:** 2026-10-16 — corrected strict-work run 38864229664 completed the selected-pair factorial: parent-frame ordering resolved 6/6 solve-state cliffs; repair fixed-seed alone resolved 0/1 repair cliff.
 > **Decision:** stable coordinate-dependent candidate ordering is causal for every selected PG-G symmetry solve-state cliff. The selected-pair mechanism survives and advances to outcome-blind independent-parent confirmation; no production treatment is yet authorized.
 > **Remaining gate:** confirm the ordering effect on independent parents, then and only then design a cold-legal current-input canonical tie-order consumer.
-> **Evidence role:** selected-pair causal attribution only. This cannot establish prevalence, unseen-parent transfer or production value.
+> **Evidence role:** forensic
+> **Selection:** five symmetry pairs selected after inspecting the PG-G response pilot and ordering microscope.
+> **Population identity:** exact five cases in `reports/2026-10-16-pg-g-symmetry-causal-factorial-spec-001.json`; historical descendants pinned to `32132d6ba60f1203ee013ed0d475f46061eddd49`.
+> **Selection history:** discovery-cohort response cliffs first nominated the symmetry cases; the ordering microscope then localized the candidate-order/repair-seed seams before this intervention was designed.
+> **Inference scope:** selected-pair causal attribution only. This cannot establish prevalence, unseen-parent transfer, or production value.
 > **Treatment authority:** none.
 
 ## Question
