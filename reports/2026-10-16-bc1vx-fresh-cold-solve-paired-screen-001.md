@@ -25,3 +25,8 @@ Run **both arms** on the same four selected rows per shard under the ordinary pr
 An explicitly branch-scoped, one-shot push workflow, `.github/workflows/bc1vx-fresh-cold-screen-20261016.yml`, owns 16 independent paired shards. It uploads the exact rows and a per-shard integrity/verdict JSON artifact. Do not allow a passing workflow to promote the experimental flag: **the already-prespecified solved-control regression gate remains separate and outstanding**.
 
 After inspection, fold a verified result into the existing BC1-VX report and canonical workstream state; do not turn exploratory gains into independent confirmation. The workflow can be removed when its evidence has been captured (Git preserves it). 
+
+## Dispatch/recovery ledger
+
+- Initial workflow run [38976563995](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/38976563995), source `b0eff28cbd6d3a9fed639f1e1bef1333ee692632`, is **instrument-invalid, zero solver results**. Deterministic disjoint selection succeeded; the CLI refused a comma-separated position selector whose later tokens omitted the required `pos:` prefix. Do not count any row from this run.
+- Corrected workflow run [38976765549](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/38976765549), source `49504b1773cf59498259031143a795adf7f2486e`, uses an explicit `pos:` prefix per selected position; same salt, cohort, budgets, flags and validation. Its result is pending.
