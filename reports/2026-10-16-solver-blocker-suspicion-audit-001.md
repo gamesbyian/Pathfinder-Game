@@ -40,7 +40,7 @@ Only the first two normally justify forbidding an experiment outright. Promotion
 | separator Family 3 | wait for frozen legal prefix population / sibling harvest | frozen production-search prefix populations now exist | **expired**; run retained census under PG-J/PG-N |
 | relational feasibility Q1 | D1 evidence preflight is current next gate | D1 ran and its ranking consumer closed 0/120; premise survived | **expired**; route premise to PG-D/PG-J/PG-N |
 | PG-L basin overlap | wait until PG-C/PG-G | PG-G already causally proves order-sensitive trajectory divergence; PG-C completion is not required to observe overlap/novelty | **procedural**; PG-L active instrument-only |
-| PG-M reason reuse | wait for a brand-new proof-bearing reason family | retained Phase-0 question can measure rediscovery/economics of already-sound facts; a new theorem is needed only for a new behavioral consumer | **over-scoped**; PG-M active retained-first |
+| PG-M reason reuse | wait for a brand-new proof-bearing reason family | the original Phase 0 stays negative, but later fresh exact-DEAD siblings and PG-D/J/K query material are a materially changed evidence set that can be rejoined without a new theorem | **over-scoped**; PG-M active as a delta rejoin, not a rerun |
 | PG-N alternative search object | wait for PG-D to find useful trail/switch consequence | exact-fate collision attacks can falsify existing separator/topology/relational interface candidates now | **over-scoped**; PG-N active retained-first |
 | complete-path LNS | no production-quality complete candidate constructor | its own machine result says this blocker is obsolete after production multi-pick/frontier work; Stage 2 was method-limited, not negative | **obsolete**; PG-O active bounded falsifier |
 | WS6 dependency repair | need >=12 independent exact matched parents before proceeding | 12 parents is a confirmation threshold. The preserved descent-shadow observer can cheaply test whether a useful interface exists before buying exact replication | **over-scoped**; PG-P active instrument-only |
@@ -66,7 +66,7 @@ This may establish that two actions are redundant or complementary. It may not s
 
 ### PG-M - solve-local rediscovery
 
-Start with retained evidence and already-sound current-instance facts. Ask whether the same expensive relation/certificate is independently re-derived often enough that recognition before recomputation could matter.
+Do not rerun the original 2026-09-17 Phase 0 unchanged. Rejoin only the later fresh exact-DEAD sibling population and newer PG-D/PG-J/PG-K exact/interface-query material, then ask whether that changed evidence restores solve-local recurrence or a material rediscovery ceiling.
 
 The experiment may prove there is nothing to reuse. A behavioral cache, backjumper or proof store still needs:
 
