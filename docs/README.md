@@ -28,7 +28,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-solve-local-rediscovery-preflight.md`](solver-solve-local-rediscovery-preflight.md) | Bounded observer-first plan to measure repeated derivation and potential typed reuse of expensive current-instance facts within one cold solve |
 | [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md) | Bounded current-input relational queries (intersection realizability, event feasibility, interface commutativity) |
 | [`solver-dependency-defined-revision-preflight.md`](solver-dependency-defined-revision-preflight.md) | Observer-first test of whether DEAD near-misses trace to a compact dependency-defined commitment set, not path-distance rollback |
-| [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research method, stop rules, promotion and selection discipline |
+| [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research method, stop rules, promotion/selection discipline, and claim-scoped blocker audit rules |
 | [`research-queryability.md`](research-queryability.md) | Derived research query model, semantic views, temporal comparison, source-shape hardening, and queryability benchmark contract |
 | [`solver-archaeology-register.md`](solver-archaeology-register.md) | Historical solver premises, dispositions, vocabulary lineages, and reopen questions; **not** a priority authority |
 | [`solver-research-data-assets.md`](solver-research-data-assets.md) | Compact cross-asset topology and scientific boundaries |
@@ -91,8 +91,8 @@ For a conversational/unregistered idea, start with [`research-question-intake.md
 For an existing gate/question, default orientation is:
 
 1. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md)
-2. if the current gate is premise discovery, read [`solver-premise-map-post-exhaustion-status-2026-10-01.json`](solver-premise-map-post-exhaustion-status-2026-10-01.json), [the October-1 refresh](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md), and the [October-16 no-stranding reconciliation](../reports/2026-10-16-solver-research-queue-exhumation-reconciliation-001.md)
-3. [`solver-research-operating-model.md`](solver-research-operating-model.md)
+2. if the current gate is premise discovery, read [`solver-premise-map-post-exhaustion-status-2026-10-01.json`](solver-premise-map-post-exhaustion-status-2026-10-01.json), [the October-1 refresh](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md), the [October-16 no-stranding reconciliation](../reports/2026-10-16-solver-research-queue-exhumation-reconciliation-001.md), and the [blocker suspicion audit](../reports/2026-10-16-solver-blocker-suspicion-audit-001.md)
+3. [`solver-research-operating-model.md`](solver-research-operating-model.md), especially the blocker-audit rule before accepting a `wait`/`only after` condition
 3. the specialist doc for the current gate
 4. compact evidence/tool queries before broad artifacts
 
