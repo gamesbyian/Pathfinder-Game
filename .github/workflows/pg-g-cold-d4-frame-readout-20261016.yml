@@ -1,0 +1,35 @@
+# Temporary artifact-only executor to expose measured opportunity counts from PG-G script.
+name: PG-G cold D4 frame readout
+on:
+  push:
+    branches:
+      - chatgpt/pg-g-cold-d4-current-input-feasibility-2026-10-16
+    paths:
+      - .github/workflows/pg-g-cold-d4-frame-readout-20261016.yml
+permissions:
+  contents: read
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Validate all current-input D4 frames and print verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/run-bundled.mjs scripts/stress/pg-g-cold-d4-frame-feasibility.mjs -- \
+            --out=tmp/pg-g-cold-d4-frame/summary.json
+          cat tmp/pg-g-cold-d4-frame/summary.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve exact aggregate output
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-g-cold-d4-frame-result
+          path: tmp/pg-g-cold-d4-frame/summary.json
+          retention-days: 90
+          if-no-files-found: error
