@@ -99,8 +99,8 @@ Prefer the cheapest truthful route:
 1. **already answered**: answer it and repair stale routing/state if needed;
 2. **existing-data analysis**: retained evidence or a valid new join/reducer;
 3. **instrument-only**: new/extended production-inert telemetry, reduction, or persistence without new solver acquisition;
-4. **bounded compute**: solver/reference acquisition only after cheaper routes cannot decide;
-5. **blocked/unidentifiable**: record the blocker/reopen condition instead of buying a larger sweep.
+4. **bounded compute**: normally prefer cheaper retained/query routes first, but allow a small solver/reference computation earlier when it is itself the cheapest faithful discriminator and a proxy would be more complex, less valid, or more expensive;
+5. **blocked/unidentifiable**: record the claim-scoped blocker/reopen condition instead of buying a larger sweep; before marking it blocked, explicitly test whether a read-only shadow, disposable reference/prototype, partial representation, synthetic counterexample, or one-off question-scoped construction can answer a weaker deciding question.
 
 For a promoted solver question, keep two machine dimensions separate:
 

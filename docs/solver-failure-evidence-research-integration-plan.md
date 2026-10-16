@@ -21,7 +21,7 @@ Direct implementation/precommitment work is exhausted; surviving science is rout
 - **Phase 4B — completed / design earned:** admissible-order reserve starvation recurs on **2/40 independent parents**, earning the smallest matched-total-work reserve-fraction A/B design. No dispatch is authorized yet. [Result](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md).
 - **Phase 4C/4D — resolved by specialist owners:** H3 remaining-length independently transfers and earns a matched-work consumer-design gate; Lane G modest completion-dose escalation is closed negative.
 - **Phase 4E — complete:** capability evidence may consume protocol-compatible failure-response joins as derived research evidence, never production policy.
-- **Phase 5 — condition-gated:** no recurring rich producer is justified; a repeated event/state consumer may reopen bounded targeted capture. [Audit](../reports/2026-09-19-recurring-rich-search-loss-producer-candidate-audit-001.md).
+- **Phase 5 — resource-promotion gated, not science-blocked:** no recurring rich producer is justified, so do not create standing rich telemetry. A scoped current question may still use retained/one-off valid capture or earn bounded targeted capture without first proving recurrence. [Audit](../reports/2026-09-19-recurring-rich-search-loss-producer-candidate-audit-001.md).
 - **Phases 6-8 — condition-gated / routed:** repeated compatible populations may earn richer reducers/resource work; recurring rich production routes to search-loss P8; explicit first-loss selection routes to P9.
 - **2026-09-22 broad compact acquisition — available / contrastive use required:** canonical refresh `35687363645` produced complete compact response for 1,802 parents and 56,906 attempts with complete normalized action/configuration work joins. All 532 current misses are invocation-level node-limited, but 1,010 solved parents also contain failed attempts. Therefore broad residual screening should use parent-level residual-vs-solved controls before richer capture; censoring/event volume alone is non-discriminating. This does not create a recurring rich producer or satisfy search-loss P8. [Reconciliation](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md).
 
@@ -573,7 +573,7 @@ No recurrence pattern by itself earns production policy.
 
 This is not automatically next.
 
-If and only if `solver-optimization-workstreams.md` selects operational divergence / first-loss, execute Phase 9 of the existing search-loss implementation plan rather than creating a competing procedure here.
+`solver-optimization-workstreams.md` now selects PG-C operational divergence / first-loss. Execute Phase 9 of the existing search-loss implementation plan retained-first rather than creating a competing procedure here.
 
 Use the full information-cost ladder:
 
@@ -647,7 +647,7 @@ Prefer small merge boundaries.
 
 ### PR A — authority integration
 
-Phase 0 only. Documentation/question/reopen references, no solver behavior.
+Historical implementation note: this phase was documentation/question/reopen only. The current PG-C first-loss execution is now authorized by workstreams; this plan does not impose a second wait gate.
 
 Finish line:
 

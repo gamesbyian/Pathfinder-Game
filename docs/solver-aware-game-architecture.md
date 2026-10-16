@@ -40,7 +40,7 @@ Witness paths, families, mutations/symmetries, intended regions, and constructio
 
 ## Shared compiled graph
 
-Do not build a domain compiled graph as housekeeping. Reopen only for a concrete consumer that removes duplicated semantics without weakening the independent oracle; solver-specific typed/hot structures stay above it.
+Do not promote a **durable shared** domain compiled graph as housekeeping. A concrete consumer is still required before changing the architecture, and the independent oracle must remain independent. A branch-local consumer-specific compiled view may nevertheless be used as a disposable performance/semantic falsifier when constructing that view is cheaper than arguing about it abstractly; it earns no shared-architecture status merely by working.
 
 ## New mechanic checklist
 

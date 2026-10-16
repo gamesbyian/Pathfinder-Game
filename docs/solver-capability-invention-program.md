@@ -147,7 +147,7 @@ This does not reopen the tested form. Any rebirth needs a new explicit contract.
 - Do not require identical cross-level outputs from a generic per-instance proof procedure.
 - Do not reopen closed scorer/width/retry forms merely to populate the queue.
 - Do not use known identities, hints, winners, historical per-level outcomes/cost, or capability membership as cold policy inputs.
-- Do not build a generic blackboard, learner, backjumper, exact subsystem, or framework before repeated decision-bearing demand exists.
+- Do not **promote a generic durable** blackboard, learner, backjumper, exact subsystem, or framework before repeated decision-bearing demand exists. A branch-local disposable implementation of one narrow operation is allowed earlier when it is the cheapest falsifier/measurement instrument; it must have a stop/delete rule and gains no production authority from existing.
 
 ## Promotion into the live queue
 

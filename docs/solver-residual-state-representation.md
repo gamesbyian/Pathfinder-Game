@@ -372,11 +372,11 @@ Promote toward ranking/retention/repair only if:
 
 ### Candidate representative-set/beam idea
 
-Do not escalate to complex subset optimization until a simple descriptor-aware reserve/quota demonstrates future-coverage information beyond random reserve and width increase.
+Do not escalate to a **durable/production** complex subset optimizer until a simple descriptor-aware reserve/quota or equivalent bounded test demonstrates future-coverage information beyond random reserve and width increase. A tiny offline optimizer may be used earlier as an oracle/falsifier if it is the cheapest way to measure that headroom.
 
 ### Candidate CEGAR/refinement work
 
-Use exact counterexamples to refine a **specific** candidate abstraction. Do not build a general abstraction-refinement framework before one coarse abstraction has demonstrated value and concrete counterexamples repeatedly identify compact missing distinctions.
+Use exact counterexamples to refine a **specific** candidate abstraction. Do not build a general persistent abstraction-refinement framework before one coarse abstraction demonstrates value, but permit a disposable collision/refinement script whose purpose is precisely to falsify candidate sufficiency. PG-N owns that bounded attack.
 
 ## Explicit non-actions
 

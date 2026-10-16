@@ -17,11 +17,11 @@ assert.equal(inventionLive, undefined,
     'closed capability-invention work must not remain in the live research front door');
 const repairSupportLive = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '6/7');
 assert.ok(repairSupportLive);
-assert.equal(repairSupportLive.executionState, 'on-demand');
-assert.equal(repairSupportLive.gateClass, 'reopen-only');
+assert.equal(repairSupportLive.executionState, 'active');
+assert.equal(repairSupportLive.gateClass, 'instrument-only');
 assert.equal(repairSupportLive.questionRef, 'WS6-DEPENDENCY-CONDITIONED-REPAIR');
-assert.equal(repairSupportLive.questionState, 'deferred-reopen');
-assert.ok(typeof repairSupportLive.questionReopensOn === 'string' && repairSupportLive.questionReopensOn.length > 0);
+assert.equal(repairSupportLive.questionState, 'active-candidate');
+assert.equal(repairSupportLive.questionReopensOn, null);
 assert.equal(inventory.findings.authority.some(row =>
     row.kind === 'active-workstream-references-terminal-question' && String(row.workstreamId) === '2'), false);
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
@@ -179,7 +179,7 @@ assert.ok(inventory.planLifecycle.some(row =>
 const brief = renderResearchSystemBrief(inventory);
 assert.match(brief, /^# Solver research brief$/m);
 assert.match(brief, /^## Live queue$/m);
-assert.match(brief, /WS6-DEPENDENCY-CONDITIONED-REPAIR[\s\S]*route: reopen-only[\s\S]*deferred-reopen/u);
+assert.match(brief, /WS6-DEPENDENCY-CONDITIONED-REPAIR[\s\S]*route: instrument-only[\s\S]*active-candidate/u);
 assert.match(brief, /^## Recent structured closeouts$/m);
 assert.match(brief, /^## Unfinished execution references$/m);
 assert.match(brief, /acquisition: telemetry-or-economics|acquisition: fresh-independent-parents/u);

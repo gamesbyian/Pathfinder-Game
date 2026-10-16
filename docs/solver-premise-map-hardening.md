@@ -1,9 +1,9 @@
 # Solver premise-map hardening
 
-> **Status:** active hardening protocol before insight mining.
-> **Last evidence:** 2026-09-17 — canonical premise map contains 142 propositions across the baseline and three extension files, plus typed relations and completeness lenses.
-> **Decision:** harden the map as a dataset before using it as an idea generator.
-> **Remaining gate:** complete structural and reciprocal source audits, freeze a versioned snapshot, and mine only from the frozen snapshot.
+> **Status:** concluded-positive historical hardening protocol; the hardened snapshots and mining rounds have executed. This document remains method authority, not a live pre-mining blocker.
+> **Last evidence:** 2026-10-16 - canonical v2 and the 148-row post-exhaustion overlay are live; the original hardening, reciprocal coverage, frozen snapshots, mining, replication/reconciliation and successor-map work have all landed.
+> **Decision:** completed. Preserve the hardening protocol for future snapshot versions, but do not rerun it as a prerequisite to current premise-discovery work.
+> **Remaining gate:** none for the completed v1/v2 hardening programme. A future snapshot version repeats these protections only when that version is intentionally opened.
 
 ## Purpose
 

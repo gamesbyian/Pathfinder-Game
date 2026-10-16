@@ -12,7 +12,7 @@ node scripts/research-status-index.mjs --compact --query=<term>
 
 Optional filters: `--status=...`, `--kind=queue|experiment|evidence`. Open only the matched report whose protocol, evidence, caveats, or reasoning you need.
 
-Current solver priority/state/gates: [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md). The earned BC1-VX production A/B was re-dispatched on 2026-10-16 under its frozen protocol. Premise discovery is deliberately repopulated: PG-G awaits independent-parent confirmation; PG-C/PG-D/PG-H/PG-I/PG-J/PG-K are live bounded discovery; PG-B is a frozen compute re-dispatch; PG-L/PG-M/PG-N are dependency-queued. The audit and promotion rationale is [`2026-10-16-solver-research-queue-exhumation-reconciliation-001.md`](2026-10-16-solver-research-queue-exhumation-reconciliation-001.md). The current premise evidence overlay is [`../docs/solver-premise-map-post-exhaustion-status-2026-10-01.json`](../docs/solver-premise-map-post-exhaustion-status-2026-10-01.json), reconciled through 2026-10-16. For explicitly historical/retired solver premises and their dispositions, use [`../docs/solver-archaeology-register.md`](../docs/solver-archaeology-register.md) before opening broad old report families.
+Current solver priority/state/gates: [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md). BC1-VX's representative production A/B is now positive (225/300 control -> 232/300 treatment, 7 gains / 0 losses) and waits on solved-control regression. Premise discovery is deliberately broad: PG-C/PG-D/PG-H/PG-I/PG-J/PG-K remain live; PG-G runs independent confirmation with cold-key feasibility in parallel; blocker review activated PG-L/PG-M/PG-N plus PG-O complete-path-LNS falsification and PG-P repair descent tracing. PG-B remains frozen optional compute. Queue reconstruction is documented in [`2026-10-16-solver-research-queue-exhumation-reconciliation-001.md`](2026-10-16-solver-research-queue-exhumation-reconciliation-001.md); blocker dispositions in [`2026-10-16-solver-blocker-suspicion-audit-001.md`](2026-10-16-solver-blocker-suspicion-audit-001.md). The current premise evidence overlay is [`../docs/solver-premise-map-post-exhaustion-status-2026-10-01.json`](../docs/solver-premise-map-post-exhaustion-status-2026-10-01.json), reconciled through 2026-10-16.
 
 ## Report contract
 
@@ -51,6 +51,7 @@ Reproducible selected-on evidence remains selected-on evidence. See [`2026-09-14
 
 - priority/state/gates: [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md)
 - research method: [`../docs/solver-research-operating-model.md`](../docs/solver-research-operating-model.md)
+- blocker/no-stranding audit: [`2026-10-16-solver-blocker-suspicion-audit-001.md`](2026-10-16-solver-blocker-suspicion-audit-001.md)
 - historical premise/disposition memory: [`../docs/solver-archaeology-register.md`](../docs/solver-archaeology-register.md) (**not** a priority authority)
 - scheduling/allocation: [`../docs/solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md)
 - evaluation/generalization: [`../docs/solver-evaluation-evidence.md`](../docs/solver-evaluation-evidence.md)

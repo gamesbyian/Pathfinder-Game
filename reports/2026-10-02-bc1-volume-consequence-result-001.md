@@ -1,9 +1,9 @@
 # BC1-V: volume consequence of theorem BC1
 
 > **Status:** active
-> **Last evidence:** 2026-10-02 — witness soundness on all stored Corpus-2 and Corpus-1 solutions (0 alarms, both forms); raw width-500 beam A/B on the frozen random-300: BC1-V 42 → 48 (7 gains / 1 loss), BC1-VX adds 48 → 51 (3 / 0).
-> **Decision:** BC1-V and its vertex-cut extension BC1-VX are sound and new. VX is a strict superset that adds 3 gains for 0 losses at flat work, so **BC1-VX (`STRATEGY_BC1_VERTEX_VOLUME_PRUNE`) is the production candidate**. Both flags stay default-OFF until the production A/B and a regression gate come back.
-> **Remaining gate:** representative production A/B on `data/stress/bc1-prune-ab-001-ids.txt` (treatment arm GHA 37052447194 was cancelled by the maintainer 2 minutes into its shards; re-dispatch needs their go-ahead; dispatch shape: `enable_flags=STRATEGY_BC1_VERTEX_VOLUME_PRUNE`, which replaced the cancelled BC1-V-only arm 37051159924; control = BC1-on arm 36772815197, whose solver semantics equal current `main`, and the current-main full-corpus control 37049775397 as a second control). Promote if gains clearly exceed losses, as BC1 did; then run the solved-control regression set.
+> **Last evidence:** 2026-10-16 — representative production random-300 A/B completed: frozen control run 36772815197 solved 225/300; BC1-VX treatment run 37052447194 solved 232/300 (**7 gains / 0 losses**), with aggregate `workSpent` 44,638,363,505 → 42,754,637,509 (~4.2% lower). Earlier witness soundness remains 0 alarms across ~861k states.
+> **Decision:** BC1-VX (`STRATEGY_BC1_VERTEX_VOLUME_PRUNE`) has now cleared its representative production A/B strongly positive: 7 gains / 0 losses and lower aggregate canonical work. It remains default-OFF until the prespecified solved-control regression set clears. The positive A/B also satisfies the historical prerequisite for **exploratory** transfer of this different volume consequence into shared hard-prune stages; that transfer is diagnostic only and does not reopen the old pipeline-wide BC1 form.
+> **Remaining gate:** run the prespecified solved-control regression set before promotion/default-ON. The current-main full-corpus control attempt 37049775397 was cancelled and is not needed to reinterpret the completed frozen random-300 A/B as anything broader than its own population.
 > **Research question:** `WS2-CUT-BALANCE-PROJECTION`
 > **Evidence role:** discovery
 > **Selection:** prespecified (BC1's frozen seeded random-300; no outcome selection)

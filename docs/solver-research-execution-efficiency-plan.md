@@ -221,9 +221,9 @@ Extend existing research metadata/queryability with factual execution cost where
 
 Do **not** create an ROI score, winner ranking, or parallel queue. The purpose is to answer historical questions such as “which evidence families repeatedly buy expensive compute before the first discriminator?” and “which retained assets keep answering later gates cheaply?”
 
-## Phase 7 — WS1 shadow-authority transport — NOT ACTIVATED
+## Phase 7 — WS1 shadow-authority transport — NOT ACTIVATED FOR PRODUCTION
 
-The independent WS1 confirmation concluded negative on 2026-09-26, so this phase's activation condition was not met. Preserve the ladder below as a reusable pattern only if a materially different future selector independently earns authority.
+The 2026-09-26 WS1 "negative" was later shown instrument-invalid; the telemetry-corrected 2026-10-02 confirmation was positive. The phase still does **not** activate a production suppressor because the subsequent consumer/seam audit found the transferable signal is work-only at the late ladder tail, with no demonstrated cold-solve upside. Preserve the ladder below as the authority-promotion pattern if machine-independent tail work becomes an explicit product objective or a materially different selector earns a real consumer. Do not cite the retracted 2026-09-26 result as a blocker.
 
 Historical activation ladder:
 

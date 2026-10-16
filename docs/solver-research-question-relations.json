@@ -484,12 +484,12 @@
       "id": "WS6-DEPENDENCY-CONDITIONED-REPAIR",
       "question": "When append-only repair cannot rescue a near miss, is the missing neighborhood better defined by a compact set of earlier coupled commitments than by rollback/path distance?",
       "owner": "WS6",
-      "state": "deferred-reopen",
+      "state": "active-candidate",
       "answeredBy": [
         "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md",
         "reports/2026-10-01-ws6-independent-parent-replication-result-001.md"
       ],
-      "result": "Development microscope positive on retained R03147 exact pairs: both independent causal divergence points change the same bounded families, local path-resource occupancy and relational must-pass lower bound, while global accounting matches and both branches pass current hard prunes. This earns independent-parent replication of the frozen interface only; one parent is insufficient for a reusable descriptor or repair consumer. Independent-parent replication (2026-10-01) was inconclusive: only 2 of 24 parents yielded an eligible exact DEAD/LIVE pair (min 12), 4/9 resolvable exact-dead divergences were already rejected by existing prunes, 60/69 CP-SAT queries abstained at 60 s; WS6 returns to dormant.",
+      "result": "Development microscope positive on retained R03147 exact pairs: both independent causal divergence points change the same bounded families, local path-resource occupancy and relational must-pass lower bound, while global accounting matches and both branches pass current hard prunes. This earns independent-parent replication of the frozen interface only; one parent is insufficient for a reusable descriptor or repair consumer. Independent-parent replication (2026-10-01) was inconclusive: only 2 of 24 parents yielded an eligible exact DEAD/LIVE pair (min 12), 4/9 resolvable exact-dead divergences were already rejected by existing prunes, 60/69 CP-SAT queries abstained at 60 s; WS6 returns to dormant. BLOCKER AUDIT 2026-10-16: the 12-parent exact matched-pair floor remains a threshold for reusable-interface confirmation, not a prerequisite for read-only discovery. The archaeology-preserved descent-shadow observer is now active: trace earlier commitment classes before operator-incapable residuals and use the result to decide what, if anything, deserves exact matched-pair replication.",
       "constrainedBy": [
         "docs/solver-archaeology-register.md",
         "reports/2026-09-20-ws6-dependency-interface-observer-reopen-001.md"
@@ -497,9 +497,11 @@
       "constrains": [
         "Preserve Lane E's tested-form negative: ordinary divergence remains the exact causal boundary in the tested regime.",
         "Freeze the same path-resource/relational-bound projection before independent-parent outcomes; do not feature-shop or infer a directional threshold from R03147.",
-        "No dependency-conditioned repair, backjump, LNS, classifier, or hard prune before independent-parent recurrence and a separate consumer falsifier."
+        "No dependency-conditioned repair, backjump, LNS, classifier, or hard prune before independent-parent recurrence and a separate consumer falsifier.",
+        "A small/selected descent-observer population may nominate an interface but cannot confirm a reusable repair descriptor.",
+        "No repair behavior changes in the same experiment as the observer."
       ],
-      "reopensOn": "A suitable independent-parent exact matched-pair population plus a concrete consumer question make replication decision-changing; do not acquire a population or profile speed merely to keep the solver queue active.",
+      "reopensOn": null,
       "aliases": [
         "dependency-conditioned repair",
         "repair neighborhood"
@@ -597,7 +599,7 @@
       "id": "WS2-G1-COMPLETE-PATH-LNS",
       "question": "Are production-search-derived relaxed candidates close enough to the accepted-solution manifold, and locally repairable often enough, to justify a complete-path LNS implementation?",
       "owner": "WS2",
-      "state": "deferred-reopen",
+      "state": "active-candidate",
       "aliases": [
         "G1",
         "complete-path LNS",
@@ -607,13 +609,15 @@
         "reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md",
         "reports/2026-09-17-production-search-sibling-construction-result-001.md"
       ],
-      "result": "Stage 1 is positive: accepted solutions cluster. Stage 2 was method-limited because three naive complete-path constructors failed. The later production-search multi-pick work established that real beam frontiers can yield rare exact-LIVE states and that one-pick sampling was the deeper statistical failure. The old generic 'production-quality constructor missing' blocker is therefore too broad; the remaining gap is converting frozen real-search partials into a fair complete relaxed candidate and measuring local repairability.",
+      "result": "Stage 1 is positive: accepted solutions cluster. Stage 2 was method-limited because three naive complete-path constructors failed. The later production-search multi-pick work established that real beam frontiers can yield rare exact-LIVE states and that one-pick sampling was the deeper statistical failure. The old generic 'production-quality constructor missing' blocker is therefore too broad; the remaining gap is converting frozen real-search partials into a fair complete relaxed candidate and measuring local repairability. BLOCKER AUDIT 2026-10-16: this remaining construction gap is now an executable bounded development question, not a deferred prerequisite. Reuse frozen production-search partials/multi-pick frontier material and test the cheapest fair partial-to-relaxed-candidate completion or a partial-to-solution-manifold proxy. Full LNS remains unearned until candidate closeness/local repairability is positive.",
       "constrains": [
         "Reuse production-search-derived frontier states rather than inventing another heuristic pseudo-state generator.",
         "Do not build full LNS until the repaired Stage-2 falsifier is positive under a frozen candidate-construction method.",
-        "Failure/search-loss evidence may supply additional real production partials or basin context, but it does not replace Lane G's specialist frontier sampler or frozen candidate-construction gate."
+        "Failure/search-loss evidence may supply additional real production partials or basin context, but it does not replace Lane G's specialist frontier sampler or frozen candidate-construction gate.",
+        "Do not treat answer-bearing accepted solutions as candidate construction input; they are evaluation references only.",
+        "A disposable candidate-shaping prototype is allowed as the falsifier; a general LNS engine is not earned by its existence."
       ],
-      "reopensOn": "A production-search-derived frontier/partial-state construction can be completed or relaxed into a fair full candidate without answer leakage, after which distance-to-solution and local repairability can be measured.",
+      "reopensOn": null,
       "premiseRefs": [
         "P073",
         "P143"
@@ -1051,7 +1055,7 @@
         "reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md",
         "reports/2026-10-02-bc1-volume-consequence-result-001.md"
       ],
-      "result": "CONCLUDED-POSITIVE / PROMOTED 2026-10-01. BC1 fresh-connectivity pruning was reduced to a zero-canonical-work check at the seam where ordinary connectivity already ran, then cleared matched-budget production A/B, gain/loss replay, solved-control, and regression gates. Random-300 at 50M improved 206 -> 225 solved (23 gains / 4 losses); the production flag is default-ON. Unconditional per-candidate checking, pipeline-wide DFS/repair/admissible-order application, every-phase checking, higher-budget probes, and BC1-G production use are closed in their tested forms. BC1-G remains a sound research-only strengthening with low incremental incidence. The BC1-off dead-last whole-ladder retry is parked in solver-future-work.md and is not a current gate. REOPENED 2026-10-02 for BC1-V (volume consequence of the same theorem: fresh cells behind goal-free bridges are unusable, so they leave the volume check; no pending mandatory cell needed). Sound on 861k stored-solution witness states; raw-beam random-300 42 -> 48 (7 gains / 1 loss); production A/B pending.",
+      "result": "CONCLUDED-POSITIVE / PROMOTED 2026-10-01. BC1 fresh-connectivity pruning was reduced to a zero-canonical-work check at the seam where ordinary connectivity already ran, then cleared matched-budget production A/B, gain/loss replay, solved-control, and regression gates. Random-300 at 50M improved 206 -> 225 solved (23 gains / 4 losses); the production flag is default-ON. Unconditional per-candidate checking, pipeline-wide DFS/repair/admissible-order application, every-phase checking, higher-budget probes, and BC1-G production use are closed in their tested forms. BC1-G remains a sound research-only strengthening with low incremental incidence. The BC1-off dead-last whole-ladder retry is parked in solver-future-work.md and is not a current gate. REOPENED 2026-10-02 for BC1-V (volume consequence of the same theorem: fresh cells behind goal-free bridges are unusable, so they leave the volume check; no pending mandatory cell needed). Sound on 861k stored-solution witness states; raw-beam random-300 42 -> 48 (7 gains / 1 loss); representative production A/B completed 2026-10-16: frozen control run 36772815197 solved 225/300 at 44.64B aggregate work; BC1-VX treatment run 37052447194 solved 232/300 at 42.75B, 7 gains / 0 losses. The solved-control regression gate still precedes production promotion. The prior 'positive beam A/B' prerequisite for exploratory BC1-VX shared hard-prune transfer is satisfied.",
       "constrains": [
         "Do not reopen Lane A C0-C2 unchanged: recurring compact interface identity and per-state bridge conservation are different premises.",
         "BC1 fresh-connectivity pruning is promoted/default-ON; do not buy another generic confirmation round for the same treatment.",
@@ -1398,6 +1402,89 @@
         "A successor must produce a sound actionable consequence on exact contrasts and price its derivation cost."
       ],
       "reopensOn": null,
+      "acquisitionNeed": "representation-or-candidate"
+    },
+    {
+      "id": "WS2-CROSS-ATTEMPT-BASIN-OVERLAP",
+      "question": "Do nominally different legal search actions actually explore different state/trajectory basins and failure families, and does their marginal novelty predict incremental value under canonical work?",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "aliases": [
+        "PG-L",
+        "basin overlap",
+        "action overlap",
+        "trajectory overlap"
+      ],
+      "constrainedBy": [
+        "docs/solver-archaeology-register.md",
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md"
+      ],
+      "result": "Activated by the 2026-10-16 blocker audit. Historical overlap telemetry was instrument-compromised, but PG-G now causally demonstrates that tied ordering alone can redirect finite-work outcomes. The former requirement to wait for PG-C/PG-G completion is therefore procedural. Run a read-only canonical-action/state-population overlap and novelty observer now; no allocation/steering consumer is earned by descriptive overlap.",
+      "constrains": [
+        "Do not steer allocation from overlap alone.",
+        "Use canonical action identities, participation/reach denominators and canonical work; historical broken overlap telemetry is not evidence."
+      ],
+      "reopensOn": null,
+      "premiseRefs": [
+        "P165",
+        "P199"
+      ],
+      "acquisitionNeed": "telemetry-or-economics"
+    },
+    {
+      "id": "WS2-SOLVE-LOCAL-REDISCOVERY",
+      "question": "Within one solve invocation, do already-sound blocker/resource facts recur early enough and often enough that cheap recognition could avoid repeated derivation work?",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "aliases": [
+        "PG-M",
+        "solve-local rediscovery",
+        "solve-local reason reuse",
+        "failure certificate reuse"
+      ],
+      "constrainedBy": [
+        "docs/solver-solve-local-rediscovery-preflight.md",
+        "docs/solver-capability-gap-stop-condition-reconciliation.md"
+      ],
+      "result": "Activated by the 2026-10-16 blocker audit on materially changed evidence only. Cross-level learned-connectivity reuse stays closed, and the original 2026-09-17 Phase 0 remains negative on its tested retained population. PG-M therefore begins with a delta rejoin against the later fresh exact-DEAD sibling population and newer PG-D/PG-J/PG-K exact/interface-query material. Only if that new material restores solve-local recurrence/economic headroom may a tiny observer follow. Behavioral memoization/backjumping remains gated on a pre-computation sound certificate and material avoided work.",
+      "constrains": [
+        "Do not reuse post-hoc reached-set signatures as proofs before the computation they are meant to avoid.",
+        "Cross-level reason reuse remains closed; scope is one invocation/current instance unless separately earned."
+      ],
+      "reopensOn": null,
+      "premiseRefs": [
+        "P067",
+        "P080",
+        "P081"
+      ],
+      "acquisitionNeed": "telemetry-or-economics"
+    },
+    {
+      "id": "WS2-INTERFACE-SUFFICIENCY-FALSIFIER",
+      "question": "Do compact current-input boundary/interface signatures collapse states with different exact completion fates, or can any candidate survive a direct future-sufficiency collision attack with useful compression?",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "aliases": [
+        "PG-N",
+        "interface sufficiency",
+        "frontier sufficiency",
+        "alternative search object falsifier"
+      ],
+      "constrainedBy": [
+        "docs/solver-residual-state-representation.md",
+        "docs/solver-separator-dynamic-interface-contract-preflight.md",
+        "docs/solver-reasoning-capability-atlas.md"
+      ],
+      "result": "Activated by the 2026-10-16 blocker audit. The falsifier does not need PG-D to first produce a useful trail/switch consequence: existing separator, topology and relational candidate signatures can already be attacked for exact-fate collisions. A single collision falsifies exact sufficiency for that candidate. Only a candidate with soundness/fidelity plus useful compression can earn a frontier/ZDD/backward/plan architecture.",
+      "constrains": [
+        "Approximate/predictive signatures cannot authorize exact caching or pruning.",
+        "Architecture implementation is not earned merely by surviving a bounded collision search."
+      ],
+      "reopensOn": null,
+      "premiseRefs": [
+        "P198",
+        "P204"
+      ],
       "acquisitionNeed": "representation-or-candidate"
     }
   ]

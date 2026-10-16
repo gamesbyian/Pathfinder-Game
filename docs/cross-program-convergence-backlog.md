@@ -16,7 +16,7 @@ The last five days repeatedly produced the same structural lesson through differ
 - plan quality: every completion claim needs an executable proof and complete population;
 - caching/materialization: reuse only exact generations and make hidden dependencies observable.
 
-Those lessons have not yet propagated uniformly. This backlog records the remaining cross-program transfers so they are not lost once the current WS1/CI work closes.
+Those lessons have not yet propagated uniformly. This backlog records remaining cross-program transfers. The historical WS1/CI sequencing dependencies that originally shaped this list are now closed and must not block unrelated follow-through.
 
 ## Ordering rule
 
@@ -24,7 +24,7 @@ Do not create a parallel infrastructure campaign that starves live solver scienc
 
 Near-term order:
 
-1. finish PR #2122 and dispatch the single frozen WS1 confirmation;
+1. **historical prerequisite satisfied:** PR #2122 / the frozen WS1 confirmation line is closed; do not use it as a gate on current convergence work;
 2. keep current WS2 promotion/confirmation gates moving;
 3. execute the highest-leverage convergence audits below;
 4. only generalize a framework after repeated concrete pilots show the same structure.
@@ -75,7 +75,7 @@ Classify the correct cadence as one of:
 
 ### Trigger
 
-Start after the current WS1 confirmation dispatch/closeout unless an earlier workflow-cadence defect directly blocks live science.
+**Sequencing update (2026-10-16):** the WS1 confirmation/closeout condition is satisfied. Start any still-useful bounded item when its own value-of-information justifies it; there is no remaining WS1 wait gate.
 
 ## CP-2 — research semantic freshness / invalidation pilot
 
@@ -296,7 +296,7 @@ Only open new CI work when the timing distribution names a repeatable limiting m
 
 ### Immediate
 
-- PR #2122 / WS1 one-shot confirmation remains first.
+- PR #2122 / WS1 one-shot confirmation is historical and complete; it no longer owns ordering.
 - WS2 repair-node-cap matched-work confirmation and CID-0027/CID-0028 promotion/safety decisions remain higher scientific priority than generic infrastructure polishing.
 
 ### Already substantially applied

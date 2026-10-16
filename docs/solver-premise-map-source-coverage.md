@@ -1,6 +1,6 @@
 # Solver premise-map reciprocal source-coverage audit
 
-> **Status:** pre-mining completeness hardening.
+> **Status:** concluded-positive historical reciprocal-coverage protocol. Ten source batches completed and cleared the saturation gate; see [`../reports/2026-09-17-solver-premise-map-completeness-hardening-001.md`](../reports/2026-09-17-solver-premise-map-completeness-hardening-001.md).
 > **Scope:** confidence in what the premise map may have missed, not another internal ontology pass.
 > **Frozen reference:** `solver-premise-map-v1-2026-09-17` remains immutable.
 
@@ -94,4 +94,4 @@ These are not cosmetic additions. Both can change confidence in premise closure 
 
 ## Relationship to mining
 
-This audit is a gate on confidence in the **input**, not a thirteenth mining lens over the frozen v1 graph. Mining may proceed only with the residual uncertainty stated explicitly. New post-v1 candidates discovered here remain outside the frozen first mining round unless a separately versioned map is intentionally adopted.
+This audit **was** a gate on confidence in the frozen-v1 input, not a thirteenth mining lens. That gate was satisfied before first-round mining. Preserve the residual uncertainty and version-separation rule for future snapshots; do not treat this completed protocol as a current blocker on v2/PG research.

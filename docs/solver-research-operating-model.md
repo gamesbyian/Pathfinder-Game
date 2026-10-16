@@ -80,6 +80,30 @@ Relationship quality: validated authored edge > authored path/ID > embedded cont
 
 Before promoting a premise/question, state claim, mechanic support, novelty witness, opportunity denominator, proof/response value, nearest siblings, and nearest **useful inverse**. Inverses test directional bias; they create no queue entitlement and must pass ordinary evidence/discriminator/population gates. See [small exact projections](solver-small-exact-projections-program.md) and the [inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md).
 
+## Blocker audit rule
+
+A blocker must say **what kind of claim it blocks**. Do not let a promotion threshold silently become an experiment prohibition.
+
+Classify blockers before obeying them:
+
+1. **soundness / legality blocker** — the proposed behavioral action could be wrong or unsafe; may prohibit that action, but normally not a read-only observer or a weaker sound consumer;
+2. **inference / independence blocker** — the available evidence cannot support the intended generalization or causal claim; blocks that claim, not exploratory development on labelled development evidence;
+3. **promotion / economics blocker** — capability may be real but production value is unproved; blocks default-on/product placement, not a bounded shadow/prototype that measures the missing economics;
+4. **tooling / representation blocker** — a required observable/candidate cannot currently be constructed; first ask whether a cheaper proxy, partial representation, synthetic counterexample, retained-data join, or disposable instrument can answer the question;
+5. **sequencing / convention blocker** — “wait for X”, “only after Y”, fixed sample minima, recurring-producer requirements, or architecture-order rules that exist to control cost/process rather than preserve soundness or independence. These are presumptively parallelizable or bypassable unless the document names the contamination, invalid inference, or material wasted compute that ordering prevents.
+
+Further rules:
+
+- **Promotion blocker ≠ experiment blocker.** A short-lived branch-local observer, reference model, architecture-shaped toy, or bounded prototype may be the cheapest falsifier. It needs a stop/delete rule and may not acquire production authority by existing.
+- **A numeric sample minimum is a conclusion threshold, not automatically an acquisition prerequisite.** Smaller/heterogeneous samples may still test observability, mechanism existence, candidate construction, effect direction, or whether the planned statistic is even measurable.
+- **“Recurring producer” gates durable resource promotion, not one-off scientific use.** A valid one-off capture may answer its scoped question without being promoted into a standing Resource Contract.
+- **Independent confirmation gates transfer/promotion, not development feasibility.** When a current-input consumer can be prototyped without contaminating the confirmation population, prototype feasibility and independent confirmation may proceed in parallel.
+- **Architecture-shaped work is allowed as an instrument.** Do not build a general framework from an open gap, but do permit the smallest disposable implementation when writing it is cheaper/more discriminating than inventing a proxy for the thing it would compute.
+- **Satisfied blockers expire immediately.** When the named condition occurs, reconcile every document/question/queue row that still says to wait. Historical sequencing prose must not remain operational.
+- **Prefer bypass tests.** For every tooling/sequencing blocker, ask: can retained evidence answer a weaker version, can a read-only shadow expose the opportunity, can a toy/synthetic counterexample falsify the representation, can partial states replace complete constructions, or can two formerly serial gates run independently in parallel?
+
+A blocker may still be correct after this attack. The point is to preserve the scientific reason, not the ceremony around it.
+
 ## Stop rules
 
 These are gates, not aspirations.

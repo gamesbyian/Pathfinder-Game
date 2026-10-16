@@ -342,7 +342,7 @@ Does material research evidence propagate correctly through the existing sparse 
 
 ### Challenge to the original plan
 
-Do **not** add a dozen mandatory epistemic states to every serious question merely because they are conceptually neat. The current sparse states (`active-candidate`, `active-diagnostic`, `deferred-reopen`, `closed-tested-form`, etc.) may already be enough if relations and reopen conditions are maintained. Add state only when a concrete propagation error cannot be expressed with the existing relation vocabulary.
+Do **not** add a dozen mandatory epistemic states to every serious question merely because they are conceptually neat. The current sparse lifecycle states (`active-candidate`, `deferred-reopen`, `closed-tested-form`, etc.), combined with the workstream gate class such as `instrument-only`, may already be enough if relations and reopen conditions are maintained. Add state only when a concrete propagation error cannot be expressed with the existing relation vocabulary.
 
 Likewise, do not retrospectively score historical research priorities against eventual solve impact as a pseudo-objective. Later knowledge makes that comparison strongly hindsight-biased and historical priority metadata is incomplete. Instead ask the tractable question: **given the evidence available at the time, did the repository preserve the option and the condition for revisiting it?**
 
