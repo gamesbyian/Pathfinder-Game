@@ -346,11 +346,22 @@ export function getNeighbors(pos: number, state: SolverSearchState, level: Norma
     // (see the portal-terminal-revisit check above), so this can only ever fire once.
     // No effect on normal play/solve — prep._forcedPortalExitKey is never set in production.
     const forced = prep._forcedPortalExitKey;
+    let result = candidates;
     if (arrivedViaPortal && forced != null && pos === forced.from) {
-        return candidates.filter(k => k === forced.to);
+        result = candidates.filter(k => k === forced.to);
     }
 
-    return candidates;
+    // Research/test-only candidate-order control. Absent in every production caller, so the
+    // long-standing E/W/S/N enumeration above remains byte-for-byte unchanged by default.
+    // PG-G uses this only to ask a causal question on known symmetry siblings: if two mapped
+    // candidates have identical semantic score/slack, does imposing one shared parent-frame
+    // order collapse the otherwise arbitrary orientation-dependent search cliff?
+    const researchOrderKey = prep._candidateOrderResearchKey;
+    if (researchOrderKey && result.length > 1) {
+        result.sort((a, b) => researchOrderKey(pos, a) - researchOrderKey(pos, b));
+    }
+
+    return result;
 }
 
 // Dynamic move validity: checks that only depend on mutable state.
