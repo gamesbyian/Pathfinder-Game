@@ -1,13 +1,13 @@
 # PG-G independent-parent symmetry confirmation plan (2026-10-16)
 
 > **Status:** active
-> **Last evidence:** 2026-10-16 — the selected-pair causal factorial restored 6/6 solve-state cliffs by changing only candidate order; repair seed normalization alone restored 0/1 repair cliff.
+> **Last evidence:** 2026-10-16 — the selected-pair causal factorial restored 6/6 solve-state cliffs by changing only candidate order; the retained-family tree audit then established 54 direct `symmetry` families / 48 eligible untouched parents after excluding the six PG-G discovery parents.
 > **Decision:** run an outcome-blind independent-parent confirmation of the ordering mechanism before any cold production consumer is designed.
 > **Remaining gate:** complete Stage A control mapping and Stage B treatment on the frozen 12-parent cohort; apply the preregistered parent-level opportunity and restoration thresholds.
 > **Evidence role:** confirmation
-> **Selection:** deterministic SHA-256 rank over the retained 22-parent root-level symmetry reservoir after removing the PG-G discovery parents; no current or historical solver outcomes were inspected to choose parents.
-> **Population identity:** exact selection and hashes in `reports/2026-10-16-pg-g-independent-symmetry-confirmation-spec-001.json`; family data pinned to `32132d6ba60f1203ee013ed0d475f46061eddd49`.
-> **Selection history:** the 22-parent reservoir predates this treatment decision; five discovery parents present in that root-level trove are excluded, and R02976 is also named as discovery history but is outside this root-level reservoir.
+> **Selection:** deterministic SHA-256 rank over all 48 eligible direct root-level `symmetry` families in the pinned dataset; no current or historical solver outcomes were inspected to choose parents.
+> **Population identity:** exact 48-parent reservoir, selection hashes, and frozen 12 parents in `reports/2026-10-16-pg-g-independent-symmetry-confirmation-spec-001.json`; family data pinned to `32132d6ba60f1203ee013ed0d475f46061eddd49`.
+> **Selection history:** the eligible pool is defined only by generator-family identity and exclusion of the six already-consumed PG-G discovery parents. The earlier draft's 22-parent count came from a truncated directory listing and was corrected before any confirmation outcomes were collected.
 > **Inference scope:** independent-parent confirmation of symmetry-order causality under the frozen three-technique, 10M-work protocol; no prevalence estimate outside this reservoir and no production-policy authority.
 
 ## Why this is the next gate
@@ -18,21 +18,21 @@ The treatment remains deliberately illegal for production: a generated sibling i
 
 ## Frozen cohort
 
-The retained root-level family trove contains 27 `*-symmetry-manifest.json` parents. Five of the six PG-G discovery parents are in that root-level trove: `P00136`, `P00144`, `P00146`, `R00631`, and `R00792`. `R02976` belongs to the discovery history too but lives outside this root-level reservoir. Removing the five leaves exactly 22 untouched parents.
+The complete pinned root directory contains **54** `family-<parent>-symmetry-manifest.json` families using the seven-sibling D4 `symmetry` form. Excluding the six PG-G discovery parents leaves **48** eligible parents. Older `-sym-` families and the separate `corpus1/` / `corpus2/` family trees are not mixed into this confirmation pool.
 
 Selection is mechanical:
 
 ```text
 hash = sha256("pg-g-independent-symmetry-confirmation-v1" + NUL + parentId)
-sort ascending by hash
+sort ascending by hash, then parentId
 take first 12
 ```
 
 Selected parents, frozen before current solve outcomes are collected:
 
-`R00392, R00082, R00727, R00789, R00050, R01075, P00010, R00920, R01636, R01533, R00134, R00108`.
+`R00392, R03180, R02962, R02208, R00082, R00727, R00789, R02841, R00050, R01075, P00010, R00920`.
 
-Each selected manifest must contain exactly seven D4 siblings and its historical `parentContentHash` must match current main. A mismatch fails closed; do not replace a parent after seeing outcomes.
+Each selected manifest has already been checked structurally to contain exactly seven siblings with orientations 1..7. At execution time its historical `parentContentHash` must also match current main. A mismatch fails closed; do not replace a parent after seeing outcomes.
 
 ## Stage A: opportunity mapping
 
@@ -74,7 +74,7 @@ Secondary outcome: among rows where parent and treated sibling both solve, measu
 - Current parent fingerprints must match pinned manifests.
 - Stage A must finish before the Stage-B opportunity set is constructed.
 - Stage B must contain all and only Stage-A solve-state discordances.
-- Work accounting must set both `_workCap` and `_strictWorkCap`; >1% atomic-work overshoot fails closed.
+- Work accounting must use the maintained equal-work technique-census contract, including both `_workCap` and `_strictWorkCap`; >1% atomic-work overshoot fails closed.
 - Every solve is referee-valid.
 - Results are grouped by parent and report raw row counts separately from independent-parent counts.
 - A positive result advances only to design of a **cold-legal current-input** D4 tie-order key. It does not authorize parent-frame provenance, an eight-orientation portfolio, or any production default change.
