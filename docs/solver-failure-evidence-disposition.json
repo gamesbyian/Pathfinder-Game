@@ -84,6 +84,16 @@
       }
     },
     {
+      "id": "pg-g-symmetry-causal-factorial-one-shot",
+      "workflow": ".github/workflows/pg-g-symmetry-causal-factorial-one-shot.yml",
+      "disposition": "unsupported",
+      "reason": "Purpose-built selected-pair PG-G causal-factorial rows compare symmetry-controlled ordering and repair-seed identity; they are not an ordinary attempt-response population for compact failure-evidence transport.",
+      "durability": {
+        "mode": "artifact-only",
+        "reason": "The one-shot publishes its raw causal matrix and standard solver-sweep front door; durable aggregate/row-sensitive conclusions are recorded before the temporary workflow is deleted."
+      }
+    },
+    {
       "id": "search-loss-real-canary",
       "workflow": ".github/workflows/search-loss-real-canary.yml",
       "disposition": "unsupported",
@@ -214,16 +224,6 @@
       }
     },
     {
-      "id": "ws1-remaining-length-intrasolve-stage-a-one-shot",
-      "workflow": ".github/workflows/ws1-remaining-length-intrasolve-stage-a-one-shot.yml",
-      "disposition": "unsupported",
-      "reason": "Frozen paired WS1 elite-prefix ordering harness emits purpose-built control/treatment trace rows rather than the ordinary attempt-shaped compact failure-response population.",
-      "durability": {
-        "mode": "artifact-only",
-        "reason": "This one-shot Stage A experiment publishes its frozen result and standard solver-sweep artifact; it is not a recurring compact failure-response producer."
-      }
-    },
-    {
       "id": "ws1-late-continuation-single-stage-confirmation",
       "workflow": ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml",
       "disposition": "standard",
@@ -231,6 +231,16 @@
       "durability": {
         "mode": "automatic-harvest",
         "reason": null
+      }
+    },
+    {
+      "id": "ws1-remaining-length-intrasolve-stage-a-one-shot",
+      "workflow": ".github/workflows/ws1-remaining-length-intrasolve-stage-a-one-shot.yml",
+      "disposition": "unsupported",
+      "reason": "Frozen paired WS1 elite-prefix ordering harness emits purpose-built control/treatment trace rows rather than the ordinary attempt-shaped compact failure-response population.",
+      "durability": {
+        "mode": "artifact-only",
+        "reason": "This one-shot Stage A experiment publishes its frozen result and standard solver-sweep artifact; it is not a recurring compact failure-response producer."
       }
     }
   ]
