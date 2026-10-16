@@ -146,6 +146,10 @@ These are not solver-batch entrypoints, but remain listed here for workflow disc
 
 Use the narrowest workflow whose evidence semantics match the question. Capability workflows must remain level-blind. Avoid creating a new batch runner merely for different parallelism: common entrypoints now expose or implement the worker/shard controls needed to trade concurrent footprint against tail latency.
 
+## PG-G one-shot mechanism localization
+
+- `pg-g-symmetry-ordering-microscope-one-shot.yml` — temporary five-case path-replay diagnostic for PG-G's recovered symmetry cliffs. It checks the pinned historical family data, replays frozen mapped paths, separates semantic score/slack equivariance from E/W/S/N stable-tie ordering, and records repair's coordinate-derived seed drift. Selected-on forensic evidence only; delete after the result is recorded.
+
 ## One-shot diagnostics (delete after use)
 
 Delete a bespoke one-shot workflow once its execution surface is no longer needed, but treat workflow retirement and evidence reconstructability as separate decisions. Before deletion, apply the ordinary investigation closeout rule: if artifact-bound or branch-bound primary rows are materially required to support or later audit a durable decision, capability/future-work premise, reusable exact/reference resource, or row-sensitive mechanism claim, preserve the smallest existing-compatible evidence bundle or explicitly record what will expire and which later re-analysis will no longer be possible. Merely recording the aggregate answer is sufficient when row-level reconstruction is not material; this rule does not require archiving every one-shot artifact.
