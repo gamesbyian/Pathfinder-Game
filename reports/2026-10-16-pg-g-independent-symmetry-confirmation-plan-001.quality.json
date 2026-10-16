@@ -1,0 +1,456 @@
+{
+  "schemaVersion": 1,
+  "plan": "reports/2026-10-16-pg-g-independent-symmetry-confirmation-plan-001.md",
+  "status": "active",
+  "reconciledMainRef": "b84bd1a16fb102505d4ccb53a7944eff09eff74b",
+  "premises": [
+    {
+      "question": "Does the candidate-order mechanism that causally restored selected PG-G symmetry cliffs recur across independently selected whole parent families?",
+      "evidence": [
+        "Selected-pair strict-work factorial restored 6/6 solve-state cliffs by changing candidate order only; five DFS/admissible rows reproduced parent status/work exactly.",
+        "Repair seed normalization alone restored 0/1 selected repair cliff, so the independent confirmation centers candidate ordering rather than a seed campaign.",
+        "Complete pinned family-tree census exposes 54 direct seven-sibling `symmetry` families; after excluding all six discovery parents, 48 remain eligible without consulting solver outcomes."
+      ],
+      "alternatives": [
+        "The selected cliffs are idiosyncratic to the discovery parents and do not recur independently.",
+        "Independent parents contain orientation discordance, but parent-frame ordering restores too little of it to support a recurring mechanism.",
+        "The mechanism transfers, earning design of a cold-legal current-input D4 tie-order consumer."
+      ],
+      "discriminator": "Freeze 12 parents by outcome-blind SHA-256 rank, use Stage A only to measure current-policy symmetry discordance, and run ordering treatment only on the predeclared discordant rows. Apply the frozen 70%/40% restoration thresholds and independent-parent minima."
+    },
+    {
+      "question": "Should confirmation execute all treatment rows up front or first measure whether the opportunity population exists?",
+      "evidence": [
+        "Repository research rules require control-side opportunity sizing before broad decision-bearing compute.",
+        "The discovery cohort was selected on response cliffs and cannot estimate independent-parent opportunity prevalence.",
+        "Stage A needs only 288 control rows and determines exactly which sibling×technique rows can inform the causal restoration question."
+      ],
+      "alternatives": [
+        "Run parent-frame treatment on every sibling regardless of whether control differs from its parent.",
+        "Run a control-only opportunity map first and condition Stage B only on frozen discordance."
+      ],
+      "discriminator": "Stage A is the opportunity audit. If fewer than four independent parents or six rows are discordant, stop inconclusive without treatment expansion."
+    },
+    {
+      "question": "Does this confirmation require a new solver runner?",
+      "evidence": [
+        "scripts/family-technique-response-campaign-plan.mjs already resolves historical family manifests against current parent corpora and verifies parent-content fingerprints.",
+        "scripts/technique-census-cell.mjs already owns isolated technique parsing, referee validation, strict equal-work caps including `_strictWorkCap`, deadline-truncation semantics and worker-safe execution.",
+        "The only missing execution input is an explicit research-only candidate-order description that can populate the already-merged `_candidateOrderResearchKey` hook."
+      ],
+      "alternatives": [
+        "Copy the PG-G causal factorial runner and its budget logic into a second bespoke campaign.",
+        "Extend technique-census cells with an optional provenance-bearing research-order field and keep default behavior untouched."
+      ],
+      "discriminator": "Extend the shared cell executor only for the research-order input; Stage A and Stage B both otherwise reuse existing campaign/census/combine machinery."
+    }
+  ],
+  "repositoryPriorArt": [
+    {
+      "candidate": "scripts/family-technique-response-campaign-plan.mjs",
+      "disposition": "reuse",
+      "reason": "Already builds current-code parent + historical descendant × isolated-technique equal-work cells and verifies dataset SHA plus parent fingerprints."
+    },
+    {
+      "candidate": "scripts/technique-census-cell.mjs / technique-census.mjs",
+      "disposition": "extend",
+      "reason": "Owns the strict 10M-work execution semantics and referee validation. Add only an opt-in research-order descriptor so Stage B does not duplicate solver-budget logic."
+    },
+    {
+      "candidate": ".github/workflows/controlled-technique-response-neighborhoods.yml",
+      "disposition": "parallel-with-distinction",
+      "reason": "Provides the proven plan/canary/shard/combine/publish topology, but is frozen to the selected-on six-parent discovery cohort and must not be repurposed by changing its scientific identity."
+    },
+    {
+      "candidate": "PrepLevel._candidateOrderResearchKey / scripts/stress/pg-g-symmetry-causal-factorial.mjs",
+      "disposition": "reuse",
+      "reason": "The causal intervention and parent-frame direction mapping already exist as research-only mechanism evidence; confirmation should transport that exact ordering semantics through the shared cell runner."
+    },
+    {
+      "candidate": "docs/variant-level-research.md",
+      "disposition": "reuse",
+      "reason": "Owns whole-parent independence, symmetry interpretation, historical-family access and no-production-lookup boundaries."
+    },
+    {
+      "candidate": "docs/solver-experiment-opportunity-sizing.md",
+      "disposition": "reuse",
+      "reason": "Stage A is deliberately a control-only opportunity measurement and blocks Stage B when informative support is too small."
+    }
+  ],
+  "impactDomains": {
+    "definitionsSchemas": [
+      "Frozen PG-G independent-confirmation spec: 48 eligible direct `symmetry` families, deterministic hash rule, 12 selected parents, three techniques, 10M work, two-stage decision rule.",
+      "Optional research-only technique-census cell candidate-order descriptor; no production NormalizedLevel or solver policy schema change."
+    ],
+    "producersWriters": [
+      "scripts/family-technique-response-campaign-plan.mjs for Stage-A sealed cells.",
+      "New Stage-B plan builder derived only from complete Stage-A rows.",
+      "scripts/technique-census-cell.mjs as the sole solver-row producer for both stages."
+    ],
+    "transportsWorkers": [
+      "Existing technique-census worker/shard path.",
+      "Temporary one-shot confirmation workflow using pinned historical family sparse checkout, plan artifacts, shard artifacts, combine and standard publication."
+    ],
+    "consumersReaders": [
+      "Stage-A opportunity derivation.",
+      "Independent-confirmation analyzer applying preregistered parent-level and row-level restoration thresholds.",
+      "Current PG-G workstream/future-work routing."
+    ],
+    "persistenceStores": [
+      "Experiment evidence only: standard solver-sweep artifact plus compact dated result/summary. No Hint steering, production baseline, or persistent level-specific state."
+    ],
+    "cliPackage": [
+      "Existing family:technique-response-campaign-plan and technique-census entrypoints.",
+      "New bounded Stage-B plan/analyze CLIs with focused tests; no generic package surface unless repeated use is demonstrated."
+    ],
+    "workflowsTriggers": [
+      "Temporary PG-G independent symmetry confirmation one-shot workflow, with lifecycle/failure-evidence/README registration while present.",
+      "BC1-VX production A/B remains independent and is not cancelled or modified by this confirmation."
+    ],
+    "generatedArtifacts": [
+      "Stage-A sealed plan and combined 288-row control matrix.",
+      "Stage-A opportunity summary and exact Stage-B treatment plan.",
+      "Stage-B combined treatment rows when eligibility minima are met.",
+      "Final decision summary/result bound to exact population and solver SHA."
+    ],
+    "testsValidatorsGuards": [
+      "Deterministic reservoir/hash/spec validator.",
+      "Technique-census research-order default-inertness and parent-frame-order tests.",
+      "Stage-B plan integrity tests proving all-and-only Stage-A discordant rows.",
+      "Final analyzer threshold/parent-grouping tests.",
+      "Workflow lifecycle, failure-evidence, documentation, plan-quality and normal deep solver CI."
+    ],
+    "compatibilityHistory": [
+      "The earlier 22-parent draft on the superseded branch is non-executed precommitment history caused by a truncated directory listing; corrected 48-parent census was frozen before confirmation outcomes.",
+      "Selected-pair factorial remains forensic evidence and is not relabeled as confirmation.",
+      "Older `-sym-` and corpus-subdirectory family populations stay outside this confirmation pool."
+    ],
+    "currentDocsAuthorities": [
+      "docs/solver-optimization-workstreams.md",
+      "docs/solver-future-work.md",
+      "docs/variant-level-research.md",
+      "reports/README.md"
+    ],
+    "registriesCatalogues": [
+      "docs/solver-workflow-lifecycle.json while the temporary workflow exists.",
+      "docs/solver-failure-evidence-disposition.json for the temporary solver-running workflow.",
+      ".github/workflows/README.md for workflow discoverability."
+    ],
+    "researchSystem": [
+      "PG-G remains a premise-discovery/confirmation lane with no treatment authority.",
+      "No stable question ID is minted solely for this campaign; existing workstream authority owns state and gate.",
+      "Evidence role is confirmation at the whole-parent unit, while Stage-A sibling rows remain correlated repeated measurements."
+    ]
+  },
+  "solverQueueImpact": {
+    "classification": "unblocks",
+    "authoritiesChecked": [
+      "docs/solver-optimization-workstreams.md",
+      "docs/solver-future-work.md",
+      "docs/solver-research-question-relations.json",
+      "docs/solver-opt-in-experiment-ledger.md"
+    ],
+    "items": [
+      "PG-G controlled technique-response neighborhoods",
+      "Mechanics-derived canonicalization / symmetry / transposition future-work row"
+    ],
+    "notes": "Freezes and executes PG-G's already-earned independent-parent confirmation gate. It does not promote a solver treatment, alter BC1-VX priority, or mint a new stable question. A positive result only earns design of a cold-legal current-input tie-order consumer."
+  },
+  "definitionsOfDone": [
+    {
+      "id": "pg-g-confirm-population",
+      "claim": "The confirmation population is reproducibly frozen from the complete eligible family reservoir without solver-outcome selection.",
+      "proofs": [
+        {
+          "type": "test",
+          "locator": "node scripts/validate-pg-g-symmetry-confirmation-spec-node-test.mjs",
+          "expected": "Hash selection, discovery-parent exclusion, seven-orientation structure and tamper/error fixtures pass."
+        },
+        {
+          "type": "command",
+          "locator": "node scripts/validate-pg-g-symmetry-confirmation-spec.mjs --spec=reports/2026-10-16-pg-g-independent-symmetry-confirmation-spec-001.json --variant-family-dataset-root=<pinned-worktree>",
+          "expected": "Mounted dataset ref matches 32132d6..., 54 direct symmetry families are found, exactly 48 are eligible, the frozen first 12 hashes match the spec, and every selected family has orientations 1..7."
+        }
+      ]
+    },
+    {
+      "id": "pg-g-confirm-order-hook",
+      "claim": "Stage-B ordering is explicit research-only input to the shared strict-work cell executor and is inert when absent.",
+      "proofs": [
+        {
+          "type": "test",
+          "locator": "node scripts/technique-census-cell-node-test.mjs",
+          "expected": "Existing cells retain ordinary candidate order; symmetry-parent-frame research cells install the mapped direction key with unchanged legality/budget semantics and record the intervention provenance."
+        },
+        {
+          "type": "test",
+          "locator": "npm run check:types && npm run check:solver-budget-boundaries",
+          "expected": "Research extension is typed and does not weaken equal-work boundaries."
+        }
+      ]
+    },
+    {
+      "id": "pg-g-confirm-stage-a",
+      "claim": "Stage A observes the exact frozen 288 control rows before any treatment outcome exists and either establishes the preregistered opportunity floor or stops inconclusive.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "Stage-A sealed plan + combined-results + opportunity summary",
+          "expected": "12 parents × 8 orientations/parent-state × 3 techniques = 288 unique complete rows; zero error/referee-invalid/deadline-truncated rows; exact parent-content identity; opportunity counts grouped by independent parent."
+        },
+        {
+          "type": "workflow",
+          "locator": "PG-G independent symmetry confirmation workflow Stage A",
+          "expected": "Stage B is not executable until Stage-A combine/integrity succeeds; fewer than 4 eligible parents or 6 discordant rows yields an inconclusive terminal result without treatment fan-out."
+        }
+      ]
+    },
+    {
+      "id": "pg-g-confirm-stage-b",
+      "claim": "Stage B treats all and only the frozen Stage-A solve-state discordances with candidate ordering as the sole changed search dimension.",
+      "proofs": [
+        {
+          "type": "test",
+          "locator": "Stage-B plan-builder node test",
+          "expected": "Opportunity rows are neither omitted nor added; each treatment cell preserves technique, variant, 10M work and wall-safety cap, adds only parent-frame candidate-order metadata, and never sets repair seed normalization."
+        },
+        {
+          "type": "artifact",
+          "locator": "Stage-B plan + combined treatment result",
+          "expected": "Expected/observed cell IDs match exactly, every solve referee-validates, no equal-work row is deadline-truncated, and >1% work-cap overshoot fails closed."
+        }
+      ]
+    },
+    {
+      "id": "pg-g-confirm-verdict",
+      "claim": "The final verdict applies the frozen independent-parent and restoration thresholds without post-result tuning.",
+      "proofs": [
+        {
+          "type": "test",
+          "locator": "Independent-confirmation analyzer node test",
+          "expected": "Positive, negative, inconclusive-low-opportunity and inconclusive-middle-band fixtures match the preregistered thresholds."
+        },
+        {
+          "type": "artifact",
+          "locator": "Final PG-G independent-parent confirmation report/summary",
+          "expected": "Reports eligible parent count, discordant row count, restored row fraction, restored independent parents, per-technique breakdown, secondary paired-work contraction and exact inference boundary."
+        }
+      ]
+    },
+    {
+      "id": "pg-g-confirm-splash",
+      "claim": "Scientific state, temporary workflow ownership and future-work routing agree with the observed result and one-shot infrastructure is retired after durable evidence capture.",
+      "proofs": [
+        {
+          "type": "command",
+          "locator": "npm run research:integration-audit && npm run check:documentation-links && npm run test:workflow-lifecycle",
+          "expected": "Current research graph/docs/workflow lifecycle are internally consistent after closeout."
+        },
+        {
+          "type": "query",
+          "locator": "docs/solver-optimization-workstreams.md + docs/solver-future-work.md + docs/solver-opt-in-experiment-ledger.md",
+          "expected": "PG-G next gate matches the final result; no production/default disposition is claimed unless a later cold-legal treatment independently earns it."
+        }
+      ]
+    },
+    {
+      "id": "pg-g-confirm-finish-line",
+      "claim": "The shared solver/tooling extension is green in the repository's deep local-equivalent and hosted topology.",
+      "proofs": [
+        {
+          "type": "command",
+          "locator": "npm run ci && npm run build",
+          "expected": "Deep solver/research validation and production build pass on the final implementation head."
+        },
+        {
+          "type": "workflow",
+          "locator": "PR CI on the exact final implementation head",
+          "expected": "Required CI/premise-map checks pass before merge; scientific workflow outcome remains distinct from repository correctness."
+        }
+      ]
+    },
+    {
+      "id": "pg-g-confirm-hostile",
+      "claim": "A fresh current-main reconstruction can recover the eligible reservoir, selection, two-stage execution, intervention boundary, evidence and live queue state without trusting PR prose.",
+      "proofs": [
+        {
+          "type": "manual-evidence",
+          "locator": "Final independent closeout note against current main",
+          "expected": "Reconstructs family reservoir, selected parents, solver-row producer, workflow, artifacts, temporary lifecycle state and current PG-G gate; identifies any discrepancy as implementation work.",
+          "reason": "Scientific/authority semantic coherence across the full repository cannot be proven by one syntactic validator alone."
+        }
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "phase-0",
+      "name": "Corrected precommitment and opportunity design",
+      "entry": [
+        "Selected-pair causal result is durable; no independent-parent confirmation outcomes have been inspected."
+      ],
+      "outputs": [
+        "Corrected 48-parent reservoir census",
+        "Frozen 12-parent spec",
+        "Plan quality manifest"
+      ],
+      "affectedDomains": [
+        "definitionsSchemas",
+        "researchSystem",
+        "currentDocsAuthorities"
+      ],
+      "exitProofIds": [
+        "pg-g-confirm-population"
+      ]
+    },
+    {
+      "id": "phase-1",
+      "name": "Shared execution plumbing",
+      "entry": [
+        "Population/spec are frozen; Stage A treatment remains current ordering only."
+      ],
+      "outputs": [
+        "Research-only candidate-order cell extension",
+        "Stage-B plan builder",
+        "Final analyzer",
+        "Focused tests"
+      ],
+      "affectedDomains": [
+        "producersWriters",
+        "consumersReaders",
+        "testsValidatorsGuards",
+        "transportsWorkers"
+      ],
+      "exitProofIds": [
+        "pg-g-confirm-order-hook",
+        "pg-g-confirm-stage-b",
+        "pg-g-confirm-verdict"
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Temporary workflow and Stage-A opportunity map",
+      "entry": [
+        "Implementation passes targeted/deep validation; BC1-VX resource use is not disrupted unnecessarily."
+      ],
+      "outputs": [
+        "One-shot workflow + lifecycle registrations",
+        "288-row Stage-A matrix",
+        "Opportunity summary"
+      ],
+      "affectedDomains": [
+        "workflowsTriggers",
+        "registriesCatalogues",
+        "generatedArtifacts"
+      ],
+      "exitProofIds": [
+        "pg-g-confirm-stage-a",
+        "pg-g-confirm-finish-line"
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Conditional Stage-B treatment and verdict",
+      "entry": [
+        "Stage A complete. Run treatment only if >=4 independent parents and >=6 discordant rows are present."
+      ],
+      "outputs": [
+        "Exact Stage-B treatment plan/result when eligible",
+        "Frozen-threshold final verdict"
+      ],
+      "affectedDomains": [
+        "generatedArtifacts",
+        "researchSystem",
+        "persistenceStores"
+      ],
+      "exitProofIds": [
+        "pg-g-confirm-stage-b",
+        "pg-g-confirm-verdict"
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Splash-zone closeout and retirement",
+      "entry": [
+        "Final scientific disposition recorded and durable evidence retained."
+      ],
+      "outputs": [
+        "Updated workstream/future-work state",
+        "Temporary workflow retired",
+        "Independent hostile reconstruction"
+      ],
+      "affectedDomains": [
+        "currentDocsAuthorities",
+        "registriesCatalogues",
+        "workflowsTriggers",
+        "researchSystem"
+      ],
+      "exitProofIds": [
+        "pg-g-confirm-splash",
+        "pg-g-confirm-hostile"
+      ]
+    }
+  ],
+  "splashZone": {
+    "currentAuthorities": [
+      "docs/solver-optimization-workstreams.md",
+      "docs/solver-future-work.md",
+      "docs/variant-level-research.md",
+      "reports/README.md"
+    ],
+    "workflows": [
+      "Temporary PG-G independent symmetry confirmation workflow",
+      "Existing family campaign / technique census / standard solver-result publication surfaces"
+    ],
+    "registriesSchemas": [
+      "docs/solver-workflow-lifecycle.json",
+      "docs/solver-failure-evidence-disposition.json",
+      ".github/workflows/README.md",
+      "Research-only technique-census cell input/result provenance"
+    ],
+    "generatedData": [
+      "Stage-A plan/results/opportunity summary",
+      "Conditional Stage-B plan/results",
+      "Final compact confirmation summary/result"
+    ],
+    "solverQueue": [
+      "PG-G state and next gate",
+      "Mechanics-derived canonicalization/symmetry future-work condition",
+      "BC1-VX remains independent and unchanged by this work"
+    ],
+    "researchSystem": [
+      "Confirmation evidence role and whole-parent independence",
+      "No stable question ID invented merely for orchestration",
+      "Final result/query discoverability and structured closeout metadata"
+    ],
+    "retireOrArchive": [
+      "Delete temporary one-shot workflow after durable result and authority closeout.",
+      "Leave selected-pair forensic report historical; do not rewrite it as confirmation.",
+      "Do not use the superseded 22-parent draft as execution authority."
+    ],
+    "proofIds": [
+      "pg-g-confirm-splash",
+      "pg-g-confirm-hostile"
+    ],
+    "compatibilityHistory": [
+      "Superseded confirmation branch with truncated 22-parent reservoir remains non-executed history only."
+    ]
+  },
+  "hostileCloseout": {
+    "independentReconstruction": true,
+    "inventories": [
+      "family-reservoir",
+      "population-selection",
+      "producers",
+      "consumers",
+      "workflows",
+      "evidence-artifacts",
+      "current-authorities",
+      "solver-queue",
+      "compatibility-history"
+    ],
+    "proofIds": [
+      "pg-g-confirm-hostile"
+    ]
+  }
+}
