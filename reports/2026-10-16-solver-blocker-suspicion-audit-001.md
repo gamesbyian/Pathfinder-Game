@@ -1,7 +1,7 @@
 # Solver blocker suspicion audit 001
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-10-16 - 56 current non-archive solver/research plan, preflight, queue, atlas, backlog and authority surfaces; the stable research-question registry; current archaeology/future-work authorities; and historical evidence only where a current blocker explicitly depended on it.
+> **Last evidence:** 2026-10-16 - all 82 current non-archive `solver-*` / research Markdown authorities and references in the audited scope, including architecture/evidence/correctness docs beyond the initial 56 plan-like surfaces; the stable research-question registry; and historical evidence only where a current blocker explicitly depended on it.
 > **Decision:** several research blockers were over-scoped. Preserve soundness, legality, independence, evidence-identity and production-economics gates, but stop using promotion thresholds, sample-size thresholds, durable-resource requirements or historical sequencing as blanket permission gates on cheaper diagnostics. Activate the bounded blocker-bypass descendants listed below.
 > **Remaining gate:** execute the newly active diagnostics under their own stop rules; production behavior still requires the ordinary soundness, matched-work, confirmation and collateral gates.
 > **Evidence role:** research-state / methodology reconciliation.
@@ -17,7 +17,7 @@ This is not an argument for lowering correctness standards. The audit distinguis
 
 ## Scope
 
-The current non-archive plan/authority inventory contained 56 solver/research surfaces under the repository's plan/preflight/queue/research naming conventions. The audit also inspected every deferred/reopen stable question and followed current blockers into historical evidence when necessary.
+The first pass covered 56 plan/preflight/queue/research-named surfaces. A hostile scope check then expanded this to all **82** current non-archive `docs/solver-*.md` plus the adjacent research authorities in scope, including architecture, correctness, evidence, level-blindness, budget, provenance, resumability and workflow-remediation references. The audit also inspected every deferred/reopen stable question and followed current blockers into historical evidence when necessary.
 
 The recurring blocker types were:
 
@@ -50,6 +50,9 @@ Only the first two normally justify forbidding an experiment outright. Promotion
 | cross-program backlog | wait for PR #2122 / WS1 confirmation | both are historical and complete | **expired** |
 | retention audit fixes | fix only after documentation audit closes | audit header itself is concluded-positive | **expired**; remaining implementation follows current consumer priority |
 | BC1-VX shared-stage transfer | only after representative beam/production A/B is positive | run 37052447194 completed 232/300 vs frozen control 36772815197 at 225/300, 7 gains / 0 losses, ~4.2% lower aggregate work | **satisfied**; diagnostic shared-stage transfer may begin; BC1-VX promotion still waits on solved-control regression |
+| premise-map hardening / mining | hardening docs still said freeze snapshot / run lenses / complete reciprocal coverage before mining | v1/v2 freeze, reciprocal coverage, mining, replication and successor reconciliation are already complete | **expired**; documents retained as historical method, not current blocker |
+| premise measurement overlay | integrate overlay in later successor-map pass | measurement-opportunity relation is already live in research relations | **expired** |
+| fresh-vs-preceded late-stage integrity | naive predecessor replay cannot support a causal comparison | real methodological blocker, but only for that causal claim; unrelated late-stage work is not blocked | **kept but narrowed**; preferred bypass is exact typed stage-entry capture/replay, not manual Proxy reconstruction |
 
 ## Newly active bounded lanes
 
@@ -141,6 +144,18 @@ A new capability does not earn permanent additive budget merely because it wins 
 
 Under wall-clock termination, even read-only instrumentation can change reach. Decision-bearing rate claims still need parity/non-binding-time evidence or an observer-conditioned interpretation.
 
+### Low-value implementation-speed deferrals
+
+The speed-opportunity authority's deferred families mostly survive. They are backed by measured tiny cost share, zero incidence, stale profiling, or lack of an economical treatment boundary. They are priority/economics dispositions rather than semantic impossibility. Narrow cheap prototypes remain legal if a fresh profile or live consumer changes the opportunity.
+
+### Continuation persistence / checkpointing
+
+The resumability primitive exists, but persisted/cross-process continuation remains downstream of a useful continuation consumer because compatibility/serialization is durable product architecture, not merely an observer. A tiny round-trip test would be legal if a live question needed it; building persistence as speculative infrastructure is still unjustified.
+
+### Known-solution / saved-answer constraints
+
+Known solutions may be used offline as positive-oracle/evaluation evidence, but the recurring-generic-distinction gate before a **live** counterfactual consumer survives. Saved-answer compatibility cannot become runtime steering merely because it is diagnostically informative.
+
 ## Numeric thresholds: revised interpretation
 
 Prespecified floors remain useful and must not be retroactively moved to rescue a claim. Their scope is narrower than several documents had implicitly assumed.
@@ -192,7 +207,8 @@ A blocker-bypass lane stops when:
 - activated method-limited complete-path LNS falsification as PG-O;
 - activated the repair descent-shadow diagnostic as PG-P while preserving its confirmation threshold;
 - allowed PG-G cold-key feasibility in parallel with independent confirmation;
-- expired stale semantic-forcedness, first-loss, separator-Family-3, D1, WS1 and retention-audit sequencing language;
+- expired stale semantic-forcedness, first-loss, separator-Family-3, D1, WS1, retention-audit and completed premise-map hardening/mining sequencing language;
+- narrowed the fresh-vs-preceded late-stage correctness blocker to the causal comparison it actually protects and recorded typed stage-entry capture as the preferred bypass;
 - allowed bounded dynamic scheduler observation before static-policy success;
 - distinguished disposable architecture-shaped falsifiers from durable framework promotion;
 - distinguished one-off generation from registered generator status;
