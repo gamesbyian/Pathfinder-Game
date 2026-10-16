@@ -1,6 +1,6 @@
 # Solver research queue exhumation and no-stranding reconciliation 001
 
-> **Status:** concluded-reconciliation
+> **Status:** concluded-positive
 > **Last evidence:** 2026-10-16 — authorities through main b84bd1a16fb102505d4ccb53a7944eff09eff74b, including the post-exhaustion premise refresh, archaeology register, reasoning-capability atlas, relational-feasibility line, forced-work closeouts, October external-source search, trail/transition-system result and PG-G causal symmetry factorial.
 > **Decision:** repopulate the premise-discovery queue with every currently executable, evidence-backed descendant that can plausibly contribute new cold solves at near-typical budgets; leave only genuinely blocked/conditional descendants in future-work.
 > **Remaining gate:** execution priority and per-lane gates are owned by `docs/solver-optimization-workstreams.md`; this report is history/rationale, not a second queue.
