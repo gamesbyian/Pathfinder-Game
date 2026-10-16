@@ -1245,10 +1245,11 @@
         "docs/solver-semantic-forcedness-preflight.md",
         "reports/2026-09-25-forced-work-capture-economics-per-parent-consumer-oracle-result-001.md"
       ],
-      "result": "Activated 2026-10-16 because the literal forced-work economics blocker is closed. The existing production-inert <=320 exact-prefix preflight is the next gate. A positive establishes oracle headroom only; it does not authorize CP-SAT or another exact service in production.",
+      "result": "2026-10-16 PG-H frozen eight-parent development pilot showed two early multi-successor states each with exactly one exact LIVE child and one exact DEAD child, both from R00242 (same independent parent). The other 14/16 states remain unresolved: 38/45 child cases UNKNOWN at 20s. Earns mechanism existence, not prevalence, economics or a production prune. Next: cheap current-input discriminator on the four labelled children, then depth-targeted exact-observability pilot only if it improves informative coverage.",
       "constrains": [
         "Do not conflate raw one-successor prevalence with semantic forcedness.",
-        "No production exact query, forced move or prune before opportunity and cheaper-consequence gates."
+        "No production exact query, forced move or prune before opportunity and cheaper-consequence gates.",
+        "Do not interpret 2/2 resolved states as population prevalence: these are two sibling observations from one independent parent and only 2/16 groups were fully resolved."
       ],
       "reopensOn": null,
       "premiseRefs": [
