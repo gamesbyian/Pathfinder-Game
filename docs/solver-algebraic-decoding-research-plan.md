@@ -1,7 +1,7 @@
 # Algebraic decoding of Pathfinder solutions — research plan (2026-10-12)
 
 > **Status:** active, **premise-discovery only**. No new production solver strategy, flag, scheduling change, bulk campaign, or treatment authority.
-> **Current-main reconciliation:** `3cdbb1fc169827b1efb411e190fd7c76096bf02d` (2026-10-12 inspection).
+> **Current-main reconciliation:** `c9cb663bc72585771facbc71a53c5c48d75a63ed` (2026-10-16 reconciliation after trail/symmetry research merged).
 > **Owner:** existing solver-science priority authority `docs/solver-optimization-workstreams.md`; this plan owns the *method and ordered gates*, not queue priority.
 > **Premise family:** small exact projections / joint future feasibility / topology / composition. Terminology: *algebraic decoding* is an analogy to constraint recovery, not a claim of encryption or cryptographic security.
 
@@ -43,7 +43,7 @@ Potential stronger forms to test separately: (i) coupled cut-crossing parity wit
 - Production `modules/solver/*` already has parity, goal-distance/MP/MC bounds, connectivity and BC1/BC1-VX; `docs/solver-optimization-workstreams.md` retains the *unfinished* BC1-VX production A/B.
 - `scripts/stress/cpsat-reference-probe.py`, `cpsat-core-probe.py`, `cpsat-solution-count-probe.py`, explicit-prefix reference scripts and `scripts/stress/offline-replay-harness.mjs` supply existing exact/relaxed/referee-labelled capabilities. The solution-count probe explicitly counts a core *relaxation* and caps enumeration: neither its counts nor timeouts establish exact full-game uniqueness.
 - `scripts/stress/probes/separator-resource-probe.mjs` and `joint-obligation-mc-portal-probe.mjs` already test related joint resources; do not reimplement them with algebra branding.
-- `docs/variant-level-research.md` and the active PG-G `reports/2026-10-07-controlled-technique-response-neighborhoods-plan-001.md` supply controlled parent/variant x isolated-technique response; use them to nominate a *specific* differentiating mechanic later.
+- `docs/variant-level-research.md` and PG-G supply controlled parent/variant × isolated-technique response. PG-G has now localized a symmetry-search mechanism to stable tie ordering plus repair-seed identity; treat that as a separate active causal lane, not evidence for algebraic decoding.
 - `docs/solver-offline-replay-harness.md` owns production-inert evaluation. Do not create another universal harness, ledger, proof store, model language, solver portfolio, synthetic level source, or GHA workflow at Stage 0.
 
 Discovery limitation: the linked repo has an unindexed GitHub code-search surface; inspection used the recursive main tree and explicit source/authority fetches, not an empty code-search result as an absence proof. Before any new runtime capability, run local `tooling-census`, `research-status-index`, `research-asset-query`, and stable-question dossier joins from a full checkout.
@@ -121,6 +121,6 @@ Stop on: no novelty witness against existing inference, broad underdetermination
 1. Stage-0 source, tests, a reproducible bounded structural preflight and honest initial report.
    - The source-code reconnaissance is now documented as a separate bounded evidence report; it cannot count as a Stage-1 nonredundant theorem or trigger architecture work.
 2. Only after inspecting the Stage-0 observations and existing probe/CP-SAT records: identify one *specific* coupled fact and stage-1 discriminating tiny witness, or close the incidence-only form as redundant.
-3. Do not preempt pending BC1-VX production A/B or PG-G pilot. Any queue change must stay premise-discovery / method, with **no treatment entitlement**.
+3. Do not preempt the earned BC1-VX production A/B or PG-G's selected-pair ordering × repair-seed causal factorial. Algebraic work remains premise-discovery / method, with **no treatment entitlement**, until it produces its own current-prune-nonredundant exact witness.
 
 **Definition of done** is deliberately phase-local and machine-backed in the sibling `.quality.json`; the whole program is *not* done because this Stage-0 PR merges.
