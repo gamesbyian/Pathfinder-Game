@@ -341,6 +341,10 @@ export interface PrepLevel {
      *  representations and assert byte-identical results. Never read by production code paths;
      *  absent (falsy) preserves the default numeric-when-safe behavior. */
     _forceBeamCoarseStateStringKeyForTests?: boolean;
+    /** Research/test-only candidate ordering key. When absent, getNeighbors preserves the
+     * long-standing E/W/S/N enumeration byte-for-byte. A research caller may return a numeric key
+     * for each (from,candidate) pair to impose a controlled order without changing legality. */
+    _candidateOrderResearchKey?: ((from: number, candidate: number) => number) | null;
     /** Research/test-only repair seed control. When absent, the long-standing gate/salt-derived
      * production seeds are used byte-for-byte. Both independent repair streams derive from it. */
     _repairResearchSeed?: number | null;
