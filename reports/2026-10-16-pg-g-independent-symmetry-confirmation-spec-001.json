@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-pg-g-independent-symmetry-confirmation-spec",
+  "historicalDatasetRef": "32132d6ba60f1203ee013ed0d475f46061eddd49",
+  "evidenceRole": "confirmation",
+  "selection": "outcome-blind deterministic hash selection from the 22 root-level retained symmetry-family parents outside the PG-G discovery cohort",
+  "selectionNamespace": "pg-g-independent-symmetry-confirmation-v1",
+  "selectionAlgorithm": "sha256(selectionNamespace + NUL + parentId), ascending; take first 12",
+  "discoveryParents": [
+    "P00136",
+    "P00144",
+    "P00146",
+    "R00631",
+    "R00792",
+    "R02976"
+  ],
+  "reservoir": [
+    {
+      "parentId": "R00392",
+      "selectionHash": "02fb11502785226f8822a3d3ef3b56e937d7e679c1c851856ae6077f2e76ead8",
+      "selected": true
+    },
+    {
+      "parentId": "R00082",
+      "selectionHash": "2a51f2bf5bcf213d4680701bff12d68569e325abadd47f309b45484223410053",
+      "selected": true
+    },
+    {
+      "parentId": "R00727",
+      "selectionHash": "2dba9957af49f851a987f422a26293f819dbff2456a19c27c7f04bc5dfb5dc79",
+      "selected": true
+    },
+    {
+      "parentId": "R00789",
+      "selectionHash": "3068ab1bf5b962ca426580b128c776f2ab6a8e9cc63c72a2944938569f43bcfd",
+      "selected": true
+    },
+    {
+      "parentId": "R00050",
+      "selectionHash": "3a257c164a50cb1d3e0f3461f0ffdb5e49f606da14f57af9e9e61b65e803aed3",
+      "selected": true
+    },
+    {
+      "parentId": "R01075",
+      "selectionHash": "3b933b0bab54a0c29b019f9a392d1a9ee8f198acd4fe35900aaa1b4e6f5deda9",
+      "selected": true
+    },
+    {
+      "parentId": "P00010",
+      "selectionHash": "3ca20ae667037933c54a93ba0f59a82fcee993e552e1c855aa0b192b07673edc",
+      "selected": true
+    },
+    {
+      "parentId": "R00920",
+      "selectionHash": "411a31a8855357c28382160be6e5a35ef8403c9cc041a973fb44bd522bcfb75c",
+      "selected": true
+    },
+    {
+      "parentId": "R01636",
+      "selectionHash": "4e52e7842d181c4e7853a6b706f1992118d793d8496a1adc8e8484edde2d4f1c",
+      "selected": true
+    },
+    {
+      "parentId": "R01533",
+      "selectionHash": "57e90fa113d304a8ff51802a05391b6650741e008b2b3370681e3982936bb415",
+      "selected": true
+    },
+    {
+      "parentId": "R00134",
+      "selectionHash": "60a9f964ee7baba426478b9cfb40c9de2ecb4a0643e74d42f5bc63ccbacfdc55",
+      "selected": true
+    },
+    {
+      "parentId": "R00108",
+      "selectionHash": "68fd281c4b75325b525cf31efeec372869a3e89f0dcdc394716793d50ca77a76",
+      "selected": true
+    },
+    {
+      "parentId": "P00145",
+      "selectionHash": "7034362fadc6cb65ab25d816f019c5e3a00cbe8aa078770c1fd31661cec96cc8",
+      "selected": false
+    },
+    {
+      "parentId": "R01465",
+      "selectionHash": "72e613d1b07d04ddf07109e9b3ffce813900c2096f48513ed1886b2015452e83",
+      "selected": false
+    },
+    {
+      "parentId": "R00142",
+      "selectionHash": "823049ce2d2e028715fb85ee2db36cb4b2f1b69a6ffdd68e336783ae4c9bd3f6",
+      "selected": false
+    },
+    {
+      "parentId": "R00087",
+      "selectionHash": "8f0d5a19f41bb4dc977c7ed1c218d63fa69a3fce4bbd9fd7c6f34522c6ba7860",
+      "selected": false
+    },
+    {
+      "parentId": "R00541",
+      "selectionHash": "ac985f99f45dce5b7991a9c51dfb10797297bdfae8b312d152c1a389114d487c",
+      "selected": false
+    },
+    {
+      "parentId": "R00432",
+      "selectionHash": "b1dff823a87f82a712c6da158d62ff12bc7d73b82017b48ea3b54fcd20acb2ea",
+      "selected": false
+    },
+    {
+      "parentId": "P00097",
+      "selectionHash": "b49fdd0c69f56f3dc2bab938a7a70569ac7fdac412fd392a4a521735d68f0b8a",
+      "selected": false
+    },
+    {
+      "parentId": "R01052",
+      "selectionHash": "dc87af9999ad35db0d25ad61f2c8a6b806c31707d10247344ddabdcbb7b003a8",
+      "selected": false
+    },
+    {
+      "parentId": "R01644",
+      "selectionHash": "dda034b7a56af337cd1e0aedd06f5720722f165893abbf09a65966b47f6a762d",
+      "selected": false
+    },
+    {
+      "parentId": "R00104",
+      "selectionHash": "ea7c634108d7afb82a663228b9dc0f99b1a726584873cce83d03298052b1e92f",
+      "selected": false
+    }
+  ],
+  "selectedParents": [
+    {
+      "parentId": "R00392",
+      "selectionHash": "02fb11502785226f8822a3d3ef3b56e937d7e679c1c851856ae6077f2e76ead8"
+    },
+    {
+      "parentId": "R00082",
+      "selectionHash": "2a51f2bf5bcf213d4680701bff12d68569e325abadd47f309b45484223410053"
+    },
+    {
+      "parentId": "R00727",
+      "selectionHash": "2dba9957af49f851a987f422a26293f819dbff2456a19c27c7f04bc5dfb5dc79"
+    },
+    {
+      "parentId": "R00789",
+      "selectionHash": "3068ab1bf5b962ca426580b128c776f2ab6a8e9cc63c72a2944938569f43bcfd"
+    },
+    {
+      "parentId": "R00050",
+      "selectionHash": "3a257c164a50cb1d3e0f3461f0ffdb5e49f606da14f57af9e9e61b65e803aed3"
+    },
+    {
+      "parentId": "R01075",
+      "selectionHash": "3b933b0bab54a0c29b019f9a392d1a9ee8f198acd4fe35900aaa1b4e6f5deda9"
+    },
+    {
+      "parentId": "P00010",
+      "selectionHash": "3ca20ae667037933c54a93ba0f59a82fcee993e552e1c855aa0b192b07673edc"
+    },
+    {
+      "parentId": "R00920",
+      "selectionHash": "411a31a8855357c28382160be6e5a35ef8403c9cc041a973fb44bd522bcfb75c"
+    },
+    {
+      "parentId": "R01636",
+      "selectionHash": "4e52e7842d181c4e7853a6b706f1992118d793d8496a1adc8e8484edde2d4f1c"
+    },
+    {
+      "parentId": "R01533",
+      "selectionHash": "57e90fa113d304a8ff51802a05391b6650741e008b2b3370681e3982936bb415"
+    },
+    {
+      "parentId": "R00134",
+      "selectionHash": "60a9f964ee7baba426478b9cfb40c9de2ecb4a0643e74d42f5bc63ccbacfdc55"
+    },
+    {
+      "parentId": "R00108",
+      "selectionHash": "68fd281c4b75325b525cf31efeec372869a3e89f0dcdc394716793d50ca77a76"
+    }
+  ],
+  "techniques": [
+    "dfs|score=default|bias=none",
+    "admissible-order|tieBreak=none|lds=off",
+    "repair|score=repair|guidance=standard"
+  ],
+  "workBudget": 10000000,
+  "budgetMs": 600000,
+  "stageA": {
+    "treatment": "current candidate order",
+    "rowsPerParent": 24,
+    "description": "parent plus all seven D4 siblings under each of three isolated techniques",
+    "opportunity": "variant solve state differs from its parent under the same technique"
+  },
+  "stageB": {
+    "treatment": "parent-frame-equivariant candidate ordering only",
+    "population": "all and only Stage-A opportunity rows",
+    "repairSeedNormalization": false,
+    "description": "repeat each discordant sibling/technique row at the same work cap with only the research candidate-order hook changed"
+  },
+  "decisionRule": {
+    "minimumEligibleParents": 4,
+    "minimumDiscordantRows": 6,
+    "positiveIf": "at least 70% of Stage-B discordant rows restore the parent solve state and restoration occurs on at least 4 independent parentIds",
+    "negativeIf": "eligibility minima are met but fewer than 40% of discordant rows restore the parent solve state",
+    "otherwise": "inconclusive",
+    "secondary": "paired work contraction toward parent control among rows where parent and treated sibling both solve"
+  },
+  "inference": {
+    "independentUnit": "parentId",
+    "siblings": "correlated repeated measurements within parent",
+    "scope": "independent-parent confirmation of orientation-order causality only; no production value or cold-policy claim",
+    "productionBoundary": "family ancestry/orientation metadata are forbidden production inputs"
+  }
+}
