@@ -53,7 +53,7 @@ The machine-owned state vocabulary is:
 - `deferred-reopen` — not currently live; preserves an explicit trigger/reopen boundary;
 - `mixed` — materially mixed evidence/disposition that should not be flattened into positive or negative.
 
-`reopensOn` records the changed premise/evidence needed to revisit a deferred or scoped-closed question.
+`reopensOn` records the changed premise/evidence needed to revisit a deferred or scoped-closed question. A deferred state applies to the **tracked question/claim at that scope**. It must not be interpreted as a ban on a materially different cheaper observer/falsifier; if such a descendant is executable now, give it an active stable question (or reactivate the same question only if the causal question is genuinely unchanged) and link it from workstreams rather than leaving useful work hidden behind the deferred parent.
 
 Do not use `closed-tested-form` for a causal question that the nominal experiment failed to observe. If execution or participation made the intended question unanswered, preserve that question as deferred/open as appropriate and close only the actually tested form in dated evidence.
 
