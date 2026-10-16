@@ -76,6 +76,9 @@ for (const familyId of familyIds) {
             });
         }
         const sample = vrows[0]?.familyContext ?? {};
+        const gains = responses.filter(r => r.transition === 'gain').map(r => r.technique);
+        const losses = responses.filter(r => r.transition === 'loss').map(r => r.technique);
+        const solveStateFlip = gains.length > 0 || losses.length > 0;
         edges.push({
             variantId,
             relation: sample.relation ?? null,
@@ -83,8 +86,12 @@ for (const familyId of familyIds) {
             mutation: sample.mutation ?? null,
             techniquesObserved: responses.length,
             solveResponseHeterogeneous: new Set(responses.map(r => r.transition)).size > 1,
-            gains: responses.filter(r => r.transition === 'gain').map(r => r.technique),
-            losses: responses.filter(r => r.transition === 'loss').map(r => r.technique),
+            solveStateFlip,
+            changedTechniques: responses
+                .filter(r => r.transition === 'gain' || r.transition === 'loss')
+                .map(r => ({ technique: r.technique, transition: r.transition })),
+            gains,
+            losses,
             responses,
         });
     }
@@ -112,6 +119,7 @@ for (const familyId of familyIds) {
         techniques,
         variants: variantIds.length,
         heterogeneousEdges: edges.filter(e => e.solveResponseHeterogeneous).length,
+        solveStateFlipEdges: edges.filter(e => e.solveStateFlip).length,
         techniqueSummary,
         edges,
     });
@@ -124,6 +132,8 @@ const summary = {
     parentIds,
     variants: families.reduce((n, f) => n + f.variants, 0),
     edgesWithTechniqueHeterogeneity: families.reduce((n, f) => n + f.heterogeneousEdges, 0),
+    edgesWithSolveStateFlip: families.reduce((n, f) => n + f.solveStateFlipEdges, 0),
+    edgesWithBaselineOnlyHeterogeneity: families.reduce((n, f) => n + f.edges.filter(e => e.solveResponseHeterogeneous && !e.solveStateFlip).length, 0),
     gainCells: families.reduce((n, f) => n + f.techniqueSummary.reduce((s, t) => s + t.gains, 0), 0),
     lossCells: families.reduce((n, f) => n + f.techniqueSummary.reduce((s, t) => s + t.losses, 0), 0),
 };
@@ -134,7 +144,8 @@ const out = {
     inputs: inputFiles,
     interpretation: {
         derivative: 'For one independent parent family, compare one isolated technique under equal work on the parent and one controlled descendant.',
-        heterogeneity: 'An edge is heterogeneous when different techniques have different solve-state transitions on the same parent->variant transformation.',
+        heterogeneity: 'An edge is heterogeneous when different techniques have different solve-state transitions on the same parent->variant transformation. This can include stable baseline technique differences where no technique actually flips state.',
+        solveStateFlip: 'A stricter mutation-response signal: at least one technique changes solved/unsolved state between the parent and variant (gain or loss).',
         independence: 'Variant edges and multiple transformation-mode blocks from the same parent are repeated observations within one parent family; unique parentId is the between-level independence unit.',
     },
     summary,
