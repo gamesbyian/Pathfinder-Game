@@ -4,7 +4,7 @@
 > **Last evidence:** 2026-10-16 — corrected strict-work run 38864229664 on source f5eae0830a2b07e8b380584c2b6701bf4935c904 completed the frozen five-pair causal factorial at 10,000,000 canonical work per isolated technique.
 > **Decision:** symmetry-dependent stable candidate ordering is causal for every selected solve-state cliff: parent-frame ordering restores the parent solve/unsolved outcome in 6/6 cliffs, with exact parent work/status in all five DFS/admissible cases. Repair seed identity alone restores 0/1 repair solve-state cliffs; ordering restores the solve, and ordering plus parent-mapped seed exactly reproduces the parent repair work on that case.
 > **Remaining gate:** confirm orientation-order causality on an outcome-blind independent-parent symmetry population before designing any cold production consumer. The confirmation treatment must be computable from current level/state only; family parent-frame provenance is forbidden as production input.
-> **Evidence role:** forensic / selected-pair causal attribution.
+> **Evidence role:** forensic.
 > **Selection:** five symmetry pairs selected after the PG-G discovery pilot and ordering microscope; not prevalence or confirmation evidence.
 > **Population identity:** exact five cases in reports/2026-10-16-pg-g-symmetry-causal-factorial-spec-001.json; historical descendants pinned to 32132d6ba60f1203ee013ed0d475f46061eddd49.
 > **Inference scope:** causal attribution for the selected symmetry cliffs under current-main search semantics and the frozen 10M isolated-technique dose; no unseen-parent rate or production-value claim.
