@@ -2,6 +2,12 @@
 
 Deferred/reopen treatment work plus premise-generation reopen conditions. [Workstreams](solver-optimization-workstreams.md) owns all active priority, including the current non-treatment premise-discovery lane; [operating model](solver-research-operating-model.md) owns method; [invention](solver-capability-invention-program.md) owns capability class.
 
+## 2026-10-16 no-stranding reconciliation
+
+This file is no longer allowed to function as a parking lot for executable premise work. The repository-wide archaeology + October external-search reconciliation promoted every currently executable descendant into the canonical live queue: first-loss -> PG-C; crossing/trail feasibility -> PG-D; symmetry ordering -> PG-G; hidden semantic forcedness -> PG-H; fragile/robust family response -> PG-I; topology/completion regimes -> PG-J; commutativity -> PG-K; basin overlap -> PG-L; proof-bearing reason reuse and alternative search objects -> PG-M/PG-N behind explicit dependencies.
+
+Rows below now mean one of three things only: a tested form is closed with an explicit changed-premise trigger; a consumer is conditional on an upstream live lane; or the idea is genuinely lower-value than the live queue. If a row becomes executable without a new premise, move it to workstreams in the same change.
+
 ## Deferred descendants of active premises
 
 | Descendant | Reopen / advancement condition |
@@ -9,10 +15,10 @@ Deferred/reopen treatment work plus premise-generation reopen conditions. [Works
 | General solve-local proof store / blackboard | **Deferred.** Cut proofs recurred but failed economics: 49,034 dominated work (~0.40%) vs 791,269 boundary validations. Reopen only for a different fact family with sound cheap lookup and positive non-overlapping savings. [audit closeout](../reports/2026-09-21-computational-work-elimination-audit-closeout-001.md) |
 | Conflict-driven backjumping / clause learning | Fresh DEAD-core/relational work derives sound recurring solve-local conflicts with a cheaper backjump/rejection target |
 | Candidate-commitment viability inside LIVE search | Lane D shows within-LIVE variation (54/392 event queries infeasible; 16/23 LIVE states mixed), but D1 beam ranking closed at 0/120 disagreements. Reopen only with a materially cheaper current-input viability test **and** a different production seam with non-trivial displaced-work ceiling. [reconciliation](../reports/2026-09-21-relational-query-next-question-reconciliation-001.md) |
-| Residual-interface commutativity as a revision operator | LIVE->LIVE substitutions are referee-valid in 1,453/3,121 cases (46.6%), but capability value is untested. Reopen only on DEAD/near-miss populations where current-input commuting substitution can restore feasibility, reduce work, or create solves. [reconciliation](../reports/2026-09-21-relational-query-next-question-reconciliation-001.md) |
+| Residual-interface commutativity as a revision operator | **Promoted to live premise lane PG-K.** LIVE->LIVE substitutions are referee-valid in 1,453/3,121 cases (46.6%); the live gate is now to find a suitable exact-DEAD/near-miss population and test current-input substitution for restored feasibility/work, not to rerun LIVE splice legality. [reconciliation](../reports/2026-09-21-relational-query-next-question-reconciliation-001.md) |
 | Production bounded exact-query service | D1's observation found 0/120 production disagreements (2026-09-18) -- closed for this predicate. Reopen only under a materially different predicate/seam/population |
 | Region/AND-OR decomposition engine | C0-C2 ladder closed representation-explosive at C2. Reopen only if a different frozen interface contract restores repeated outcome equivalence without near-unique/full-prefix state. [`result`](../reports/2026-09-20-lane-a-c2-global-accounting-result-001.md) |
-| Production topology-aware state relation | Independent parents show a compact descriptor with decision-bearing discordance, then a sound consequence beyond raw phase |
+| Production topology-aware state relation | **Premise work promoted to PG-J.** Open-path topology already has independent exact LIVE/DEAD contrast; the cheap descriptor failed on the decision-bearing tied cases. PG-J now seeks a bounded sound current-input consequence before any production relation. |
 | Targeted local surgery / causal backjump operator | Independent evidence finds an actionable causal interface smaller than naive divergence/rollback; Lane E stays closed |
 | Dependency-conditioned repair neighborhood | **DEVELOPMENT POSITIVE.** R03147 nominates path-resource + relational-bound state; require independent-parent replication. [`result`](../reports/2026-09-20-ws6-dependency-interface-observer-result-001.md) |
 | BC1-off dead-last whole-ladder retry | If the default-ON BC1 beam prune's loss rate on already-solved levels (~1.4%: `R01273`, `R02333`, `R02874`, `R03242`, `R02401`) proves worth recovering: rerun the ladder with `STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE` off as an additive true-final retry (precedent: `STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY`). Expected recovery ~4/300 at roughly 2x work on the ~25% still-unsolved levels -- price against fixed `workSpent` before building. **Pricing designed 2026-10-02**: a full-corpus current-main control vs BC1-off pair (GHA 37049775397 / 37049784486 were cancelled by the maintainer at ~40 min, before any shard finished; re-dispatch awaits their go-ahead); pre-registered rule: promote only with >= 10 recoveries and a yield at least the lowest tail retry tier's on the same control run ([atlas](../reports/2026-10-02-intervention-response-atlas-result-001.md)). |
@@ -38,7 +44,7 @@ Use compact response first; never backfill pre-contract attempts. Try cheap join
 |---|---|
 | Bidirectional / backward abstraction | A compact sound residual/interface signature emerges from decomposition/topology/relational work; do not reopen full MITM from scratch |
 | Choice-bearing macro-actions | A mechanism observer shows repeated route structure beyond one-successor chains and a macro preserves transition semantics/accounting |
-| Hidden semantic forcedness | **Deferred behind `WS2-FORCED-WORK-CAPTURE-ECONOMICS`.** Reopen after literal forced-work economics, or earlier if the 25.33% reservoir proves mostly unavoidable. Then use the existing <=320-case exact-prefix preflight; no new exact engine. [preflight](solver-semantic-forcedness-preflight.md) |
+| Hidden semantic forcedness | **Promoted to live premise lane PG-H.** Its priority blocker is satisfied: `WS2-FORCED-WORK-CAPTURE-ECONOMICS` closed its tested global/post-recognition/raw-degree forms. Use the existing <=320-case exact-prefix preflight; no new exact engine and no production exact query. [preflight](solver-semantic-forcedness-preflight.md) |
 | Mechanics-derived canonicalization / symmetry / transposition | Cross-level duplicate elimination remains closed by the 1,962-level census. **PG-G selected-pair causal result is positive:** parent-frame candidate ordering restored 6/6 selected symmetry solve-state cliffs at 10M work; repair seed alone restored 0/1 repair cliff. Next: outcome-blind independent-parent symmetry confirmation. If that transfers, design the smallest cold-legal current-input D4-canonical tie key, explicitly handling automorphism ties; do not use family ancestry and do not jump to an additive eight-orientation portfolio. [result](../reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md) |
 | Structural graph preprocessing | An active separator/topology/relational premise exposes a sound graph property with enough reuse to repay construction |
 | Algebraic / constrained-trail decoding | **Conditional premise discovery, not a treatment.** Portal-free GF(2) incidence alone is sound but underdetermined; the stronger trail-with-local-switches model matches 903/903 tiny independent cases and exposes a connectivity witness, but neither has yet beaten current production inference on a real prefix. Advance only after canonical-referee differential testing across supported mechanics and one exact current-prune-nonredundant DEAD/LIVE witness with a demonstrated participation ceiling; no ZDD/SAT/CEGAR production architecture before that gate. [plan](solver-algebraic-decoding-research-plan.md) [trail result](../reports/2026-10-15-trail-transition-system-prior-art-and-toy-falsifier.md) |
@@ -58,7 +64,7 @@ Dormant until an active lane changes the premise.
 
 | Question | Reopen condition |
 |---|---|
-| Cross-attempt basin overlap | A real handoff/allocation question exists; measure action participation and solve-local rediscovery together |
+| Cross-attempt basin overlap | **Promoted to queued observer PG-L.** PG-G proves arbitrary tie order can redirect finite-work trajectories; after PG-C/PG-G, rebuild only the canonical-action observer and measure real trajectory/state-population overlap plus marginal novelty before any allocation consumer. |
 | Stability-aware portfolios / beam continuation / cross-policy handoff | A new typed fact/interface or current-input descriptor creates concrete handoff value |
 | Repair restart near-miss allocation | A fresh population or changed allocation contract revives the historical signal; do not retest generic restart |
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
@@ -90,20 +96,20 @@ Closure is form-scoped: cross-level connectivity ≠ solve-local rediscovery; ga
 
 ## Post-exhaustion premise-generation lanes
 
-The frozen v2 premise map remains 148 propositions / 184 relations. The [2026-10-01 refresh](../reports/2026-10-01-post-exhaustion-solver-premise-space-refresh-001.md) found 50 material evidence-state updates and admitted no new premise IDs. The following work is routed through the workstream authority as premise discovery, not as treatment execution.
+The October 1 refresh was the source of PG-A through PG-F, but this section no longer owns execution state. The live expanded queue is fully reconciled in [workstreams](solver-optimization-workstreams.md).
 
-| Lane | Parent premises | Advancement condition |
-|---|---|---|
-| BC1 perturbation microscope | P144/P175/P183/P184/P187 | retained gain/loss frontier analysis finds a recurring set-level survivor/displacement property that precedes the outcome difference and survives rival explanations |
-| Intervention-response residual atlas | P113/P145/P181/P199 | multiple independent interventions expose a reproducible response regime with explicit observed/unobserved ancestry |
-| WS1 generalization-unit failure analysis | P112/P181/P199/P206 | historical-positive/fresh-zero contrast is explained by a recurring identity-free unit that can prospectively define a population or state |
-| Counterfactual first-loss refresh | P024/P135/P183 | retained causal pairs collapse to a compact recurrent first-loss vocabulary; new telemetry only if a specific missing observable blocks classification |
-| Cut/resource sibling mining | P012/P032/P157/P163 | a materially different exact consequence has a proof sketch, soundness path and nontrivial recurrent incidence before any consumer |
-| Local-forcedness reinterpretation | P170/P198/P204 | local forcedness changes a real decision/handoff oracle ceiling despite global compression economics being closed |
+| October-1 lane | Current disposition |
+|---|---|
+| BC1 perturbation microscope | PG-A closed |
+| Intervention-response atlas | PG-B frozen prospective compute, queued for exact re-dispatch |
+| WS1 generalization-unit failure analysis | PG-E withdrawn after instrument correction |
+| Counterfactual first-loss refresh | **PG-C active retained-first** |
+| Cut/resource sibling mining | **PG-D active**, strengthened by trail-with-switches / forbidden-transition work |
+| Local-forcedness reinterpretation | PG-F descriptor closed; **PG-H hidden semantic forcedness** is the materially different ready descendant |
 
-Do not promote correlations, descriptive clusters or post-hoc labels directly. A surviving lane must pass through semantic premise -> cheapest falsifier -> smallest consumer -> matched-work economics.
+The same reconciliation also promoted PG-G symmetry ordering, PG-I fragile/robust family response, PG-J topology/completion regimes, PG-K commutativity, and dependency-queued PG-L/PG-M/PG-N. Do not create a second priority ordering here.
 
-Machine-readable current evidence state: [post-exhaustion overlay](solver-premise-map-post-exhaustion-status-2026-10-01.json).
+Machine-readable evidence-state overlay: [post-exhaustion overlay](solver-premise-map-post-exhaustion-status-2026-10-01.json), reconciled through 2026-10-16 without changing the frozen v2 proposition inventory.
 
 ## Research hygiene
 
