@@ -1,9 +1,9 @@
 # Solver premise-map mining preregistration
 
-> **Status:** preregistered; do not record mining results in this document.
-> **Last evidence:** 2026-09-17 — hardening overlay and structural auditor added before mining begins.
+> **Status:** concluded-positive / executed historical preregistration. Do not record mining results in this document; the frozen method remains the audit trail for the completed first round.
+> **Last evidence:** 2026-10-16 - frozen premise-map mining, replication/reconciliation and v2 successor work are complete; this preregistration has served its decision-separation purpose.
 > **Decision:** freeze methods before looking for research conclusions in the hardened map.
-> **Remaining gate:** create the frozen snapshot manifest and run each lens against that snapshot independently.
+> **Remaining gate:** none for the completed first mining round. New lenses require a new versioned preregistration only when a new decision-bearing mining round is intentionally opened.
 
 ## Separation rule
 
