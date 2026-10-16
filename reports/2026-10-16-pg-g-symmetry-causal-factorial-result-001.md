@@ -6,6 +6,7 @@
 > **Remaining gate:** confirm orientation-order causality on an outcome-blind independent-parent symmetry population before designing any cold production consumer. The confirmation treatment must be computable from current level/state only; family parent-frame provenance is forbidden as production input.
 > **Evidence role:** forensic.
 > **Selection:** five symmetry pairs selected after the PG-G discovery pilot and ordering microscope; not prevalence or confirmation evidence.
+> **Selection history:** discovery-cohort response cliffs nominated the symmetry cases; the microscope then localized stable candidate-order and repair-seed seams before the causal intervention was designed.
 > **Population identity:** exact five cases in reports/2026-10-16-pg-g-symmetry-causal-factorial-spec-001.json; historical descendants pinned to 32132d6ba60f1203ee013ed0d475f46061eddd49.
 > **Inference scope:** causal attribution for the selected symmetry cliffs under current-main search semantics and the frozen 10M isolated-technique dose; no unseen-parent rate or production-value claim.
 
