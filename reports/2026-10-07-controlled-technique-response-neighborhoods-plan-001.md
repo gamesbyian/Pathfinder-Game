@@ -1,9 +1,9 @@
 # Controlled technique-response neighborhoods — plan and infrastructure audit (2026-10-07)
 
-> **Status:** active
-> **Last evidence:** 2026-10-07 — current-main infrastructure audit plus the retained July family synthesis/resource audits.
-> **Decision:** reuse the existing variant-family and technique-census systems; do not build a second solver harness or launch another bulk family-generation campaign.
-> **Remaining gate:** run a bounded current-main pilot over existing controlled families, with whole parent families as the independent unit, then inspect only response-cliff edges with the existing pair-divergence microscope.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-10-15 — recovered complete 715-cell run 37712397687; 39/125 controlled edges contain an actual solve-state flip, including 16/42 whole-level symmetry edges.
+> **Decision:** the bounded pilot succeeded as premise discovery; coordinate/search-order sensitivity under semantically equivalent symmetry transforms is the strongest earned mechanism lead.
+> **Remaining gate:** inspect the frozen symmetry/local-mutation shortlist with the existing pair-divergence microscope, then confirm any generalized mechanism on untouched whole-parent families.
 > **Evidence role:** discovery / method-enabling.
 > **Selection:** the initial cohort is deliberately information-rich and historically repair-response-enriched; it estimates mechanisms, not population prevalence.
 > **Treatment authority:** none. Interesting interactions nominate premises; they do not promote solver behavior.
@@ -132,3 +132,14 @@ Stop a pilot if transforms mostly act as generic difficulty looseners, isolated 
 Expand only when a recurring interaction survives several independent parents or when one unusually clean edge exposes a specific missing observable that can be tested cheaply.
 
 No production treatment, selector, scheduler rule or new capability follows directly from this lane. A discovered interaction must enter the ordinary question/premise -> smallest consumer -> matched-work economics -> confirmation path.
+
+
+## Pilot result / closeout
+
+The first bounded pilot did execute on 2026-10-08 through PR #2146. All 12 solve shards succeeded; only the generic post-processing identity join failed. The complete raw matrix was recovered on 2026-10-15 and its historical family inputs were verified byte-for-byte against pinned dataset commit `32132d6ba60f1203ee013ed0d475f46061eddd49`.
+
+Result authority: [2026-10-15 controlled technique-response pilot recovery](2026-10-15-controlled-technique-response-pilot-recovery-result-001.md).
+
+The pilot contains 125 parent→variant edges / 715 isolated-technique cells. Broad transition heterogeneity appears on 108 edges, but only 39 edges contain a genuine parent→variant solve-state gain/loss. Future analysis must keep those concepts separate. Whole-level symmetry is the cleanest mechanism instrument: 16/42 symmetry edges flip at least one technique despite preserving puzzle semantics, with additional multi-order-of-magnitude work cliffs for repair and admissible-order.
+
+No treatment is promoted from this selected-on discovery cohort. The next activity is microscope-scale mechanism localization, not another bulk family run.
