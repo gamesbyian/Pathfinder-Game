@@ -1446,7 +1446,7 @@
         "docs/solver-solve-local-rediscovery-preflight.md",
         "docs/solver-capability-gap-stop-condition-reconciliation.md"
       ],
-      "result": "Activated by the 2026-10-16 blocker audit. Cross-level learned-connectivity reuse stays closed, but current authorities explicitly preserve an untested per-instance question. The old 'wait for a new proof-bearing reason family' gate was unnecessarily strong: Phase 0 can first measure recurrence/economics of already-sound current-state blocker/resource facts. Behavioral memoization/backjumping remains gated on a pre-computation sound certificate and material avoided work.",
+      "result": "Activated by the 2026-10-16 blocker audit on materially changed evidence only. Cross-level learned-connectivity reuse stays closed, and the original 2026-09-17 Phase 0 remains negative on its tested retained population. PG-M therefore begins with a delta rejoin against the later fresh exact-DEAD sibling population and newer PG-D/PG-J/PG-K exact/interface-query material. Only if that new material restores solve-local recurrence/economic headroom may a tiny observer follow. Behavioral memoization/backjumping remains gated on a pre-computation sound certificate and material avoided work.",
       "constrains": [
         "Do not reuse post-hoc reached-set signatures as proofs before the computation they are meant to avoid.",
         "Cross-level reason reuse remains closed; scope is one invocation/current instance unless separately earned."
