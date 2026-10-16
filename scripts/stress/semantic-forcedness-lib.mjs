@@ -39,3 +39,19 @@ export function summarizeSemanticForcedness(states) {
         semanticallyDeadWorkShare: totalResolvedWork ? deadWork / totalResolvedWork : null,
     };
 }
+
+/**
+ * Outcome-blind bounded state selection for a semantic-forcedness reference pilot.
+ * The ranked depth is a search-produced current-state fact; exact LIVE/DEAD
+ * outcomes are unknown at selection. Ties keep production observation order.
+ */
+export function selectSemanticForcednessCaptureGroups(groups, maxStates, mode = 'first') {
+    if (!Array.isArray(groups) || !Number.isSafeInteger(maxStates) || maxStates < 1) {
+        throw new Error('groups and positive maxStates required');
+    }
+    if (mode === 'first') return groups.slice(0, maxStates);
+    if (mode !== 'deepest') throw new Error('selection mode must be first or deepest');
+    return groups.map((group, ordinal) => ({ group, ordinal }))
+        .sort((a, b) => Number(b.group.depth) - Number(a.group.depth) || a.ordinal - b.ordinal)
+        .slice(0, maxStates).map(row => row.group);
+}

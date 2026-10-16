@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.js';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
+import { selectSemanticForcednessCaptureGroups } from './semantic-forcedness-lib.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (name, fallback = null) => {
@@ -93,13 +94,11 @@ function createCollector({ minChildren, maxChildren }) {
     };
 }
 
-function selectGroups(groups, maxStates) {
-    // Capture order is production generation order. Taking the first bounded eligible states is
-    // deterministic and independent of exact child labels, which do not exist at capture time.
-    return groups.slice(0, maxStates);
+function selectGroups(groups, maxStates, selectionMode) {
+    return selectSemanticForcednessCaptureGroups(groups, maxStates, selectionMode);
 }
 
-async function captureGate({ level, gateKey, profile, width, workBudget, budgetMs, minChildren, maxChildren, maxStates }) {
+async function captureGate({ level, gateKey, profile, width, workBudget, budgetMs, minChildren, maxChildren, maxStates, selectionMode }) {
     const prep = SOLVER_TESTING_API.prepLevel(level);
     prep._cfg = null;
     prep._metrics = { nodesExpanded: 0 };
@@ -134,7 +133,7 @@ async function captureGate({ level, gateKey, profile, width, workBudget, budgetM
     prep._beamResearchObserver = null;
 
     const snapshot = collector.snapshot();
-    const selected = selectGroups(snapshot.groups, maxStates);
+    const selected = selectGroups(snapshot.groups, maxStates, selectionMode);
     const workSpent = prep._workMeter.units - startWork;
     return {
         gateKey,
@@ -166,6 +165,7 @@ async function main() {
     const minChildren = Number(arg('min-children', 2));
     const maxChildren = Number(arg('max-children', 4));
     const maxStatesPerGate = Number(arg('max-states-per-gate', 5));
+    const selectionMode = String(arg('selection', 'first'));
     const outFile = arg('out', null);
     const casesFile = arg('cases-out', null);
 
@@ -176,6 +176,7 @@ async function main() {
         ['max-children', maxChildren], ['max-states-per-gate', maxStatesPerGate]]) {
         if (!Number.isSafeInteger(value) || value < 1) throw new Error(`--${name} must be a positive integer`);
     }
+    if (!['first', 'deepest'].includes(selectionMode)) throw new Error('--selection must be first or deepest');
     if (minChildren < 2 || maxChildren < minChildren) throw new Error('child bounds must satisfy 2 <= min <= max');
     if (!Number.isFinite(budgetMs) || budgetMs <= 0) throw new Error('--budget-ms must be positive');
 
@@ -199,7 +200,7 @@ async function main() {
         for (const gateKey of level.gateKeys) {
             const gate = await captureGate({
                 level, gateKey, profile, width, workBudget, budgetMs,
-                minChildren, maxChildren, maxStates: maxStatesPerGate,
+                minChildren, maxChildren, maxStates: maxStatesPerGate, selectionMode,
             });
             gates.push(gate);
             for (let stateIndex = 0; stateIndex < gate.selected.length; stateIndex++) {
@@ -238,8 +239,10 @@ async function main() {
         premiseUse: 'oracle-ceiling-opportunity-sizing-only',
         protocol: {
             corpusFiles, levelIds, profile: profileName, width, workBudget, budgetMs,
-            minChildren, maxChildren, maxStatesPerGate,
-            selection: 'first eligible multi-successor parent states in production generation order; exact labels unavailable at capture',
+            minChildren, maxChildren, maxStatesPerGate, selectionMode,
+            selection: selectionMode === 'deepest'
+                ? 'deepest eligible multi-successor states by descending search depth, preserving production order on ties; no exact labels at capture'
+                : 'first eligible multi-successor parent states in production generation order; exact labels unavailable at capture',
         },
         summary: {
             parents: levelIds.length,
