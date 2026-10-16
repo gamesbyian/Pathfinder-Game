@@ -4,6 +4,8 @@
 
 **Current owners:** [workstreams](solver-optimization-workstreams.md) for research priority; [research intake](research-question-intake.md) for genuinely new questions; [operating model](solver-research-operating-model.md) for evidence gates; [premise atlas](solver-premise-space-atlas.md) and [technique taxonomy](solver-technique-operational-taxonomy.md) to avoid rediscovery.
 
+**Catalogue accounting note:** this document's confirmed-link ledger currently counts **86** repositories under its own staged scout rules. The supplementary [mechanic-indexed algebraic-decoding catalogue](../reports/2026-10-12-algebraic-decoding-code-repo-candidates-001.json) contains **91** entries under broader prior-census/source/code-search inclusion rules. These are overlapping views, not additive populations; compare repository identities and evidence grades rather than summing headline counts.
+
 ## Search thesis
 
 Searching only for `pathfinding` misses constraint-satisfaction, SAT/SMT encodings, resource-constrained walks, Hamiltonian/one-stroke puzzles, graph-set enumeration, loop puzzles, regular-path queries, and named games. Pathfinder's task is a **gate-to-goal walk** with exact counted length and intersection count, mandatory obligations, direction-dependent turns/filters, flippers and zero-length portal jumps. A large share of familiar Hamiltonian, Zip, Witness and Numberlink techniques presume **no vertex revisits** and therefore cannot be copied as sound Pathfinder prunes. Also, `CSP` can stand for constrained shortest path *or* constraint satisfaction problem.

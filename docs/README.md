@@ -41,6 +41,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-workflow-lifecycle.json`](solver-workflow-lifecycle.json) | Maintained workflow inventory, consumers, and retirement triggers |
 | [`solver-residual-state-representation.md`](solver-residual-state-representation.md) | Residual/future representation vocabulary |
 | [`solver-external-repository-scout-2026-10-12.md`](solver-external-repository-scout-2026-10-12.md) | Dated multilingual external prior-art candidate catalogue, search vocabulary, source-audit and trail/transition-system follow-up links; **not** priority or treatment authority |
+| [`solver-algebraic-decoding-research-plan.md`](solver-algebraic-decoding-research-plan.md) | Bounded constraint-decoding / joint-resource research gates, including the concluded incidence and flipper-cut preflights; **not** queue or treatment authority |
 | [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) | Operational technique/configuration meaning |
 | [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | Current profile-led speed gates/dispositions |
 | [`solver-level-blindness.md`](solver-level-blindness.md) | Runtime information boundary |
