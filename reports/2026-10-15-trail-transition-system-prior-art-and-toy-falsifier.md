@@ -67,6 +67,37 @@ For corner-to-corner 3×3 alone, there are 14 valid toy walks, including two wit
 
 **Next proof obligations:** (1) formalize the per-axis transition invariant by induction on legal moves; (2) prove the pairing traversal uniquely determines the walk when there is a single source-to-target route; (3) run canonical referee differential tests with converted raw/normalized boards and states; (4) apply the mechanic perturbation matrix and distinguish sound over-approximations from exact equivalences; (5) establish a novel current-production decision opportunity before proposing a new solver architecture.
 
+### A concrete nontrivial witness against ordinary connectivity
+
+A follow-up exhaustive subset search on the same 4×3 grid discovered an **11-edge configuration** that satisfies normal selected-edge degrees and ordinary graph connectedness, but fails the single switch-route constraint. Row-major cell numbering is:
+
+```text
+ 0 - 1 - 2 - 3
+ |   |   |   |
+ 4 - 5 - 6 - 7
+ |   |   |   |
+ 8 - 9 -10 -11
+```
+
+Only these edges are **selected** (the sketch labels coordinates, not selection):
+
+`(0,4), (1,2), (1,5), (2,6), (4,5), (5,6), (5,9), (6,7), (6,10), (7,11), (9,10)`.
+
+With gate 0 and goal 11, the undirected selected-edge graph is connected and has degree 1 at 0 and 11, degree 4 at 5 and 6, and degree 2 elsewhere among its used vertices. Degree-4 cells 5 and 6 both offer two horizontal and two vertical incident edges. Nonetheless, their **straight-through transition pairings** split the configuration into:
+
+- Open route `0 → 4 → 5 → 6 → 7 → 11` (5 selected edges);
+- A separate closed route `5 → 1 → 2 → 6 → 10 → 9 → 5` (6 selected edges).
+
+The closed route shares vertices 5 and 6 with the open route **as an ordinary graph**, but the orthogonal crossing strands cannot transfer between them without an illegal turn at a twice-used axis. The static switch traversal correctly rejects this edge subset; ordinary graph connectedness and local degree validation would accept it. The self-contained script now asserts this witness by explicit edge coordinates.
+
+**Exactly what this establishes:** an *incremental relation beyond plain graph connectedness* in the simplified selected-edge formulation. It does not establish novelty over production Pathfinder connectivity, BC1, exact projection or current search-state checks. It also does not prove that production regularly constructs this fully committed topology or encounters an earlier usable partial-state proof. The next value gate must locate a real **prefix** whose sound relaxed impossibility is visible early enough to matter.
+
+### Proof sketch for the explicitly restricted toy semantics
+
+- **Legal walk → accepted static switch-route.** A normal move marks its H/V axis at both endpoints, and a future move cannot enter a used target axis. Thus no edge repeats. A visited internal vertex contributes one arrival and departure (degree 2), or two arrivals and departures on distinct axes (degree 4); a first-visit turn blocks future orthogonal re-entry. At degree 4, the two passages are straight H and straight V. Gate and goal occur only at the ends. The actual walk consumes precisely its selected edges, so the switch-graph traversal from gate reaches goal and covers the set.
+- **Accepted static switch-route → legal toy walk.** A selected edge subset with the specified 0/2/4 internal degrees, degree-1 endpoints, H/V pairing at degree 4, and a single switch-compatible gate-to-goal traversal induces one ordered route. Each selected edge is consumed once. At degree 2, entering and leaving the cell is legal on its sole visit; at degree 4, the first passage reserves only one axis and the second uses the other; the two passages cannot turn. No move re-enters a used target axis or the gate, and the route ends at the goal.
+- Therefore, for this **unmechanized toy model only**, the chosen-edge switch condition and valid normal walks correspond bijectively. Exact ordinary length is the number of selected edges, and intersections are the number of degree-4 internal vertices. The exhaustive enumerator supplies independent bounded falsification of this proof outline; it cannot substitute for a mechanized canonical-source proof, particularly at portal transitions or filter/flipper history.
+
 ## 4. Mathematical-literature branch: forbidden transitions
 
 This discovery also changes the academic search language. In [*Finding paths in graphs avoiding forbidden transitions* (2003)](https://www.sciencedirect.com/science/article/pii/S0166218X02002512), an incident-edge transition graph `T(v)` describes which pairs of edges may consecutively pass through vertex `v`; a path is compatible when it respects those local pairs. This abstract framework matches Pathfinder's cell-axis/turn restrictions more naturally than generic vertex paths.
