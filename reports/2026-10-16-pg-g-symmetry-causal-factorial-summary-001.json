@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-pg-g-symmetry-causal-factorial-summary",
+  "decisionRunId": 38864229664,
+  "sourceRef": "f5eae0830a2b07e8b380584c2b6701bf4935c904",
+  "historicalDatasetRef": "32132d6ba60f1203ee013ed0d475f46061eddd49",
+  "invalidPredecessorRunId": 38863341481,
+  "workBudget": 10000000,
+  "orderCanaryPrefixes": 393,
+  "maxWorkCapOvershoot": 835,
+  "selectedPairs": 5,
+  "techniquePairRows": 7,
+  "controlSolveStateCliffs": 6,
+  "solveCliffsResolvedByOrder": 6,
+  "repairSolveStateCliffs": 1,
+  "repairCliffsResolvedBySeedOnly": 0,
+  "repairCliffsResolvedByCombined": 1,
+  "pureWorkCliffRows": 1,
+  "disposition": "selected-pair-causal-positive-confirm-on-independent-parents",
+  "productionAuthority": false
+}
