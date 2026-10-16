@@ -97,10 +97,7 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
     }
 
     async function installCandidateOrderResearch(prep, research) {
-        if (research == null) {
-            prep._candidateOrderResearchKey = null;
-            return;
-        }
+        if (research == null) return;
         if (research.kind !== 'symmetry-parent-frame') {
             throw new Error(`unknown candidateOrderResearch.kind "${research.kind}"`);
         }
