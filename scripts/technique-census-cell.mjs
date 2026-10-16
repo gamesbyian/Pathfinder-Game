@@ -96,6 +96,45 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
         return parsedConfigCache.get(key);
     }
 
+    async function installCandidateOrderResearch(prep, research) {
+        if (research == null) {
+            prep._candidateOrderResearchKey = null;
+            return;
+        }
+        if (research.kind !== 'symmetry-parent-frame') {
+            throw new Error(`unknown candidateOrderResearch.kind "${research.kind}"`);
+        }
+        const orientation = Number(research.orientation);
+        const parentWidth = Number(research.parentWidth);
+        const parentHeight = Number(research.parentHeight);
+        if (!Number.isInteger(orientation) || orientation < 1 || orientation > 7) {
+            throw new Error('symmetry-parent-frame candidate order requires orientation 1..7');
+        }
+        if (!Number.isSafeInteger(parentWidth) || parentWidth <= 0 ||
+            !Number.isSafeInteger(parentHeight) || parentHeight <= 0) {
+            throw new Error('symmetry-parent-frame candidate order requires positive parentWidth/parentHeight');
+        }
+        const [{ inverseTransformPoint }, { UNPACK }] = await Promise.all([
+            import('../modules/domain/geometry.ts'),
+            import('../modules/domain/cell-key.ts'),
+        ]);
+        const unmap = key => {
+            const { x, y } = UNPACK(key);
+            return inverseTransformPoint(x, y, orientation, parentWidth, parentHeight);
+        };
+        prep._candidateOrderResearchKey = (from, candidate) => {
+            const a = unmap(from);
+            const b = unmap(candidate);
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            if (dx === 1 && dy === 0) return 0;  // parent-frame E
+            if (dx === -1 && dy === 0) return 1; // parent-frame W
+            if (dx === 0 && dy === 1) return 2;  // parent-frame S
+            if (dx === 0 && dy === -1) return 3; // parent-frame N
+            return 4; // non-cardinal/portal singletons remain stable
+        };
+    }
+
     async function runCell(cell) {
         const entry = getRawLevel(cell.corpus, cell.levelPos, cell.corpusFile ?? null);
         const { id: _id, stressMeta: _sm, ...rawLevel } = entry;
@@ -110,6 +149,9 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
         prep._metrics = { nodesExpanded: 0 };
         prep._forcedFirstStepKey = null;
         prep._forcedPortalExitKey = null;
+        // Research-only search-order intervention. Ordinary census/production-facing cells omit
+        // this field, leaving getNeighbors' long-standing E/W/S/N enumeration untouched.
+        await installCandidateOrderResearch(prep, cell.candidateOrderResearch ?? null);
 
         // See this file's header comment. `Number.isFinite` (not just truthy) so an explicit
         // `workBudget: Infinity` — which nothing currently sends, but which would be meaningless as
@@ -229,6 +271,7 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
             budgetMs: cell.budgetMs,
             techniqueKeys: canonicalTechniqueKeys, variantLabel: cell.variantLabel ?? null,
             pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
+            candidateOrderResearch: cell.candidateOrderResearch ?? null,
             ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget, budgetMs: cell.budgetMs,
             ...(useWork ? { workBudget: cell.workBudget, workSpent, deadlineTruncated } : {}),
             ...(useWork && Number.isFinite(cell.perTechniqueWorkCap) ? { perTechniqueWorkCap: cell.perTechniqueWorkCap } : {}),
@@ -257,6 +300,7 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
                 budgetMs: cell.budgetMs,
                 techniqueKeys: cell.techniqueKeys, variantLabel: cell.variantLabel ?? null,
                 pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
+                candidateOrderResearch: cell.candidateOrderResearch ?? null,
                 ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget, budgetMs: cell.budgetMs,
                 ...(Number.isFinite(cell.workBudget) ? { workBudget: cell.workBudget } : {}),
                 ok: false, status: 'error', error: err?.message ?? String(err),
