@@ -1232,7 +1232,7 @@ If **yes**, classify the evidence needed to reconstruct that use:
 
 This “graduation check” is a procedure, not a new storage system. It would make durability follow actual scientific use rather than forcing every exploratory acquisition to predict its eventual importance at dispatch time.
 
-**Implementation threshold:** update the operating/resource method only after final reconciliation confirms this rule does not duplicate an existing closeout capsule or evidence-retention instruction.
+**Implementation threshold: satisfied.** Final reconciliation found that the Resource Contract already owned the rule, so no new retention doctrine/schema was needed. The small propagation change has landed in `investigation-report-conventions.md`: durable decision-bearing closeout now explicitly checks reconstructability and points back to the Resource Contract. Do not leave this concluded audit as a future implementation blocker.
 
 
 
