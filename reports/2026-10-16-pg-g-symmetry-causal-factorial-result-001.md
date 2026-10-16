@@ -118,7 +118,7 @@ No production flag or default change is earned here.
 
 Use an **outcome-blind independent-parent symmetry confirmation**.
 
-A suitable pre-existing reservoir exists in the pinned family trove: 22 symmetry-family parents outside the six-parent PG-G discovery cohort, each with seven generated siblings. Do not inspect historical solver outcomes to choose among them.
+A suitable pre-existing reservoir exists in the pinned family trove: **48 direct `symmetry`-family parents outside the six-parent PG-G discovery cohort** (54 total direct `symmetry` families), each with seven generated siblings. This count is from the pinned dataset tree at `32132d6ba60f1203ee013ed0d475f46061eddd49`; the much larger older `sym` family population is deliberately not mixed into this confirmation pool. Do not inspect historical solver outcomes to choose among them.
 
 Recommended economical design:
 1. freeze 12 parents by deterministic ID hash before any new outcome inspection;
