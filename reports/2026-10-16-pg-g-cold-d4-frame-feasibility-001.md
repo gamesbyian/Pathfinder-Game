@@ -1,15 +1,32 @@
 # PG-G: current-input D4 canonical-frame feasibility 001
 
-> **Status:** active
-> **Last evidence:** 2026-10-16 — preregistered, read-only current-input D4 frame screen; outcomes pending CI execution.
-> **Decision:** evaluate a simple, solve-legal canonical orientation key before building any search policy or eight-orientation portfolio.
-> **Remaining gate:** run invariant-preserving corpus census, then decide whether enough parents have a unique legal frame; independent-parent symmetry confirmation still gates production work.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-10-16 — one-shot [GHA run 38979227761](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/38979227761) completed all D4 reciprocal invariance checks over 160 published and 1,700 Corpus-2 puzzles; 137/160 and 1,700/1,700 have unique frames.
+> **Decision:** current-input mechanic-position sketch passes the preregistered >=50% unique-frame exposure gate in both populations (85.625% published; 100% Corpus 2), with zero D4 invariance alarms. Geometric frame feasibility is established, not cold-solve benefit.
+> **Remaining gate:** price canonical-key setup overhead and confirm PG-G causal effect across outcome-blind independent symmetry parents; a cold-legal candidate-order research hook and matched-work production A/B remain separate.
 > **Research question:** `WS2-SYMMETRY-TIE-ORDER-CANONICALIZATION`
 > **Evidence role:** discovery
-> **Selection:** all 148 currently published levels plus the current full 1,700-row Corpus 2, without inspecting any solver result for selection.
-> **Population identity:** pinned input corpus contents at this branch's exact git SHA, with raw canonical mechanical fields only.
-> **Inference scope:** exposure and geometric equivariance of a *restricted feature sketch*, not solver effect or symmetric-puzzle solution invariance.
+> **Selection:** full current 160-level published corpus and full 1,700-level Corpus 2, chosen without inspecting solver outcomes.
+> **Population identity:** run 38979227761 source commit 54717c2f0fe13e5052c477bfcc553b43eaecb719, with full current data/levels.json and data/stress/stress-levels-random.json.
+> **Inference scope:** exposure and geometric equivariance of a *restricted feature sketch* on these two development corpora, not solver benefit, transfer or symmetric-puzzle solution invariance.
 > **Production effect:** none.
+
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-positive","lastEvidenceDate":"2026-10-16","decision":"Unique current-input D4 mechanic-position frames exist on 137/160 published and 1700/1700 Corpus-2 levels with no invariance errors; independent-parent causal confirmation and matched-work production benefit remain untested.","remainingGate":"Price canonical-frame setup overhead and confirm independent-parent PG-G ordering mechanism before production A/B.","joins":{"researchQuestion":"WS2-SYMMETRY-TIE-ORDER-CANONICALIZATION","premiseRefs":["P015","P144","P145","P165","P183","P204"],"measurementOpportunity":null},"evidenceRole":"discovery","scope":{"populationIdentity":"run 38979227761 source commit 54717c2f0fe13e5052c477bfcc553b43eaecb719, with full current data/levels.json and data/stress/stress-levels-random.json.","selection":"full published and Corpus-2 populations, result-independent","inferenceScope":"current-input feature-sketch geometric exposure and covariance only"},"claimRefs":[],"sourceArtifacts":["scripts/stress/pg-g-cold-d4-frame-feasibility.mjs"],"successors":{"questions":["WS2-SYMMETRY-TIE-ORDER-CANONICALIZATION"],"artifacts":[]},"prospective":{"expectation":"A cheap mechanical signature should produce a unique legal canonical frame on a substantial fraction of current levels.","surprise":"All 1700 Corpus-2 levels have unique sketch frames; 23 of 160 published are ambiguous.","anomaly":null}} -->
+
+## Measured result
+
+Frozen branch-push run [38979227761](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/38979227761), source `54717c2f0fe13e5052c477bfcc553b43eaecb719`, ran the normal bundled, current-input-only geometry detector across every row in both current corpora, checking the lexicographically minimal feature sketch under **all eight D4 transformations of every level**.
+
+| Population | Tested | Unique frames | Ambiguous | Unique-frame exposure |
+|---|---:|---:|---:|---:|
+| Published `data/levels.json` | 160 | 137 | 23 | **85.625%** |
+| Corpus 2 `stress-levels-random.json` | 1,700 | 1,700 | 0 | **100.000%** |
+
+Published ambiguity: 21 cases have two equivalent minimizers; two have four. No non-square/unsupported rows. **Zero D4 reciprocal-invariance failures**, across both corpora. Both populations independently clear the preregistered 50% unique-minimizer opportunity threshold.
+
+Important distinctions: 1,700/1,700 is not a solve rate, speedup, or symmetry-generalization claim. It simply establishes that a uniquely chosen orientation can be derived from the current puzzle without violating level blindness on these mechanic-position sketches. The 23 ambiguous published puzzles must explicitly abstain or receive a separately verified equivariant tie rule. The feature sketch ignores axes, chirality and portal pair identity; that loses discriminative power (sometimes increasing ties) but does not inject parent knowledge.
+
+This read-only script is now a maintained Node-contract test. The temporary GHA readout workflow is removed from the final PR; artifact evidence remains attached to the completed run. We do not know whether cold canonical tie-ordering increases solves, nor the actual setup-wall overhead: those are the next gates.
 
 ## Causal motivation
 
@@ -31,4 +48,4 @@ A positive geometry screen does not override the independent-parent confirmation
 
 If exposure is low, test a richer *current-input* signature (axis/chirality/portal-pair information) as a distinct, explicitly registered extension, or close the anchor-only form without discarding the ordering mechanism itself.
 
-Artifact: `scripts/stress/pg-g-cold-d4-frame-feasibility.mjs` writes machine summaries under `tmp/pg-g-cold-d4-frame/`; the test runs in the maintained Node contract suite. No additional GHA research workflow is created.
+Artifact: `scripts/stress/pg-g-cold-d4-frame-feasibility.mjs` writes machine summaries under `tmp/pg-g-cold-d4-frame/`; the test runs in the maintained Node contract suite. A one-shot evidence workflow captured an independent visible readout, then was removed from the final source branch.
