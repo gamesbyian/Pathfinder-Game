@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-controlled-technique-response-pilot-recovery-summary",
+  "recoveredAt": "2026-10-15",
+  "sourceRunId": 37712397687,
+  "sourceExecutionSha": "76455450f06f03139b415bc0f699d2c54530784a",
+  "historicalDatasetEquivalentCommit": "32132d6ba60f1203ee013ed0d475f46061eddd49",
+  "sourceArtifacts": {
+    "analysis": {
+      "id": 11523005793,
+      "zipSha256": "4a8c6a6c048bb1c214d609c32ef0d5006981fdd0c4e4337dbc015872f33ea28e"
+    },
+    "solverSweepResult": {
+      "id": 11522885927,
+      "zipSha256": "40c72c68daaf2bb5dbe6c814908221d80e35e1957a5520268886de7fdffad6cd"
+    },
+    "planInputs": {
+      "id": 11522695867
+    }
+  },
+  "provenance": {
+    "selectedHistoricalFamilyFiles": 36,
+    "selectedHistoricalFamilyFilesMatchingPinnedCommit": 36,
+    "parentContentIdentityBlocksVerified": 18,
+    "planCells": 715,
+    "observedUniqueCells": 715,
+    "missingCells": 0,
+    "extraCells": 0,
+    "repeatedParentTechniqueInconsistencies": 0,
+    "refereeInvalid": 0,
+    "deadlineTruncated": 0,
+    "harnessErrors": 0
+  },
+  "cellOutcomes": {
+    "solved": 548,
+    "workBudgetReached": 145,
+    "exhausted": 22
+  },
+  "analysis": {
+    "independentParents": 6,
+    "familyModeBlocks": 18,
+    "parentVariantEdges": 125,
+    "broadHeterogeneousEdges": 108,
+    "solveStateFlipEdges": 39,
+    "gainCells": 26,
+    "lossCells": 26
+  },
+  "byRelation": {
+    "local-mutant": {
+      "edges": 42,
+      "solveStateFlipEdges": 19,
+      "gainCells": 13,
+      "lossCells": 14
+    },
+    "swap": {
+      "edges": 41,
+      "solveStateFlipEdges": 4,
+      "gainCells": 1,
+      "lossCells": 3
+    },
+    "symmetry": {
+      "edges": 42,
+      "solveStateFlipEdges": 16,
+      "gainCells": 12,
+      "lossCells": 9
+    }
+  },
+  "byParent": {
+    "P00136": {
+      "edges": 20,
+      "solveStateFlipEdges": 0
+    },
+    "P00144": {
+      "edges": 21,
+      "solveStateFlipEdges": 4
+    },
+    "P00146": {
+      "edges": 21,
+      "solveStateFlipEdges": 13
+    },
+    "R00631": {
+      "edges": 21,
+      "solveStateFlipEdges": 7
+    },
+    "R00792": {
+      "edges": 21,
+      "solveStateFlipEdges": 4
+    },
+    "R02976": {
+      "edges": 21,
+      "solveStateFlipEdges": 11
+    }
+  },
+  "byTechnique": {
+    "repair": {
+      "gains": 0,
+      "losses": 9
+    },
+    "beam-objective": {
+      "gains": 0,
+      "losses": 1
+    },
+    "beam-intersection": {
+      "gains": 3,
+      "losses": 0
+    },
+    "dfs": {
+      "gains": 12,
+      "losses": 0
+    },
+    "admissible": {
+      "gains": 11,
+      "losses": 16
+    }
+  },
+  "microscopeShortlist": [
+    "P00146->F00146-sym-01",
+    "P00146->F00146-sym-05",
+    "R02976->F02976-sym-01",
+    "R00631->F00631-sym-02",
+    "P00144->F00144-sym-02",
+    "P00146->F00146-lm-02",
+    "P00146->F00146-lm-03",
+    "R00631->F00631-lm-04"
+  ],
+  "treatmentAuthority": "none"
+}

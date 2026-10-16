@@ -50,9 +50,9 @@ try {
             mutation:role==='variant'?{operation:'move'}:null},
     });
     await writeFile(resultsFile, JSON.stringify({results:[
-        row(t1,'parent',null,false,1000), row(t2,'parent',null,false,1000),
-        row(t1,'variant','V1',true,800), row(t2,'variant','V1',false,1000),
-        row(t1,'variant','V2',false,1000), row(t2,'variant','V2',false,1000),
+        row(t1,'parent',null,false,1000), row(t2,'parent',null,true,500),
+        row(t1,'variant','V1',true,800), row(t2,'variant','V1',true,600),
+        row(t1,'variant','V2',false,1000), row(t2,'variant','V2',true,550),
     ]}));
     const analyzed = spawnSync(process.execPath, ['scripts/analyze-family-technique-response.mjs',
         `--input=${resultsFile}`, `--out=${analysisFile}`], { cwd:root, encoding:'utf8' });
@@ -62,10 +62,17 @@ try {
     assert.equal(analysis.summary.parentFamilies, 1);
     assert.deepEqual(analysis.summary.parentIds, ['P1']);
     assert.equal(analysis.summary.variants, 2);
-    assert.equal(analysis.summary.edgesWithTechniqueHeterogeneity, 1);
+    assert.equal(analysis.summary.edgesWithTechniqueHeterogeneity, 2);
+    assert.equal(analysis.summary.edgesWithSolveStateFlip, 1);
+    assert.equal(analysis.summary.edgesWithBaselineOnlyHeterogeneity, 1);
     const v1 = analysis.families[0].edges.find(e => e.variantId === 'V1');
     assert.deepEqual(v1.gains, [t1]);
-    assert.equal(v1.responses.find(r => r.technique === t2).transition, 'neither');
+    assert.equal(v1.responses.find(r => r.technique === t2).transition, 'both-solved');
+    assert.equal(v1.solveStateFlip, true);
+    assert.deepEqual(v1.changedTechniques, [{ technique:t1, transition:'gain' }]);
+    const v2 = analysis.families[0].edges.find(e => e.variantId === 'V2');
+    assert.equal(v2.solveResponseHeterogeneous, true);
+    assert.equal(v2.solveStateFlip, false);
 
     const datasetRoot = path.join(dir, 'dataset');
     const familyDir = path.join(datasetRoot, 'data', 'families');
