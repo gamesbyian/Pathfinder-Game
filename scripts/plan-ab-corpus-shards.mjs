@@ -50,14 +50,14 @@ const tokens = readFileSync(sampleFile, 'utf8').split('\n').map(s => s.trim()).f
  *  named `${idx}-01`, `${idx}-02`, ... (or bare `idx` when count === 1, matching the historical
  *  single-shard corpus1/published naming so existing artifact-name patterns keep working). */
 function shardCorpus(idx, corpus, corpusKey, positionTokens, count) {
-    if (count <= 1) return [{ idx, corpus, corpus_key: corpusKey, levels: `pos:${positionTokens.join(',')}` }];
+    if (count <= 1) return [{ idx, corpus, corpus_key: corpusKey, levels: positionTokens.map(position => `pos:${position}`).join(',') }];
     const shards = [];
     for (let i = 0; i < count; i++) {
         const slice = positionTokens.filter((_, index) => index % count === i);
         if (slice.length) shards.push({
             idx: `${idx}-${String(i + 1).padStart(2, '0')}`,
             corpus, corpus_key: corpusKey,
-            levels: `pos:${slice.join(',')}`,
+            levels: slice.map(position => `pos:${position}`).join(','),
         });
     }
     return shards;
