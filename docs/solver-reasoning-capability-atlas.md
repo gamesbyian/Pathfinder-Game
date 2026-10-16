@@ -224,15 +224,15 @@ Current evidence strengthens or narrows these intersections:
 
 ## Current premise-generation re-entry
 
-The treatment queue has one earned execution gate (BC1-VX), while the premise queue is deliberately repopulated. Conceptually:
+BC1-VX's representative A/B is positive and waits on solved-control regression; premise discovery is deliberately broad. Conceptually:
 
-1. **Causal localization and cheap retained-data discriminators:** PG-G independent symmetry confirmation, PG-C first-loss refresh and PG-I fragile/robust family-response analysis.
-2. **Measure hidden decision structure before inventing consumers:** PG-H semantic-forcedness census and PG-D canonical trail/switch discriminator.
-3. **Test categorical futures:** PG-J topology/completion regimes and PG-K DEAD/near-miss commutativity; select joint-obligation matching/Hall/resource siblings only when they have a smallest novelty witness.
-4. **Study control and memory only after a useful fact exists:** PG-L basin/action overlap, then PG-M solve-local reason recurrence for a newly earned proof family.
-5. **Keep alternative search objects explicit but downstream:** PG-N first falsifies compact interface sufficiency; only positive compression/fidelity can earn frontier/ZDD, backward/interface or abstract-plan architecture.
+1. **Causal localization and cheap retained-data discriminators:** PG-C first-loss, PG-I fragile/robust response, PG-G independent confirmation, with PG-G's cold D4-key feasibility allowed in parallel.
+2. **Measure hidden decision structure:** PG-H semantic forcedness, PG-D trail/switch feasibility, and PG-P read-only repair descent tracing. Numeric confirmation minima do not block cheaper observability/mechanism tests.
+3. **Attack candidate future representations directly:** PG-J topology/completion regimes, PG-K commutativity and PG-N interface-sufficiency collision testing. A disposable exact/architecture-shaped falsifier may run before any durable engine is earned.
+4. **Measure control/memory opportunity without presupposing a new theorem:** PG-L basin/action novelty and PG-M solve-local rediscovery may run retained-first now; steering, caching or backjumping still need their own soundness/economics gates.
+5. **Revisit method-limited architecture premises with better inputs:** PG-O uses real production-search partials to finish the previously blocked LNS falsifier. Only positive candidate closeness/repairability can earn LNS itself.
 
-This order maximizes premise information while keeping compute near ordinary budgets: retained evidence and <=hundreds-case exact falsifiers precede broad campaigns. See [workstreams](solver-optimization-workstreams.md) for live gates.
+This ordering favors information value rather than ceremony: retained evidence, shadows, collision attacks and <=hundreds-case exact falsifiers precede broad campaigns. See [workstreams](solver-optimization-workstreams.md) for live gates.
 
 ## Premise-generation protocol
 
