@@ -15,7 +15,7 @@ The 2026-10-16 queue reconciliation plus blocker audit moved executable question
 - **Region / AND-OR decomposition:** a different frozen interface restores repeated outcome equivalence without near-unique/full-prefix state; C0-C2 closed representation-explosive.
 - **Targeted surgery / causal backjump:** independent evidence identifies an actionable causal interface smaller than naive divergence/rollback.
 - **BC1-off dead-last retry:** re-dispatch only frozen PG-B pricing; keep >=10 recoveries plus tail-tier-yield promotion rule. [atlas](../reports/2026-10-02-intervention-response-atlas-result-001.md)
-- **Per-level plan compiler:** two architectures show predictable current-input niches without historical identity.
+- **Durable/production per-level plan compiler:** two architectures show predictable current-input niches without historical identity. A tiny offline/current-input-only planner or plan-DSL interpreter may be used earlier as a disposable falsifier under an active semantic lane when planning itself is the cheapest way to discover whether such niches exist; its selected plans remain development evidence.
 
 ## Architectural reopen rules
 
@@ -25,9 +25,9 @@ The 2026-10-16 queue reconciliation plus blocker audit moved executable question
 - **Structural preprocessing:** active separator/topology/relational premise exposes a sound property with enough reuse to repay construction.
 - **Durable/production algebraic/trail/frontier/ZDD/SAT/CEGAR architecture:** requires a referee-valid, current-prune-nonredundant fact with useful participation/economics. A tiny disposable architecture-shaped program is allowed earlier when it is itself the cheapest falsifier; PG-N now owns the interface-sufficiency attack.
 - **Cooperative engines:** two solver families expose complementary typed artifacts; begin with one bounded handoff.
-- **Mechanic automata:** repeated descendants require one shared mechanic-state contract strongly enough to justify migration.
+- **Durable shared mechanic automata:** repeated descendants require one shared mechanic-state contract strongly enough to justify migration. Question-scoped finite-state models remain legal earlier as disposable exact/relaxed instruments when they test one mechanic interaction and do not force a shared runtime schema.
 - **Adversarial generation:** attack a frozen semantic hypothesis via solver-belief versus exact-reality disagreement without construction leakage.
-- **Program synthesis / theorem extraction:** parent-held-out exact contrasts first support a tiny stable DSL or exact subdomain; outputs remain nominations pending confirmation.
+- **Production program synthesis / theorem extraction:** parent-held-out exact contrasts must support the promoted DSL/subdomain. Development-only synthesis over labelled development evidence may run earlier to nominate tiny rules/theorems or counterexamples; synthesized outputs remain nominations and must be frozen before independent evaluation.
 
 ## Conditional composition / allocation
 
