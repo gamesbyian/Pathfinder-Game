@@ -177,7 +177,13 @@ async function runIsolated(rawLevel, technique, {
     prep._forcedPortalExitKey = null;
     if (armUsesOrder(arm)) prep._candidateOrderResearchKey = makeParentFrameOrderKey(orientation, parentRaw);
     const workStart = prep._workMeter.units;
-    prep._workCap = workStart + Number(spec.workBudget);
+    const absoluteWorkCap = workStart + Number(spec.workBudget);
+    prep._workCap = absoluteWorkCap;
+    // Admissible-order / IDA deliberately ignores the historical soft _workCap and obeys
+    // _strictWorkCap inside its hot loop. Match technique-census-cell.mjs's proven equal-work
+    // contract exactly so this selected-pair experiment cannot silently give IDA hundreds of
+    // millions of extra work while DFS/repair stop at the nominal 10M dose.
+    prep._strictWorkCap = absoluteWorkCap;
     const config = parseAttemptConfigKey(technique);
     const attempts = [];
     let solution = null;
@@ -233,7 +239,8 @@ async function runIsolated(rawLevel, technique, {
         nodesExpanded:prep._metrics.nodesExpanded,
         totalMs:Date.now() - startMs,
         deadlineTruncated,
-        validDeterministicEvidence:!deadlineTruncated,
+        validDeterministicEvidence:!deadlineTruncated && workSpent <= spec.workBudget * 1.01,
+        workCapOvershoot:Math.max(0, workSpent - spec.workBudget),
         winningGate,
         gateSeeds,
         attempts,
@@ -303,7 +310,7 @@ const invalid = rows.flatMap(row => Object.values(row.variantArms)
     .filter(run => !run.validDeterministicEvidence)
     .map(run => `${row.caseId}::${row.technique}::${run.arm}`));
 for (const [key, run] of parentCache) if (!run.validDeterministicEvidence) invalid.push(`parent::${key}`);
-if (invalid.length) throw new Error(`deadline-truncated equal-work observations: ${invalid.join(', ')}`);
+if (invalid.length) throw new Error(`invalid equal-work observations (deadline or >1% work-cap overshoot): ${invalid.join(', ')}`);
 
 const solveCliffs = rows.filter(row => !row.comparisons.control.solveStateMatches);
 const workOnlyControls = rows.filter(row => row.comparisons.control.solveStateMatches
