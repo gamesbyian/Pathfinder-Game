@@ -38,11 +38,11 @@ The October external-source search, trail/transition-system work and PG-G causal
 | Topological / homotopy completion classes | **PG-J active descendant.** Open-path topology is exact-contrast positive; the cheap descriptor failed specifically on decision-bearing tied cases. |
 | Fragile vs robust hardness / perturbation response | **PG-I active retained-data lane.** PG-G shows some symmetry cliffs are pure coordinate-order economics, making family robustness/fragility diagnostically useful. |
 | Residual-interface commutativity | **PG-K active bounded lane.** LIVE->LIVE legality is positive (1,453/3,121 length-matched); the missing test is DEAD/near-miss restoration or work reduction. |
-| Cross-attempt basin overlap | **PG-L dependency-queued observer.** Historical measurements were instrument-compromised; PG-G gives a fresh causal reason to measure whether nominally different actions explore genuinely different basins. |
-| Compact dead causes / conflict reuse | **PG-M dependency-queued.** Old connectivity populations and size-1 cores stay closed; only a new proof-bearing reason family from PG-C/PG-D/PG-J can reopen recurrence/reuse. |
+| Cross-attempt basin overlap | **PG-L active instrument-only.** Historical measurements were instrument-compromised; PG-G gives a fresh causal reason to measure whether nominally different actions explore genuinely different basins. The old requirement to wait for PG-C/PG-G completion was procedural, so the canonical read-only observer may run now. |
+| Compact dead causes / conflict reuse | **PG-M active retained-first descendant.** Old cross-level connectivity reuse and size-1 cores stay closed, but the solve-local recurrence/economics question does not need a brand-new proof family before Phase 0. Measure already-sound fact rediscovery first; behavioral reuse still requires a pre-computation certificate. |
 | Completion-regime / categorical future structure | **PG-J active synthesis question.** Topology, switch-compatible crossing plans, obligation competition and state-set retention now provide concrete falsifiers. |
 | Forced-chain / certified macro traversal | **Not promoted for cold-solve acquisition.** Interesting for implementation efficiency, but current canonical-work accounting gives it no automatic solve-count claim. |
-| Progress-conditioned continuation / stasis | **Not reopened in tested forms.** PG-L may test a different canonical trajectory/failure-family novelty signal; generic restart and badness/stasis forms remain closed. |
+| Progress-conditioned continuation / stasis | **Tested stasis forms remain closed; PG-L is active on a different question.** Canonical trajectory/action novelty may be observed now, but generic restart and badness/stasis predictors remain closed. |
 
 Practical rule: **historical-premise unresolved + current executable falsifier = workstream row**. Future archaeology must not leave an executable descendant stranded here or in future-work alone.
 
@@ -158,7 +158,7 @@ Current `modules/solver/search.ts` again uses an ordinary per-state DFS frame an
 
 ### Dependency-conditioned repair neighbourhoods
 
-**Status:** changed premise; generic positional repair tested negative, dependency-defined locality unresolved.
+**Status:** changed premise; generic positional repair tested negative. **2026-10-16 blocker audit:** dependency-defined locality confirmation remains unresolved, but the read-only descent-shadow discovery observer is now active under PG-P; the old 12-parent exact-pair floor applies to confirmation, not observation.
 
 The uploaded CP-LNS/LNS research emphasizes effective neighbourhoods after propagation and variable/constraint relationships: choosing the right coupled decision universe can matter more than nominal destruction size or the sophistication of the selector. Pathfinder's closest historical treatment was positional rather than dependency-defined. Commit `5f0848994d11a5ba40161d5143ddc9f129223c59` added an elite-prefix DFS repair operator; its 20-level shared-budget A/B was 4/20 versus 5/20 control, including a confirmed budget-displacement loss. That closes the unchanged broad prefix-probe form.
 
