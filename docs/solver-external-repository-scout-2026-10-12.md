@@ -10,6 +10,24 @@ Searching only for `pathfinding` misses constraint-satisfaction, SAT/SMT encodin
 
 **Triage:** `A` = inspect first for a transferable mechanism or reference model; `B` = meaningful adjacent experiment; `C` = background, vocabulary, harnesses, duplicates or distant analogy. Grades do not imply correctness or runnable code.
 
+## Third-wave discoveries: trails and forbidden transitions (2026-10-15)
+
+**Source-audit and independent toy falsifier:** [Trail and transition-system report](../reports/2026-10-15-trail-transition-system-prior-art-and-toy-falsifier.md), including a runnable self-contained `node scripts/research-trail-switch-toy.mjs`. This narrows the discovery question: Pathfinder's ordinary edges are not repeated, although vertices may be revisited, so **trail / edge-simple walk** is a better problem label than Hamiltonian path. The precise crossing transition uses orthogonal H/V strands, and a generic trail solver does *not* automatically enforce it. Only a restricted toy variant has been exhaustively checked, not the canonical Pathfinder referee.
+
+| Tier | Newly verified GitHub repository | Search value |
+|---|---|---|
+| **A** | [hana-hiro/graphillion-trails](https://github.com/hana-hiro/graphillion-trails) | **Key direct analogue:** enumerates all trails (revisited vertices, no repeated edges), by transforming to constrained paths in a line graph and leveraging Graphillion/ZDD; bilingual English/Japanese source, MIT; Python-2-era code |
+| B | [Jeroenodb/Optimal-Enumeration-of-Euler-Trails](https://github.com/Jeroenodb/Optimal-Enumeration-of-Euler-Trails) | 2026 directed Eulerian-trail enumeration, explicit brute-force comparison stress harness and adversarial counterexample generator; fixed graph all-edge obligation differs from Pathfinder |
+| B | [AndreVRibeiro/zdd_graph_enumeration](https://github.com/AndreVRibeiro/zdd_graph_enumeration) | New independent implementation of **simple** s-t-path frontier ZDD in Python; useful contrast with the edge-simple trail reduction |
+| C | [brooksandrew/postman_problems](https://github.com/brooksandrew/postman_problems) | Classic/rural Chinese postman route-inspection models; often **repeat** edges and minimize total route length, so primarily an inverse/control |
+| B | [semiexp/numlin-sat](https://github.com/semiexp/numlin-sat) | Another distinct SAT Numberlink implementation for comparison with loop subtour/connectivity requirements |
+
+**Corpus accounting:** 70 originals + 11 second-wave + **5 third-wave = 86 distinct, confirmed GitHub repository links**. The [hareball95/graphillion-trails fork](https://github.com/hareball95/graphillion-trails) was confirmed as an upstream fork and is deliberately **not** counted as an independent candidate. Repository/link counts are not numbers of distinct algorithms, evidence replications, or independent publications.
+
+**Academic search expansion:** *transition systems; compatible trail; forbidden transitions; incident-edge transition graph; edge-simple walk; line graph; trails with local restrictions; directed/undirected Eulerian route; strand pairing; switch graph; subtour elimination; no repeated edge; gluing an Euler tour*. Useful source abstracts: [paths avoiding forbidden transitions (2003)](https://www.sciencedirect.com/science/article/pii/S0166218X02002512) and [A-trails in plane Eulerian graphs (1998)](https://www.sciencedirect.com/science/article/pii/S0166218X97001418). **A-trail is not identical to Pathfinder's straight-through crossing rule.** These papers are background to formulate queries; no full-paper implementation has been replicated.
+
+---
+
 ## Follow-up source review and second-wave discoveries (2026-10-12)
 
 **Verification update:** All 70 original repository URLs have now resolved successfully via GitHub's public repository metadata endpoint. This proves the link targets exist; it does **not** verify working code, algorithm correctness, licensing, or independent lineage. The first 70 are now an **existence-checked discovery corpus**. Inspect [the source-level research report](../reports/2026-10-12-external-pathfinding-source-inspection-001.md) for method and exact-source details, differences in problem semantics, caveats and six bounded falsification packets.
