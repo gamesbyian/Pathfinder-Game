@@ -201,7 +201,7 @@ This is not required by level-blindness. All of the above is generated from lega
 
 A normal sweep row can therefore lose stage/action/seed resolution when transformed into compact failure response.
 
-**Disposition:** confirmed candidate bug; document first, fix only after this audit establishes expected identity semantics across producers.
+**Disposition (reconciled 2026-10-16):** confirmed candidate bug. The documentation-first audit is concluded, so its sequencing blocker is satisfied. Any remaining code fix is now governed by the identified consumer/implementation owner and ordinary value/compatibility checks, not by waiting for this audit.
 
 
 ### IR-002 / IR-023 contract verification — configuration and action identities are distinct canonical types
@@ -1122,7 +1122,7 @@ No implementation should be generated from these findings alone:
 
 - **IR-002 / IR-023:** row-level compact `actionKey` should be audited against `winningActionKey` semantics. This has a real downstream phenotype/join blast radius and source information already exists.
 
-This is the clearest eventual code fix, but implementation remains intentionally deferred until the documentation-first audit closes.
+This was the clearest eventual code fix. **The documentation-first audit is now closed, so that historical defer condition is satisfied.** Implementation may proceed when its current consumer/owner ranks it; this audit no longer supplies a reason to wait.
 
 ### C. Durability/reconstructability design candidates
 
