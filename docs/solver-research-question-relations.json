@@ -484,7 +484,7 @@
       "id": "WS6-DEPENDENCY-CONDITIONED-REPAIR",
       "question": "When append-only repair cannot rescue a near miss, is the missing neighborhood better defined by a compact set of earlier coupled commitments than by rollback/path distance?",
       "owner": "WS6",
-      "state": "active-diagnostic",
+      "state": "active-candidate",
       "answeredBy": [
         "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md",
         "reports/2026-10-01-ws6-independent-parent-replication-result-001.md"
@@ -1408,7 +1408,7 @@
       "id": "WS2-CROSS-ATTEMPT-BASIN-OVERLAP",
       "question": "Do nominally different legal search actions actually explore different state/trajectory basins and failure families, and does their marginal novelty predict incremental value under canonical work?",
       "owner": "WS2",
-      "state": "active-diagnostic",
+      "state": "active-candidate",
       "aliases": [
         "PG-L",
         "basin overlap",
@@ -1435,7 +1435,7 @@
       "id": "WS2-SOLVE-LOCAL-REDISCOVERY",
       "question": "Within one solve invocation, do already-sound blocker/resource facts recur early enough and often enough that cheap recognition could avoid repeated derivation work?",
       "owner": "WS2",
-      "state": "active-diagnostic",
+      "state": "active-candidate",
       "aliases": [
         "PG-M",
         "solve-local rediscovery",
