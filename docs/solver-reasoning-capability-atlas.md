@@ -137,7 +137,7 @@ Gap labels: **INFERENCE + COMPOSITION**.
 
 This survives the negative H1 exact form: H1 falsified one compact recurring event vocabulary, not the broader per-instance ability to derive joint realizability/impossibility from current input.
 
-Potential descendants only after a positive premise: bounded exact micro-query, CSP/DP over interfaces, conflict/core derivation, CEGAR-style plan refinement, separator contracts.
+Potential **behavioral/durable** descendants after a positive premise: bounded exact micro-query, CSP/DP over interfaces, conflict/core derivation, CEGAR-style plan refinement, separator contracts. A tiny disposable CSP/DP/CEGAR/plan-refinement program may appear earlier when it is itself the cheapest premise falsifier; it earns no architecture or production authority merely by producing an interesting result.
 
 ### 2. Path-history topology as an actionable state relation
 
