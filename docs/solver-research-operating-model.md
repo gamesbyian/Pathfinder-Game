@@ -12,6 +12,20 @@ Measurements belong in dated reports, current workstream decisions in the workst
 
 New/unregistered questions enter through [`research-question-intake.md`](research-question-intake.md): contextualize and collapse the ambiguity before minting an ID. Known-ID solver questions start from `research:dossier`; research-system questions do not enter the solver-science registry by default.
 
+### Queue completeness / no-stranding invariant
+
+A research-state reconciliation is incomplete if an executable unresolved premise exists only in future-work, archaeology, a plan, a dated report, the premise overlay, or the question graph.
+
+After a material result or a declared queue exhaustion:
+
+1. scan those surfaces for unresolved descendants and changed reopen conditions;
+2. if the cheapest falsifier is executable from current evidence/tooling, give it a row in `solver-optimization-workstreams.md`;
+3. if it is not executable, preserve the exact blocker/dependency rather than a vague “future work” label;
+4. keep tested forms closed when only the parent premise survives;
+5. update workstreams, future-work, question relations, premise evidence state and any affected core atlas/index in the same reconciliation.
+
+Plans and reports may propose a next experiment, but they cannot be the only place an executable next gate lives. The purpose is queue completeness, not queue inflation: dependency-queued rows are preferred to premature broad compute or architecture work.
+
 ## Pipeline
 
 > semantic truth → controlled evidence → failure class → exact/shadow evaluation → narrow intervention → level-blind matched-work verdict → confirmation proportional to selection pressure → cross-distribution challenge when the claim warrants it
