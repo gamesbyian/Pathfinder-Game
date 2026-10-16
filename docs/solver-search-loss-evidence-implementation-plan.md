@@ -1542,7 +1542,7 @@ Never default to raw capsule count as prevalence.
 
 ### Phase 8 - resource audit
 
-> **Status (2026-09-19): empirical capture gate cleared; recurring-resource gate remains open.** GHA run `35423841173` now clears the real-capture prerequisites checked by `search-loss-resource-audit-preflight.mjs`: valid contract, observer parity, multi-parent population, non-empty bounded capsules, selector denominators, immutable run SHA, non-synthetic producer, solved controls, and failed parents. The preflight reports `captureGateClear=true`, `empiricalConditioningReady=true`, and `auditReady=false` solely because `recurringProducerDeclared=false`. The registry therefore correctly remains `contract-only`. Do not promote it or add a Resource Contract audit declaration until a genuine recurring producer population exists; a one-off canary is evidence for readiness, not permission to invent recurrence.
+> **Status (reconciled 2026-10-16): empirical capture gate cleared; durable-resource promotion remains recurrence-gated.** GHA run `35423841173` clears the real-capture prerequisites. `auditReady=false` solely because `recurringProducerDeclared=false`, so the registry correctly remains `contract-only`. **That blocks standing Resource Contract promotion, not scoped PG-C science:** valid one-off/retained capsules may be used for the question they can actually answer. Do not manufacture recurrence merely to promote infrastructure.
 
 **Goal:** promote from catalogue-grade to audited-resource grade before broad recurring decision use.
 
@@ -1577,7 +1577,7 @@ Add mechanical checks where practical.
 
 ### Phase 9 - first scientific consumer: bounded first-loss survey
 
-> **Status (2026-09-19): eligible candidate, not yet selected.** `WS2-WORK-LADDER-ECONOMICS` has closed negative. Current workstream authority now lists operational divergence/first-loss, rejection counterfactuals, and a 2x2 interaction as the remaining discriminators. Phase 9 may execute only if the authority selects the first-loss/operational-divergence lane; the negative economics result removes the old reopen prerequisite but does not itself choose among those candidates.
+> **Status (reconciled 2026-10-16): ACTIVE under PG-C.** `WS2-WORK-LADDER-ECONOMICS` closed negative, and current workstream authority has now selected operational divergence / first-loss. Phase 9 is authorized retained-first. Use the existing counterfactual material and taxonomy before adding telemetry; this plan no longer waits for a selection decision that has already happened.
 
 **Goal:** prove that the resource changes research decisions.
 
@@ -1950,7 +1950,7 @@ This plan is **implementation-complete through every currently executable phase*
 Durable resumption authority lives in [`solver-future-work.md`](solver-future-work.md):
 
 - Phase 8 resumes automatically when a genuine recurring search-loss producer population exists; complete the Resource Contract audit and make an explicit promote/remain-contract-only decision.
-- Phase 9 resumes only if [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) selects operational divergence / first-loss as the active WS2 discriminator.
+- Phase 9 is active because [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) now selects PG-C operational divergence / first-loss. Retained counterfactual analysis is the first execution step; instrumentation is added only for a named missing observable.
 - When Phase 8 is complete and Phase 9 is either completed when authorized or explicitly retired/deferred by current workstream authority, change this document's status from implementation plan to completed/closed and move any surviving descendants to the appropriate future-work authority.
 - If a stop/simplification condition fires first, record that disposition and close or narrow the plan rather than preserving a zombie plan indefinitely.
 
