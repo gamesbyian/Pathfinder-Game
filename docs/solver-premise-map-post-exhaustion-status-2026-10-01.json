@@ -416,10 +416,11 @@
       "proposition": "Expected new solves per marginal unit of work is a better allocation objective than raw per-stage success rate.",
       "v2Status": "implicit / partly practiced",
       "postExhaustionClassification": "strengthened-marginal-value",
-      "postV2Interpretation": "Forced-work and BC1 work accounting repeatedly show local incidence is insufficient; value depends on displaced or avoided canonical work and unique solves under a fixed envelope.",
+      "postV2Interpretation": "Forced-work, BC1 and BC1-VX accounting show local incidence is insufficient; value depends on displaced/avoided canonical work and unique solves under a fixed envelope. BC1-VX's representative production A/B is unusually clean: 7 gains / 0 losses with ~4.2% lower aggregate work, while promotion still correctly waits on solved-control regression.",
       "evidenceRefs": [
         "reports/2026-09-25-forced-work-capture-economics-phase-census-result-001.md",
-        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md"
+        "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
+        "reports/2026-10-02-bc1-volume-consequence-result-001.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -752,11 +753,13 @@
       "id": "P132",
       "proposition": "A mechanism should show immediate solve gain before deeper instrumentation is justified.",
       "v2Status": "weakened",
-      "postExhaustionClassification": "strengthened-enabling-evidence-value",
-      "postV2Interpretation": "BC1 progressed through theorem/incidence/shadow economics before solve promotion, while BC1-G stopped after soundness+incidence without a production A/B; immediate solve gain is not the only useful maturity signal.",
+      "postExhaustionClassification": "strengthened-enabling-evidence-value-and-claim-scoped-gates",
+      "postV2Interpretation": "BC1 progressed through theorem/incidence/shadow economics before solve promotion; BC1-VX later cleared representative production A/B after those precursor gates. The 2026-10-16 blocker audit generalizes the lesson: promotion/confirmation thresholds should not be pulled backward to prohibit cheaper read-only or disposable premise tests.",
       "evidenceRefs": [
         "reports/2026-09-30-bc1-fresh-prune-matched-budget-ab-result-001.md",
-        "reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md"
+        "reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md",
+        "reports/2026-10-02-bc1-volume-consequence-result-001.md",
+        "reports/2026-10-16-solver-blocker-suspicion-audit-001.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
@@ -1389,13 +1392,15 @@
       "id": "P198",
       "proposition": "A solver idea progresses through distinct maturity gates: phenomenon existence, representability, semantic soundness or fidelity, real-search participation, useful-work effect, complementary matched-cost value, schedulability, and production promotion.",
       "v2Status": "governing research ladder / newly explicit",
-      "postExhaustionClassification": "strongly-confirmed-maturity-ladder-october",
-      "postV2Interpretation": "October reinforces the maturity ladder twice: trail/switch has tiny-model semantic fidelity but no real-prefix novelty yet; PG-G progressed from response association to seam localization to causal intervention and still stops before cold production pending independent-parent transfer and a current-input consumer.",
+      "postExhaustionClassification": "strongly-confirmed-maturity-ladder-and-claim-scoped-blockers",
+      "postV2Interpretation": "October reinforces the maturity ladder while clarifying that gates attach to claims. Trail/switch has toy fidelity but still needs real-prefix novelty for a real consumer; PG-G has causal development evidence but still needs independent transfer for production; BC1-VX has passed representative A/B but still needs solved-control regression. The blocker audit permits cheaper earlier diagnostics without collapsing these later promotion gates.",
       "evidenceRefs": [
         "reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md",
         "reports/2026-09-21-relational-query-next-question-reconciliation-001.md",
         "reports/2026-10-15-trail-transition-system-prior-art-and-toy-falsifier.md",
-        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md"
+        "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md",
+        "reports/2026-10-02-bc1-volume-consequence-result-001.md",
+        "reports/2026-10-16-solver-blocker-suspicion-audit-001.md"
       ],
       "semanticNovelty": "EVIDENCE_STATE_CHANGE"
     },
