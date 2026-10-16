@@ -1,8 +1,14 @@
 # PG-H hidden semantic forcedness: frozen small reference pilot 001
 
-> **Status:** active / execution pending. This preflight authorizes neither a solver action nor a production claim.
-> **Question:** `WS2-SEMANTIC-FORCEDNESS` / PG-H, [canonical workstreams](../docs/solver-optimization-workstreams.md).
-> **Evidence role:** development; Corpus 2 is extensively mined, even though the specified sample selection is outcome-blind for this test.
+> **Status:** active
+> **Last evidence:** 2026-10-16 — run 38977850830 captured 16 eligible branching states with 45 exact child cases across 8 preselected parents; exact labels are pending.
+> **Decision:** proceed with the frozen 45-case bounded CP-SAT reference pilot; do not infer semantic forcedness or native cold-solve improvement from capture alone.
+> **Remaining gate:** complete exact-case reference classification, reconcile all 45 cases, then decide whether a cheap current-input forcedness discriminator has enough opportunity to test.
+> **Research question:** `WS2-SEMANTIC-FORCEDNESS`
+> **Evidence role:** discovery
+> **Selection:** preselected by deterministic hash independent of exact child outcomes.
+> **Population identity:** run 38977850830 source commit 87a579074c3a850148b707fe1997915ea417c106; exact IDs and source SHA-256 in the run capture manifest.
+> **Inference scope:** selected 8-parent development sample, first two eligible multi-child states per gate at fixed 500k beam work; not a population prevalence estimate or production-value claim.
 > **Production effect:** none. The observer, exact references and reconciliation run separately from ordinary production search.
 
 ## Decision this pilot can make
