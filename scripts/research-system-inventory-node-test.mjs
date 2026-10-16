@@ -179,7 +179,7 @@ assert.ok(inventory.planLifecycle.some(row =>
 const brief = renderResearchSystemBrief(inventory);
 assert.match(brief, /^# Solver research brief$/m);
 assert.match(brief, /^## Live queue$/m);
-assert.match(brief, /WS6-DEPENDENCY-CONDITIONED-REPAIR[\s\S]*route: reopen-only[\s\S]*deferred-reopen/u);
+assert.match(brief, /WS6-DEPENDENCY-CONDITIONED-REPAIR[\s\S]*route: instrument-only[\s\S]*active-candidate/u);
 assert.match(brief, /^## Recent structured closeouts$/m);
 assert.match(brief, /^## Unfinished execution references$/m);
 assert.match(brief, /acquisition: telemetry-or-economics|acquisition: fresh-independent-parents/u);
