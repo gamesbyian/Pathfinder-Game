@@ -1,9 +1,9 @@
 # PG-K bounded exact-DEAD prefix segment-revision preflight 001
 
 > **Status:** active
-> **Last evidence:** 2026-10-17 — 75 exact-DEAD raw-prefix states across 25 independent Corpus-2 parents have previously retained oracle labels and accepted historical hint files; the existing Lane D same-interface splice machinery previously showed legal substitutions on LIVE paths, but not DEAD-prefix rescue.
+> **Last evidence:** 2026-10-17 — first complete [PG-K run 39070668942](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39070668942) on all 75 prelabelled exact-DEAD cases across 25 independent Corpus-2 parents: 796 distinct revisions; 92 move-legal on 42 cases, from 22 parents; 0/911 referee-accepted complete paths using accepted hint suffixes. One case per 12 independently hash-selected eligible parents is frozen for an additional exact oracle probe; verdict pending.
 > **Decision:** run one strictly offline, read-only, bounded *candidate construction + full-path native referee* test before claiming a repair mechanism or buying CP-SAT. It neither changes the production solver nor spends any solver work budgets.
-> **Remaining gate:** evaluate the full frozen parent cohort. Preserve every referee-accepted novel complete patched path and the cases/cost of candidates with no accepted completion. Distinguish candidate construction, native solution evidence and unlabelled patched prefixes.
+> **Remaining gate:** resolve 12 frozen independent-parent CP-SAT LIVE/DEAD/UNKNOWN revised-prefix questions; UNKNOWN abstains. Then close tested form or nominate a current-input-only revision constructor. No production promotion.
 > **Research question:** `WS2-RESIDUAL-INTERFACE-COMMUTATIVITY-REVISION`
 > **Evidence role:** discovery
 > **Population identity:** all 75 exactly DEAD prefix cases from `reports/stress/class5-fresh-sibling-harvest-exact-labels-2026-09-17.json` across 25 Corpus-2 parent levels; source declares 0 alarms and CP-SAT INFEASIBLE for each case. Parent, not sibling, is the independent inference unit.
@@ -32,3 +32,22 @@ The bounded pilot is run through a one-shot branch-only workflow and `scripts/st
 - **At least one complete accepted patched path:** retain full referee-valid path and its originating exact-DEAD prefix, classify the geometry/obligation change and ask whether a generic **solve-local** (no historical hint) candidate provider can construct comparable revisions. Any candidate policy still needs matched-work cold production A/B and independent parents before promotion.
 
 Stop before CP-SAT, general repair code, or an unbounded candidate search. Never conflate accepted *alternate already-LIVE solution* swaps with actual DEAD-prefix revision, and never use retained outcomes/paths as a cold router.
+
+## Completed geometry/replay gate and frozen exact successor
+
+Source-matched [run 39070668942](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39070668942), original source `5b6b0af688a64a076c10f747ede1186b9a702493`, passed bounded pure-geometry self-tests and reran the *same* 75 source CP-SAT-DEAD cases. The complete original artifact (ID `12114499887`) is permanently mirrored into [machine evidence](stress/pg-k-dead-prefix-revisions-20261017-001.json) with all **92 move-legal patched prefixes** and no postselected omissions. The matched source case SHA-256 and Corpus-2 SHA-256 are embedded in that machine report. Prior runs with an obsolete import and a malformed synthetic canary failed before data capture and must not be treated as negative experiment outcomes.
+
+| Strict opportunity stage | Frozen result |
+|---|---:|
+| Independently selected original parents | 25 |
+| Original exact-DEAD prefixes, errors/UNKNOWN | 75, 0 |
+| Distinct candidate same-interface revisions | **796** in 73/75 cases |
+| Move-legal revised prefixes | **92** in 42/75 cases, across 22 parents |
+| Dynamically illegal revised prefixes | 704 |
+| Tested full-path completions using available historical-hint suffixes | 911 |
+| Native referee accepted full solutions | **0** |
+| Parents selected for separate exact prefix oracle | **12 of 22 eligible**, one each |
+
+The first conclusion is **constructive yet bounded**: actual current-mechanics move-legal local revisions of exact-DEAD states exist in many independent parents, but the most restrictive *known-hint suffix* way of finishing those revisions failed across 911 completions. That failure is not evidence the 92 revised prefixes are exact-DEAD; checking that is the second experiment. The [literal frozen 12-parent request](stress/pg-k-dead-prefix-exact-tranche-20261017-001.json) selects parents by a deterministic hash, then selects each parent's smallest geometry-hash move-legal prefix. It was published **before** any revised-prefix oracle result; never alter it in response to a label.
+
+The next [one-shot 12-parent reference workflow](https://github.com/gamesbyian/Pathfinder-Game/actions/workflows/pg-k-exact-revised-prefix-20261017.yml) uses the maintained explicit-prefix CP-SAT executor, 20 seconds per case, and the independent native witness referee. It cannot classify a move-legal candidate as LIVE unless an independently accepted complete path is produced; infeasible and timeout/abstain are separate outcomes. No cold solver behaviour, portfolio or work budget changes here.
