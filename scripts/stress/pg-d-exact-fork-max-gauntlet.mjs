@@ -96,7 +96,13 @@ const summary={originalObservations:rawRows.length,distinctPrefixes:unique.size,
  deadSurviveFinalMaxGauntlet:dead.filter(x=>x.finalGauntlet==='pass').length,
  deadNeverRejectedAlongPrefix:dead.filter(x=>!x.firstReject).length,
  liveEverRejected:live.filter(x=>x.firstReject).length,
- survivingMixedContrastParents:[...new Set(pass.filter(x=>x.mixedContrast).map(x=>x.levelId))].sort(),
+ matchedMixedPassGroups:[...groupBy(checked.filter(x=>x.mixedContrast),r=>JSON.stringify([r.levelId,r.endpointXY,r.rawDepth])).values()]
+  .filter(g=>g.some(r=>r.referenceLabel==='live'&&r.finalGauntlet==='pass')
+    &&g.some(r=>r.referenceLabel==='dead'&&r.finalGauntlet==='pass')).length,
+ parentsWithBothFatesPassing:[...new Set([...groupBy(checked.filter(x=>x.mixedContrast),r=>JSON.stringify([r.levelId,r.endpointXY,r.rawDepth])).values()]
+   .filter(g=>g.some(r=>r.referenceLabel==='live'&&r.finalGauntlet==='pass')
+     &&g.some(r=>r.referenceLabel==='dead'&&r.finalGauntlet==='pass'))
+   .map(g=>g[0].levelId))].sort(),
  maximalFinalPassCount:pass.length,alarms:alarms.length};
 const report={schema:'pathfinder.pg-d-exact-fork-max-gauntlet-census/v1',evidenceRole:'retrospective-development',
  design:{selection:'all three existing exact topology-fork tables, literal dedupe; portal-bearing levels omitted for future all-ordinary route logic',
