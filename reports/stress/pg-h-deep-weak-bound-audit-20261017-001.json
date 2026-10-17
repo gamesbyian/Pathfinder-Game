@@ -1,0 +1,36 @@
+{
+  "schema": "pathfinder.pg-h-deep-weak-bound-audit/v1",
+  "sourceRunId": 39007906782,
+  "sourceEvidenceRunId": 39005597866,
+  "sourceCommit": "857d44fafadc95f3b95101486d0a8eb2e71f7d06",
+  "sourceCorpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "evidenceRole": "development",
+  "method": "zero-query counted-step, premature-goal and all-cells 0-1 portal-augmented optimistic goal-distance inspection",
+  "population": {
+    "uniqueParents": 8,
+    "groups": 16,
+    "childCases": 35,
+    "originalExactDead": 35
+  },
+  "result": {
+    "alreadyTerminalNextBeamExpansion": 2,
+    "alreadyTerminalCaseIds": [
+      "R02240:g196616:s0:d65:c1",
+      "R02240:g196616:s1:d65:c1"
+    ],
+    "countedLengthOverruns": 0,
+    "optimisticGoalDistanceExceedsRemaining": 0,
+    "nonterminalCasesSurvivingAllWeakChecks": 33,
+    "remainingCountedMovesRange": [
+      2,
+      37
+    ]
+  },
+  "limits": [
+    "Two early-goal cases are already discarded by the existing beam pos===goal terminal branch after one frontier step and are not incremental pruning capability.",
+    "Portal jump count must be deducted from raw path depth; stored exact labels are offline reference data only.",
+    "Extremely optimistic static goal distance is an admissible lower bound, not a decision-grade static pruning treatment at this seam.",
+    "Per-parent expansion work is not the total hypothetical future descendant work saved by an early rejection.",
+    "Remaining 33 cases may still be cheap to reject by existing more informative dynamic conditions; no work savings or cold gains established."
+  ]
+}
