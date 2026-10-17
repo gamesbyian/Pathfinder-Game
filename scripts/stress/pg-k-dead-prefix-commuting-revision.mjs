@@ -54,7 +54,7 @@ if(process.argv.includes('--self-test')){runSelfTest();process.exit(0)}
 const outputArg=process.argv.find(x=>x.startsWith('--out='));
 assert(outputArg,'--out path required');
 installBrowserStubs();
-const {createSolver}=await import('../../modules/solver.js');
+const {createSolver,SOLVER_TESTING_API:api}=await import('../../modules/solver.js');
 const {validateCandidatePath}=await import('../../modules/domain/path-validator.ts');
 const Solver=createSolver();
 const doc=JSON.parse(readFileSync(inputFile,'utf8'));
@@ -76,6 +76,18 @@ for(const [levelId,deadCases] of group){
  const available=(source.hintRecords||[]).map(h=>h.path).filter(p=>Array.isArray(p)&&p.length>1).slice(0,maxHintPaths);
  const usable=available.filter(p=>validateCandidatePath(level,p).ok);
  const rawHints=usable.map(p=>p.map(unpacked));
+ const prep=api.prepLevel(level);prep._cfg=null;
+ const isMoveLegalPrefix=(p)=>{
+  const state=api.createState(p[0],level,prep);
+  for(let i=1;i<p.length;i++){
+   const before=p[i-1],next=p[i];
+   if(!api.getNeighbors(before,state,level,prep).includes(next))return false;
+   const port=level.portalMap.get(before);
+   const jump=!!(port&&!state.lastWasPortalJump&&port.dest===next);
+   api.applyMove(next,state,level,prep,jump);
+  }
+  return true;
+ };
  let parentAccepted=0;
  for(const deadCase of deadCases){
   const original=deadCase.prefix;const originalPacked=original.map(packed);
@@ -87,8 +99,13 @@ for(const [levelId,deadCases] of group){
   const ranked=[...uniq.values()].sort((a,b)=>a.fingerprint.localeCompare(b.fingerprint)).slice(0,maxCandidatesPerCase);
   const baselineHintHash=new Set(usable.map(h=>hash(h)));
   let candidateAnchors=0,attempts=0,accepted=[],distinctCandidatePaths=new Set();
+  let moveLegalRevisedPrefixes=0,moveIllegalRevisedPrefixes=0;
+  assert(isMoveLegalPrefix(originalPacked),'original CP-SAT-DEAD prefix is not move-legal under current solver '+deadCase.caseId);
   for(const rev of ranked){
    const revisedPacked=rev.prefix.map(packed);
+   const moveLegal=isMoveLegalPrefix(revisedPacked);
+   if(moveLegal)moveLegalRevisedPrefixes++;
+   else{moveIllegalRevisedPrefixes++;continue;}
    const endpoint=rev.prefix.at(-1);
    for(let h=0;h<rawHints.length;h++){
     const hint=rawHints[h],hintPacked=usable[h];
@@ -113,7 +130,8 @@ for(const [levelId,deadCases] of group){
   reportRows.push({levelId,caseId:deadCase.caseId,deadPrefixRawDepth:original.length-1,
    sourceReferenceLabel:deadCase.referenceLabel,
    usableHistoricHints:usable.length,totalDistinctRevisionProposals:uniq.size,
-   proposalsExamined:ranked.length,suffixAnchorOccurrences:candidateAnchors,
+   proposalsExamined:ranked.length,moveLegalRevisedPrefixes,moveIllegalRevisedPrefixes,
+   suffixAnchorOccurrences:candidateAnchors,
    distinctFullPathChecks:attempts,acceptedNovelRevisions:accepted.length,
    accepted:accepted.slice(0,4)});
  }
@@ -131,11 +149,16 @@ const verdict={schema:'pathfinder.pg-k-dead-prefix-commuting-revision-opportunit
  summary:{parents:group.size,cases:reportRows.length,casesWithHint:reportRows.filter(r=>r.usableHistoricHints>0).length,
   casesWithRevisionProposals:reportRows.filter(r=>r.totalDistinctRevisionProposals>0).length,
   distinctRevisionProposals:rawRevisions,examinedProposals:reportRows.reduce((n,r)=>n+r.proposalsExamined,0),
-  fullPathChecks:testedFullPaths,acceptedNovelRevisions:reportRows.reduce((n,r)=>n+r.acceptedNovelRevisions,0),
+  fullPathChecks:testedFullPaths,
+  moveLegalRevisedPrefixes:reportRows.reduce((n,r)=>n+r.moveLegalRevisedPrefixes,0),
+  moveIllegalRevisedPrefixes:reportRows.reduce((n,r)=>n+r.moveIllegalRevisedPrefixes,0),
+  casesWithMoveLegalRevision:reportRows.filter(r=>r.moveLegalRevisedPrefixes>0).length,
+  acceptedNovelRevisions:reportRows.reduce((n,r)=>n+r.acceptedNovelRevisions,0),
   casesWithAccepted:reportRows.filter(r=>r.acceptedNovelRevisions>0).length,
   parentsWithAccepted:parentsWithAccepted.length,acceptedParents:parentsWithAccepted},
  rows:reportRows,
  caveats:['Historically guided repair is NOT a new cold solve; it only measures reference-guided segment-revision capability.',
+  'Move-legal revised prefixes are NOT oracle LIVE: they can still be provably DEAD under coupled obligations or exact length/intersection requirements.',
   'A failed native complete path may still be a legitimate, completable revised prefix; no DEAD claim is made for a patch.',
   'Raw-length-preserving substitutions do not guarantee game-counted length on portal boards; native referee decides.',
   'First 256 unique geometry candidates per DEAD case, ranked outcome-blind; zero result would only close this bounded constructor.']};
