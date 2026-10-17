@@ -70,6 +70,10 @@ Cumulative raw-beam effect versus the production BC1-only beam: 42 → 51 on the
 
 Both arms solve **8/8** through the same winning tier on every level, with total `workSpent` 261.2M vs 260.7M (−0.2%). As with BC1, the raw-beam gains are levels the wider ladder already solves. Any cold-solve value has to come from the ladder residual, which only the representative production arm can show.
 
-## What this does not establish
+## What the isolated raw-beam evidence alone does not establish
 
-Production-ladder value is not yet measured. The A/B above is one raw configuration on one population.
+The raw-beam experiment on its own does not establish production-ladder value. Subsequent paired production-ladder studies did measure that value: the separate random-300 A/B gained seven cold solves with no losses, and the disjoint 64-level screen below added two more. Those findings retain their separate cohort boundaries and do not bypass the solved-control promotion gate.
+
+## 2026-10-16 fresh, disjoint 64-level cold screen
+
+[Report](2026-10-16-bc1vx-fresh-cold-solve-paired-screen-001.md) / [machine evidence](stress/bc1vx-fresh-paired-screen-20261016-001.json): [run 38976765549](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/38976765549), source 49504b1773cf59498259031143a795adf7f2486e, 16/16 complete shards, 64 unique ID pairs strictly disjoint from the original representative 300. At 50M nodes / 67M base work with the normal additive retry envelope: **49/64 control → 51/64 treatment**, **two new referee-valid cold solves (R01765 and R02951), zero losses**, and 9,193,084,933 → 9,084,075,977 aggregate canonical work (−1.19%). Development support only (Corpus 2 was previously investigated); this neither displaces the earlier A/B nor clears the prespecified solved-control regression promotion gate. Production BC1-VX remains default-OFF.
