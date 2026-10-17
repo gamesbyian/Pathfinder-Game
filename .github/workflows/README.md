@@ -132,6 +132,10 @@ Both share `scripts/plan-ab-corpus-shards.mjs` for the mandatory Corpus 1 + publ
 
 Do not infer that CP-SAT search workers should equal runner vCPUs; compare representative runs because those workers also diversify search.
 
+## Current disposable instrument (remove after evidence captured)
+
+- `bc1vx-shared-stage-transfer-canary-20261017.yml` — branch-only source-pinned read-only DFS/admissible BC1-VX opportunity canary, with exact control/shadow canonical-work parity. Delete upon completed result preservation, not an ongoing solver batch runner.
+
 ## Other batch research
 
 - `collect-variant-family-dataset.yml` — native solver work already defaults to 4 workers per runner; its hints belong to generated variants under `data/families`, not canonical levels.
