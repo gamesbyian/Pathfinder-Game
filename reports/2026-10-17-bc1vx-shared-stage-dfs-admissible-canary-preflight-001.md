@@ -1,6 +1,6 @@
 # BC1-VX 2Y shared-stage DFS/admissible opportunity canary 001
 
-> **Status:** active-instrument-only
+> **Status:** active
 > **Last evidence:** 2026-10-17 — theorem BC1-VX default-ON in the beam fresh-connectivity seam, but the shared DFS/admissible application remains unmeasured.
 > **Decision:** measure zero-policy-change exposure and strict control/shadow work parity on one bounded eight-parent development canary before any new hard-prune treatment, CP-SAT or population-scale experiment.
 > **Remaining gate:** source-identical shadow/canonical-work parity and nonzero would-reject exposure. Stop if zero useful hits. If positive, size a level-blind independent opportunity sample and compare explicit control/treatment under matched work. No repair consumer in this probe.
