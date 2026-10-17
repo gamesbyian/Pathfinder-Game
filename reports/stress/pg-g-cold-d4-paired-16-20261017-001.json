@@ -1,0 +1,208 @@
+{
+  "schema": "pathfinder.pg-g-cold-d4-combined-verdict/v1",
+  "sourceRunId": 39008986903,
+  "sourceRunUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39008986903",
+  "sourceCommit": "045982f639693263693c0ec980e821e7134e5377",
+  "evidenceRole": "development",
+  "population": "Frozen SHA256 outcome-blind 16 from Corpus 2 excluding BC1 representative-300/fresh-64/solved-control-150",
+  "solverFlag": "STRATEGY_PGG_COLD_D4_CANDIDATE_ORDER",
+  "shards": [
+    {
+      "shard": 0,
+      "sampleSha256": "d3dfa987fa563ce9bc76de07828f14a0b2501ea219f5a92ede03e96400cabfd2",
+      "control": 1,
+      "treatment": 1
+    },
+    {
+      "shard": 1,
+      "sampleSha256": "855210bdf896a603677a2b8e7e334479ec93ba3cc6184fc0cb8627bab8982ada",
+      "control": 3,
+      "treatment": 3
+    },
+    {
+      "shard": 2,
+      "sampleSha256": "fc12340f08f3e6d0886be4c37229d2a9db986e9a510739145b8bc742bd391224",
+      "control": 4,
+      "treatment": 3
+    },
+    {
+      "shard": 3,
+      "sampleSha256": "570d24cb22818297f5ea96350a66436c75f96bc6de00f7124d3505a2c3cf2b5f",
+      "control": 4,
+      "treatment": 4
+    }
+  ],
+  "summary": {
+    "levels": 16,
+    "controlSolved": 12,
+    "treatmentSolved": 11,
+    "gains": [],
+    "losses": [
+      "R02389"
+    ],
+    "controlWork": 1896114638,
+    "treatmentWork": 2377232321
+  },
+  "rows": [
+    {
+      "id": "R02399",
+      "controlSolved": false,
+      "treatmentSolved": false,
+      "controlStatus": "node-budget-reached",
+      "treatmentStatus": "node-budget-reached",
+      "controlWork": 314699343,
+      "treatmentWork": 314699343,
+      "refereeValid": null
+    },
+    {
+      "id": "R02636",
+      "controlSolved": true,
+      "treatmentSolved": true,
+      "controlStatus": "success",
+      "treatmentStatus": "success",
+      "controlWork": 127709036,
+      "treatmentWork": 130275670,
+      "refereeValid": true
+    },
+    {
+      "id": "R02799",
+      "controlSolved": false,
+      "treatmentSolved": false,
+      "controlStatus": "node-budget-reached",
+      "treatmentStatus": "node-budget-reached",
+      "controlWork": 254133528,
+      "treatmentWork": 256449957,
+      "refereeValid": null
+    },
+    {
+      "id": "R03269",
+      "controlSolved": false,
+      "treatmentSolved": false,
+      "controlStatus": "node-budget-reached",
+      "treatmentStatus": "node-budget-reached",
+      "controlWork": 261075436,
+      "treatmentWork": 263109953,
+      "refereeValid": null
+    },
+    {
+      "id": "R02196",
+      "controlSolved": true,
+      "treatmentSolved": true,
+      "controlStatus": "success",
+      "treatmentStatus": "success",
+      "controlWork": 174986406,
+      "treatmentWork": 227226456,
+      "refereeValid": true
+    },
+    {
+      "id": "R02260",
+      "controlSolved": false,
+      "treatmentSolved": false,
+      "controlStatus": "node-budget-reached",
+      "treatmentStatus": "node-budget-reached",
+      "controlWork": 304689762,
+      "treatmentWork": 282310818,
+      "refereeValid": null
+    },
+    {
+      "id": "R01215",
+      "controlSolved": true,
+      "treatmentSolved": true,
+      "controlStatus": "success",
+      "treatmentStatus": "success",
+      "controlWork": 4705575,
+      "treatmentWork": 65467150,
+      "refereeValid": true
+    },
+    {
+      "id": "R02064",
+      "controlSolved": true,
+      "treatmentSolved": true,
+      "controlStatus": "success",
+      "treatmentStatus": "success",
+      "controlWork": 25295965,
+      "treatmentWork": 25311534,
+      "refereeValid": true
+    },
+    {
+      "id": "R01009",
+      "controlSolved": true,
+      "treatmentSolved": true,
+      "controlStatus": "success",
+      "treatmentStatus": "success",
+      "controlWork": 3259745,
+      "treatmentWork": 3315048,
+      "refereeValid": true
+    },
+    {
+      "id": "R02151",
+      "controlSolved": true,
+      "treatmentSolved": true,
+      "controlStatus": "success",
+      "treatmentStatus": "success",
+      "controlWork": 139907934,
+      "treatmentWork": 137251609,
+      "refereeValid": true
+    },
+    {
+      "id": "R02195",
+      "controlSolved": true,
+      "treatmentSolved": true,
+      "controlStatus": "success",
+      "treatmentStatus": "success",
+      "controlWork": 22367829,
+      "treatmentWork": 22365526,
+      "refereeValid": true
+    },
+    {
+      "id": "R02389",
+      "controlSolved": true,
+      "treatmentSolved": false,
+      "controlStatus": "success",
+      "treatmentStatus": "node-budget-reached",
+      "controlWork": 185423953,
+      "treatmentWork": 367324101,
+      "refereeValid": null
+    },
+    {
+      "id": "R01011",
+      "controlSolved": true,
+      "treatmentSolved": true,
+      "controlStatus": "success",
+      "treatmentStatus": "success",
+      "controlWork": 48586639,
+      "treatmentWork": 48586639,
+      "refereeValid": true
+    },
+    {
+      "id": "R01694",
+      "controlSolved": true,
+      "treatmentSolved": true,
+      "controlStatus": "success",
+      "treatmentStatus": "success",
+      "controlWork": 2255206,
+      "treatmentWork": 206522926,
+      "refereeValid": true
+    },
+    {
+      "id": "R02348",
+      "controlSolved": true,
+      "treatmentSolved": true,
+      "controlStatus": "success",
+      "treatmentStatus": "success",
+      "controlWork": 25192112,
+      "treatmentWork": 25189423,
+      "refereeValid": true
+    },
+    {
+      "id": "R02411",
+      "controlSolved": true,
+      "treatmentSolved": true,
+      "controlStatus": "success",
+      "treatmentStatus": "success",
+      "controlWork": 1826169,
+      "treatmentWork": 1826168,
+      "refereeValid": true
+    }
+  ]
+}
