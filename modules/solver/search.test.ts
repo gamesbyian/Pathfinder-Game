@@ -584,7 +584,9 @@ function pairUsedByPath(path: number[]): number | null {
 test('beam coarse-state merge on a portal level does not collapse candidates that used different portal pairs (opt-in flag on)', async () => {
   const level = makePortalConvergenceLevel();
   const prep = prepLevel(level);
-  prep._cfg = { STRATEGY_PORTAL_COARSE_STATE_MERGE: true } as any;
+  // Isolate portal coarse-merge semantics from BC1-VX's newly default-ON
+  // sound dead-branch pruning, which can suppress this convergence fixture.
+  prep._cfg = { STRATEGY_PORTAL_COARSE_STATE_MERGE: true, STRATEGY_BC1_VERTEX_VOLUME_PRUNE: false } as any;
   prep._metrics = { nodesExpanded: 0 };
   const records: Array<{ stage: string; paths: number[][] }> = [];
   prep._beamResearchObserver = { observe: record => records.push({ stage: record.stage, paths: record.paths }) };
@@ -604,7 +606,9 @@ test('beam coarse-state merge on a portal level does not collapse candidates tha
 test('beam coarse-state merge on a portal level is disabled by default (no opt-in flag)', async () => {
   const level = makePortalConvergenceLevel();
   const prep = prepLevel(level);
-  prep._cfg = null;
+  // Keep the portal-merge default OFF while disabling unrelated, sound BC1-VX
+  // pruning so this fixture still exposes both constructed convergence paths.
+  prep._cfg = { STRATEGY_BC1_VERTEX_VOLUME_PRUNE: false } as any;
   prep._metrics = { nodesExpanded: 0 };
   const records: Array<{ stage: string; paths: number[][] }> = [];
   prep._beamResearchObserver = { observe: record => records.push({ stage: record.stage, paths: record.paths }) };
