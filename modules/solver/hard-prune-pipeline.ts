@@ -6,7 +6,7 @@ import { evaluateObligationClusters } from './joint-obligation-propagation.js';
 import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustCrossNeighborBudgetDeadlocked, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { isSolutionState } from './solution.js';
 import { stateSignature } from './nogood-cache.js';
-import { isConnected, probeUnscheduledConnectivityGoalCutCertificate } from './topology.js';
+import { bc1StrandedFreshVolume, isConnected, probeUnscheduledConnectivityGoalCutCertificate } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, PrepLevel, SolverSearchState } from './types.js';
@@ -265,6 +265,21 @@ export function evaluatePrunedMove(
     if (runConnectivity && (!cfg || cfg.PRUNE_CONNECTIVITY)) {
         reached(diagnostics, 'PRUNE_CONNECTIVITY');
         if (!isConnected(next, state, level, prep)) return reject(diagnostics, 'PRUNE_CONNECTIVITY');
+        // 2Y read-only shared-stage transfer falsifier. isConnected just refreshed _reached
+        // for this exact applied state. No search decision, canonical-work meter or
+        // budget depends on the observer; stochastic repair never opts into this probe.
+        const transferObserver = prep._bc1SharedTransferObserver;
+        if (transferObserver) {
+            const portalVolumeApplicable = level.portalMap.size === 0 || prep._cfg?.PRUNE_CONNECTIVITY_VOLUME_PORTAL !== false;
+            const v = portalVolumeApplicable ? bc1StrandedFreshVolume(next, state, level, true) : null;
+            const volumeReject = !!v && v.strandedFresh > 0
+                && v.freshVolume - v.strandedFresh + level.requiredIntersections - state.ints < rSteps;
+            transferObserver.observe({
+                supported: v !== null, portalVolumeApplicable,
+                freshVolume: v?.freshVolume ?? null, strandedFresh: v?.strandedFresh ?? null,
+                bc1Conflict: v?.bc1Conflict ?? null, volumeReject,
+            });
+        }
     }
 
     return 'pass';
