@@ -1,0 +1,1492 @@
+{
+  "schema": "pathfinder.pg-c-phase9-retained-first-loss/v1",
+  "evidenceRole": "historical-source-rejoin-decision-audit",
+  "population": [
+    "28 previously frozen first-loss frontier parents from 2026-09-11, 14 development plus 14 independent confirmation"
+  ],
+  "sourceFiles": [
+    "reports/stress/first-loss-pilot-sample-manifest-001.json",
+    "reports/stress/first-loss-confirmation-sample-manifest-001.json",
+    "reports/stress/first-loss-pilot-beam-width2000-001.json",
+    "reports/stress/first-loss-confirmation-beam-width2000-001.json",
+    "reports/stress/first-loss-pilot-beam-width5000-001.json",
+    "reports/stress/first-loss-confirmation-beam-width5000-001.json",
+    "reports/stress/first-loss-frontier-repair-rollback-census-001.json",
+    "reports/stress/first-loss-frontier-repair-rollback-census-300k-001.json",
+    "reports/stress/first-loss-frontier-repair-operator-reachability-001.json"
+  ],
+  "summary": {
+    "parents": 28,
+    "development": 14,
+    "independentConfirmation": 14,
+    "allKnownSupportLostByBeamWidth2000": 28,
+    "allKnownSupportLostByBeamWidth5000": 28,
+    "passiveParityNoAlarms": 28,
+    "knownHintSpliceRepairSolved": 4,
+    "knownHintSpliceRepairMisses": 24,
+    "measuredNaturalRepairInsufficientExposure": 28,
+    "medianBeamDepthExtension": 2,
+    "maxBeamDepthExtension": 13,
+    "firstIrreversibleLossProven": 0,
+    "earliestUnresolvedParentCount": 28
+  },
+  "interpretation": "All 28 selected previously known-valid hint-supported basins are lost via score-width cull under both observed beam widths. This is witness-relative F6 and not proof that all still-live futures are lost or that F2-F5 is causally excluded; all 28 remain UNRESOLVED_EARLIER_CLASS. Repair can solve four cases only when seeded with unavailable-to-cold solver hint prefixes; does not certify an implementable cold handoff.",
+  "parents": [
+    {
+      "id": "R03101",
+      "sample": "development",
+      "class": 4,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 124,
+      "knownValidLabels": 264,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 65542,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 16,
+          "workAtLoss": 9659,
+          "workAfterKnownSupportLoss": 146146
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 65542,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 18,
+          "workAtLoss": 23783,
+          "workAfterKnownSupportLoss": 351564
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30000,
+          "maxKnownPrefix": 17
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300000,
+          "maxKnownPrefix": 17
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 16,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 16",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R00329",
+      "sample": "development",
+      "class": 4,
+      "routingRegime": "must-cross-heavy",
+      "requiredLength": 110,
+      "knownValidLabels": 40,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 786442,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 13,
+          "workAtLoss": 6741,
+          "workAfterKnownSupportLoss": 142888
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 786442,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 16,
+          "workAtLoss": 25558,
+          "workAfterKnownSupportLoss": 358544
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30025,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300051,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 13,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 13",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R03275",
+      "sample": "development",
+      "class": 4,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 90,
+      "knownValidLabels": 38,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 458759,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 15,
+          "workAtLoss": 10843,
+          "workAfterKnownSupportLoss": 85467
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 458759,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 16,
+          "workAtLoss": 23373,
+          "workAfterKnownSupportLoss": 317948
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30034,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300012,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 15,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 15",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R02530",
+      "sample": "development",
+      "class": 4,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 88,
+      "knownValidLabels": 5,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 131072,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 16,
+          "workAtLoss": 6228,
+          "workAfterKnownSupportLoss": 86852
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 131072,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 19,
+          "workAtLoss": 20912,
+          "workAfterKnownSupportLoss": 207993
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30014,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300005,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 16,
+          "operationSolved": true,
+          "nodes": 225824
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 16",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R02309",
+      "sample": "development",
+      "class": 4,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 91,
+      "knownValidLabels": 26,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 720901,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 19,
+          "workAtLoss": 15784,
+          "workAfterKnownSupportLoss": 60514
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 720901,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 19,
+          "workAtLoss": 30897,
+          "workAfterKnownSupportLoss": 164849
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30010,
+          "maxKnownPrefix": 3
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300002,
+          "maxKnownPrefix": 3
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 19,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 19",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R03351",
+      "sample": "development",
+      "class": 4,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 119,
+      "knownValidLabels": 66,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 196611,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 34,
+          "workAtLoss": 45642,
+          "workAfterKnownSupportLoss": 144305
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 196611,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 47,
+          "workAtLoss": 173062,
+          "workAfterKnownSupportLoss": 231470
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30002,
+          "maxKnownPrefix": 3
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300027,
+          "maxKnownPrefix": 3
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 34,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 34",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R01190",
+      "sample": "development",
+      "class": 4,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 97,
+      "knownValidLabels": 46,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 720900,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 22,
+          "workAtLoss": 9510,
+          "workAfterKnownSupportLoss": 56431
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 720900,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 26,
+          "workAtLoss": 33966,
+          "workAfterKnownSupportLoss": 131399
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30016,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300019,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 22,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 22",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R01632",
+      "sample": "development",
+      "class": 5,
+      "routingRegime": "must-cross-heavy",
+      "requiredLength": 118,
+      "knownValidLabels": 134,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 589827,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 10,
+          "workAtLoss": 2837,
+          "workAfterKnownSupportLoss": 169403
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 589827,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 11,
+          "workAtLoss": 5884,
+          "workAfterKnownSupportLoss": 368699
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30064,
+          "maxKnownPrefix": 3
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300029,
+          "maxKnownPrefix": 3
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 10,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 10",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R03088",
+      "sample": "development",
+      "class": 5,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 88,
+      "knownValidLabels": 8,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 589828,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 13,
+          "workAtLoss": 3899,
+          "workAfterKnownSupportLoss": 83420
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 589828,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 15,
+          "workAtLoss": 11390,
+          "workAfterKnownSupportLoss": 208283
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30015,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300008,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 13,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 13",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R01097",
+      "sample": "development",
+      "class": 5,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 116,
+      "knownValidLabels": 12,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 10,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 16,
+          "workAtLoss": 4420,
+          "workAfterKnownSupportLoss": 158288
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 10,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 19,
+          "workAtLoss": 17202,
+          "workAfterKnownSupportLoss": 386741
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30035,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300000,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 16,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 16",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R03229",
+      "sample": "development",
+      "class": 5,
+      "routingRegime": "must-cross-heavy",
+      "requiredLength": 82,
+      "knownValidLabels": 3,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 262147,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 22,
+          "workAtLoss": 16295,
+          "workAfterKnownSupportLoss": 75756
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 262147,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 24,
+          "workAtLoss": 42318,
+          "workAfterKnownSupportLoss": 183801
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30000,
+          "maxKnownPrefix": 4
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300000,
+          "maxKnownPrefix": 4
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 22,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 22",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R03197",
+      "sample": "development",
+      "class": 5,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 119,
+      "knownValidLabels": 33,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 1,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 13,
+          "workAtLoss": 6201,
+          "workAfterKnownSupportLoss": 155096
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 1,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 14,
+          "workAtLoss": 12702,
+          "workAfterKnownSupportLoss": 371541
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30006,
+          "maxKnownPrefix": 2
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300002,
+          "maxKnownPrefix": 2
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 13,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 13",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R02185",
+      "sample": "development",
+      "class": 5,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 79,
+      "knownValidLabels": 16,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 393225,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 16,
+          "workAtLoss": 10788,
+          "workAfterKnownSupportLoss": 96173
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 393225,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 20,
+          "workAtLoss": 37887,
+          "workAfterKnownSupportLoss": 256231
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30038,
+          "maxKnownPrefix": 12
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300011,
+          "maxKnownPrefix": 3
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 16,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 16",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R02733",
+      "sample": "development",
+      "class": 5,
+      "routingRegime": "multi-portal",
+      "requiredLength": 73,
+      "knownValidLabels": 7,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 589833,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 16,
+          "workAtLoss": 6435,
+          "workAfterKnownSupportLoss": 77642
+        },
+        "beam5000": {
+          "sourceRef": "88c98be0e32ea7776ca8066916da408607ac0d0a",
+          "gateKey": 589833,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 20,
+          "workAtLoss": 26333,
+          "workAfterKnownSupportLoss": 176138
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30007,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300034,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 16,
+          "operationSolved": true,
+          "nodes": 965566
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 16",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R02438",
+      "sample": "independent-confirmation",
+      "class": 4,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 105,
+      "knownValidLabels": 157,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 131076,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 17,
+          "workAtLoss": 15353,
+          "workAfterKnownSupportLoss": 137784
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 131076,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 19,
+          "workAtLoss": 41564,
+          "workAfterKnownSupportLoss": 359140
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30016,
+          "maxKnownPrefix": 9
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300016,
+          "maxKnownPrefix": 9
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 17,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 17",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R02590",
+      "sample": "independent-confirmation",
+      "class": 4,
+      "routingRegime": "must-cross-heavy",
+      "requiredLength": 78,
+      "knownValidLabels": 4,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 589829,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 22,
+          "workAtLoss": 18562,
+          "workAfterKnownSupportLoss": 59526
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 589829,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 22,
+          "workAtLoss": 38986,
+          "workAfterKnownSupportLoss": 160469
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30003,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300028,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 22,
+          "operationSolved": true,
+          "nodes": 352459
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 22",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R02897",
+      "sample": "independent-confirmation",
+      "class": 4,
+      "routingRegime": "must-cross-heavy",
+      "requiredLength": 74,
+      "knownValidLabels": 12,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 131078,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 41,
+          "workAtLoss": 57483,
+          "workAfterKnownSupportLoss": 38588
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 131078,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 41,
+          "workAtLoss": 134659,
+          "workAfterKnownSupportLoss": 99720
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30012,
+          "maxKnownPrefix": 6
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300029,
+          "maxKnownPrefix": 6
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 41,
+          "operationSolved": true,
+          "nodes": 6593
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 41",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R03223",
+      "sample": "independent-confirmation",
+      "class": 4,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 97,
+      "knownValidLabels": 76,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 524292,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 14,
+          "workAtLoss": 9815,
+          "workAfterKnownSupportLoss": 165254
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 524292,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 15,
+          "workAtLoss": 23088,
+          "workAfterKnownSupportLoss": 380453
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30051,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300026,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 14,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 14",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R00786",
+      "sample": "independent-confirmation",
+      "class": 4,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 92,
+      "knownValidLabels": 6,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 327684,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 21,
+          "workAtLoss": 17637,
+          "workAfterKnownSupportLoss": 125393
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 327684,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 22,
+          "workAtLoss": 41803,
+          "workAfterKnownSupportLoss": 327315
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30031,
+          "maxKnownPrefix": 3
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300009,
+          "maxKnownPrefix": 3
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 21,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 21",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R03083",
+      "sample": "independent-confirmation",
+      "class": 4,
+      "routingRegime": "must-cross-heavy",
+      "requiredLength": 119,
+      "knownValidLabels": 59,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 196618,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 11,
+          "workAtLoss": 5901,
+          "workAfterKnownSupportLoss": 179673
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 196618,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 12,
+          "workAtLoss": 13286,
+          "workAfterKnownSupportLoss": 453746
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30009,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300069,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 11,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 11",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R01023",
+      "sample": "independent-confirmation",
+      "class": 4,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 76,
+      "knownValidLabels": 13,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 196612,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 16,
+          "workAtLoss": 7430,
+          "workAfterKnownSupportLoss": 75925
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 196612,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 18,
+          "workAtLoss": 17514,
+          "workAfterKnownSupportLoss": 182927
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30015,
+          "maxKnownPrefix": 2
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300020,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 16,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 16",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R00139",
+      "sample": "independent-confirmation",
+      "class": 5,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 116,
+      "knownValidLabels": 21,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 851981,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 14,
+          "workAtLoss": 5227,
+          "workAfterKnownSupportLoss": 175716
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 851981,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 20,
+          "workAtLoss": 36971,
+          "workAfterKnownSupportLoss": 384382
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30023,
+          "maxKnownPrefix": 3
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300017,
+          "maxKnownPrefix": 3
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 14,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 14",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R02801",
+      "sample": "independent-confirmation",
+      "class": 5,
+      "routingRegime": "must-cross-heavy",
+      "requiredLength": 79,
+      "knownValidLabels": 1,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 524291,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 12,
+          "workAtLoss": 4960,
+          "workAfterKnownSupportLoss": 70964
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 524291,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 14,
+          "workAtLoss": 13769,
+          "workAfterKnownSupportLoss": 170645
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30001,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300022,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 12,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 12",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R02170",
+      "sample": "independent-confirmation",
+      "class": 5,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 93,
+      "knownValidLabels": 47,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 458757,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 18,
+          "workAtLoss": 13381,
+          "workAfterKnownSupportLoss": 111763
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 458757,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 19,
+          "workAtLoss": 29935,
+          "workAfterKnownSupportLoss": 279442
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30017,
+          "maxKnownPrefix": 5
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300010,
+          "maxKnownPrefix": 5
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 18,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 18",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R02210",
+      "sample": "independent-confirmation",
+      "class": 5,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 115,
+      "knownValidLabels": 30,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 786437,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 13,
+          "workAtLoss": 7927,
+          "workAfterKnownSupportLoss": 144602
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 786437,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 13,
+          "workAtLoss": 12365,
+          "workAfterKnownSupportLoss": 359789
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30012,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300013,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 13,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 13",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R02025",
+      "sample": "independent-confirmation",
+      "class": 5,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 82,
+      "knownValidLabels": 35,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 131073,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 16,
+          "workAtLoss": 8217,
+          "workAfterKnownSupportLoss": 73358
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 131073,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 16,
+          "workAtLoss": 11949,
+          "workAfterKnownSupportLoss": 192880
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30023,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300025,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 16,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 16",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R01290",
+      "sample": "independent-confirmation",
+      "class": 5,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 116,
+      "knownValidLabels": 8,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 196613,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 11,
+          "workAtLoss": 4125,
+          "workAfterKnownSupportLoss": 153506
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 196613,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 13,
+          "workAtLoss": 12021,
+          "workAfterKnownSupportLoss": 386849
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30004,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300003,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 11,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 11",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    },
+    {
+      "id": "R02324",
+      "sample": "independent-confirmation",
+      "class": 5,
+      "routingRegime": "intersection-heavy",
+      "requiredLength": 125,
+      "knownValidLabels": 11,
+      "observedAt": {
+        "beam2000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 589836,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 12,
+          "workAtLoss": 4609,
+          "workAfterKnownSupportLoss": 168780
+        },
+        "beam5000": {
+          "sourceRef": "0143e5f76c8da26483561021ac9cfd74081925d9",
+          "gateKey": 589836,
+          "lossStage": "post-score-width-cull",
+          "lossCause": "score-width-culled",
+          "firstLossDepth": 16,
+          "workAtLoss": 22884,
+          "workAfterKnownSupportLoss": 401577
+        },
+        "repairNatural30k": {
+          "nodesExpanded": 30019,
+          "maxKnownPrefix": 1
+        },
+        "repairNatural300k": {
+          "nodesExpanded": 300027,
+          "maxKnownPrefix": 1
+        },
+        "repairSplicedExactKnownGoodState": {
+          "source": "historical accepted stored hint prefix, NOT available to cold production",
+          "liveDepth": 12,
+          "operationSolved": false,
+          "nodes": 2000000
+        }
+      },
+      "firstLoss": {
+        "observedMechanism": "F6 known-label beam score-width retention loss",
+        "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
+        "workCensored": false,
+        "independentExactLiveSupport": "valid historical hint label observed through depth 12",
+        "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
+        "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
+        "causalInterventionEstablished": "none cold-available",
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+      }
+    }
+  ]
+}
