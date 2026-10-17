@@ -9,7 +9,7 @@
 import {createHash} from 'node:crypto';
 import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
-import {readLevelsWithHints} from '../level-data-io.mjs';
+import {readLevelCorpusDocumentWithHints} from '../level-data-io.mjs';
 import {installBrowserStubs} from '../test-lib/browser-stubs.mjs';
 
 const inputFile='reports/stress/class5-fresh-sibling-harvest-exact-labels-2026-09-17.json';
@@ -63,7 +63,7 @@ assert(doc.summary?.live===0&&doc.summary?.dead===75&&doc.summary?.abstain===0,'
 assert(doc.summary?.correctnessAlarms===0&&doc.summary?.inputAlarms===0,'source correctness alarms');
 assert(doc.rows.length===75&&doc.rows.every(x=>x.referenceLabel==='dead'&&x.cpSatStatus==='INFEASIBLE'),
  'invalid EXACT-DEAD population');
-const fromCorpus=readLevelsWithHints(path.resolve(corpusFile),{hintsDir:'data/stress/hints-random'});
+const {levels:fromCorpus}=readLevelCorpusDocumentWithHints(path.resolve(corpusFile));
 const byLevel=new Map(fromCorpus.map(x=>[x.id,x]));
 const group=new Map();
 for(const r of doc.rows){let g=group.get(r.levelId)||[];g.push(r);group.set(r.levelId,g)}
