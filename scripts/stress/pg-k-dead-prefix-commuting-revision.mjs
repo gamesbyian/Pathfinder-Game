@@ -99,12 +99,15 @@ for(const [levelId,deadCases] of group){
   const ranked=[...uniq.values()].sort((a,b)=>a.fingerprint.localeCompare(b.fingerprint)).slice(0,maxCandidatesPerCase);
   const baselineHintHash=new Set(usable.map(h=>hash(h)));
   let candidateAnchors=0,attempts=0,accepted=[],distinctCandidatePaths=new Set();
-  let moveLegalRevisedPrefixes=0,moveIllegalRevisedPrefixes=0;
+  let moveLegalRevisedPrefixes=0,moveIllegalRevisedPrefixes=0,legalRevisions=[];
   assert(isMoveLegalPrefix(originalPacked),'original CP-SAT-DEAD prefix is not move-legal under current solver '+deadCase.caseId);
   for(const rev of ranked){
    const revisedPacked=rev.prefix.map(packed);
    const moveLegal=isMoveLegalPrefix(revisedPacked);
-   if(moveLegal)moveLegalRevisedPrefixes++;
+   if(moveLegal){moveLegalRevisedPrefixes++;
+    legalRevisions.push({fingerprint:rev.fingerprint,proposalHint:rev.proposalHint,
+     a:rev.a,b:rev.b,hintStart:rev.hintStart,hintEnd:rev.hintEnd,prefix:rev.prefix});
+   }
    else{moveIllegalRevisedPrefixes++;continue;}
    const endpoint=rev.prefix.at(-1);
    for(let h=0;h<rawHints.length;h++){
@@ -133,12 +136,30 @@ for(const [levelId,deadCases] of group){
    proposalsExamined:ranked.length,moveLegalRevisedPrefixes,moveIllegalRevisedPrefixes,
    suffixAnchorOccurrences:candidateAnchors,
    distinctFullPathChecks:attempts,acceptedNovelRevisions:accepted.length,
+   legalRevisions,
    accepted:accepted.slice(0,4)});
  }
  console.log('PG-K PARENT '+JSON.stringify({levelId,exactDeadCases:deadCases.length,
   usableHints:usable.length,acceptedRevisions:parentAccepted}));
 }
 const parentsWithAccepted=[...new Set(reportRows.filter(r=>r.acceptedNovelRevisions).map(r=>r.levelId))];
+// Precommit a small independent-parent exact reference tranche without inspecting any
+// revised-prefix CP-SAT fate. All proposal selection is geometry/hash-only.
+const candidateByParent=new Map();
+for(const row of reportRows)for(const v of row.legalRevisions){
+ const a=candidateByParent.get(row.levelId)||[];
+ a.push({levelId:row.levelId,caseId:row.caseId,...v});candidateByParent.set(row.levelId,a);
+}
+const candidatesByIndependentParent=[...candidateByParent.keys()].sort((a,b)=>
+ hash(['pg-k-exact-parent-tranche-20261017',a]).localeCompare(hash(['pg-k-exact-parent-tranche-20261017',b])));
+const referenceCases=candidatesByIndependentParent.slice(0,12).map(levelId=>{
+ const selected=candidateByParent.get(levelId).sort((a,b)=>a.fingerprint.localeCompare(b.fingerprint))[0];
+ return {id:'PGK-'+levelId+'-'+selected.fingerprint.slice(0,12),levelId,
+  corpus:corpusFile,prefix:selected.prefix,
+  source:{kind:'pg-k-hint-guided-move-legal-revision',deadCaseId:selected.caseId,
+   geometryHash:selected.fingerprint,revisionWindow:[selected.a,selected.b],
+   independentlySelected:'one hash-first geometry proposal in each of twelve hash-selected eligible independent parents'}};
+});
 const verdict={schema:'pathfinder.pg-k-dead-prefix-commuting-revision-opportunity/v1',
  source:{exactLabels:inputFile,sha256:checksum(inputFile),corpus:corpusFile,corpusSha256:checksum(corpusFile)},
  design:{selectedParents:25,exactDeadPrefixes:75,selection:'all exact-DEAD frozen class-5 multi-parent cases, no fate-conditioned subset',
@@ -157,12 +178,18 @@ const verdict={schema:'pathfinder.pg-k-dead-prefix-commuting-revision-opportunit
   casesWithAccepted:reportRows.filter(r=>r.acceptedNovelRevisions>0).length,
   parentsWithAccepted:parentsWithAccepted.length,acceptedParents:parentsWithAccepted},
  rows:reportRows,
+ referenceCandidateManifest:{schemaVersion:1,kind:'pg-k-exact-reference-tranche',
+  selection:'twelve geometry-hash selected independent eligible parents, one hashed move-legal patched prefix each; no CP-SAT revised-prefix fates inspected',
+  eligibleParents:candidatesByIndependentParent.length,selectedParents:referenceCases.length,
+  cases:referenceCases},
  caveats:['Historically guided repair is NOT a new cold solve; it only measures reference-guided segment-revision capability.',
   'Move-legal revised prefixes are NOT oracle LIVE: they can still be provably DEAD under coupled obligations or exact length/intersection requirements.',
   'A failed native complete path may still be a legitimate, completable revised prefix; no DEAD claim is made for a patch.',
   'Raw-length-preserving substitutions do not guarantee game-counted length on portal boards; native referee decides.',
   'First 256 unique geometry candidates per DEAD case, ranked outcome-blind; zero result would only close this bounded constructor.']};
 assert(verdict.summary.cases===75,'incomplete case coverage');
+assert(verdict.summary.moveLegalRevisedPrefixes===reportRows.reduce((n,r)=>n+r.legalRevisions.length,0),'candidate transport mismatch');
+assert(referenceCases.length<=12&&new Set(referenceCases.map(x=>x.levelId)).size===referenceCases.length,'non-independent exact tranche');
 const filename=path.resolve(outputArg.slice('--out='.length));
 mkdirSync(path.dirname(filename),{recursive:true});
 writeFileSync(filename,JSON.stringify(verdict,null,2)+'\n');
