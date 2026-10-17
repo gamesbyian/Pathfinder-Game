@@ -6,7 +6,7 @@ on:
     branches:
       - chatgpt/bc1vx-second-disjoint-cold64-20261017
     paths:
-      - .github/workflows/bc1vx-bc1vx-second64-paired-16-20261017.yml
+      - .github/workflows/bc1vx-second-disjoint-cold64-20261017.yml
   workflow_dispatch:
 
 permissions:
