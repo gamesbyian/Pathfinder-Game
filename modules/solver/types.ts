@@ -304,7 +304,7 @@ export interface PrepLevel {
     /** Research-only isConnected() rejection observer — see ConnectivityRejectionObserver's doc. */
     _connectivityRejectionObserver?: ConnectivityRejectionObserver | null;
     /** One-shot read-only 2Y DFS/admissible BC1-VX opportunity probe. Absent in production. */
-    _bc1SharedTransferObserver?: { observe(record: {
+    _bc1SharedTransferObserver?: { pruneCandidate?: boolean; observe(record: {
         supported: boolean; portalVolumeApplicable: boolean;
         freshVolume: number | null; strandedFresh: number | null;
         bc1Conflict: boolean | null; volumeReject: boolean;
