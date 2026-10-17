@@ -42,8 +42,8 @@ function generateRevisions(dead,hint,span=maxSpan){
  return changes;
 }
 function runSelfTest(){
- const dead=[[0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0],[8,0],[9,0],[10,0],[11,0],[12,0],[13,0]];
- const hint=[[0,0],[1,0],[2,0],[3,0],[4,0],[4,1],[5,1],[6,1],[7,0],[8,0],[9,0],[10,0],[11,0],[12,0],[13,0]];
+ const dead=[[0,3],[1,3],[2,3],[3,3],[4,3],[4,4],[5,4],[5,3],[6,3],[7,3],[8,3],[9,3],[10,3],[11,3]];
+ const hint=[[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[5,2],[6,2],[6,3],[7,3],[8,3],[9,3],[10,3],[11,3]];
  const out=generateRevisions(dead,hint);
  assert(out.some(x=>x.a===4&&x.b===8),'must discover true same-interface interior change');
  assert(out.every(x=>x.prefix.length===dead.length),'preserve length');
