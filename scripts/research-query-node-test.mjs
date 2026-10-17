@@ -120,9 +120,8 @@ assert.ok(supportImpact.rows.some(row =>
 
 const answerability = buildResearchQueryView(graph, { view: 'answerability' });
 // noFreshSolverExecution ('existing-data'/'design'/'implementation' gate classes) is exercised on a
-// synthetic fixture rather than a live workstream row: every currently-live gate is closed/bounded-
-// compute/dormant (no workstream is mid-design/mid-implementation right now), so relying on a real
-// row would make this assertion only as durable as whichever workstream happens to be live.
+// synthetic fixture rather than relying on a specific workstream forever. BC1-VX
+// now has a real implementation gate, but its later promotion will move that class again.
 const designGateFixture = {
   ...graph,
   nodes: graph.nodes.map(node =>
@@ -141,8 +140,8 @@ const boundedComputeFixture = {
 };
 assert.ok(buildAnswerabilityView(boundedComputeFixture).boundedCompute.some(row => row.workstreamId === '2X'),
   'bounded-compute gate should be explicitly classified as bounded compute');
-assert.ok(answerability.boundedCompute.some(row => row.workstreamId === '2X'),
-  'reopened small exact projections BC1-V production A/B should appear as active bounded compute');
+assert.ok(answerability.noFreshSolverExecution.some(row => row.workstreamId === '2X'),
+  'BC1-VX completed production A/B and solved-control regression; immediate gate is explicit implementation/promotion, not new bounded research compute');
 assert.ok(answerability.dormantOrConditional.some(row => row.workstreamId === '2R'),
   'reopen-only parity lane should not appear as an active execution gate');
 assert.equal(answerability.unclassified.length, 0,
