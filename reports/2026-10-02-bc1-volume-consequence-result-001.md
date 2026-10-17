@@ -1,8 +1,8 @@
 # BC1-V: volume consequence of theorem BC1
 
 > **Status:** active
-> **Last evidence:** 2026-10-16 — representative production random-300 A/B completed: frozen control run 36772815197 solved 225/300; BC1-VX treatment run 37052447194 solved 232/300 (**7 gains / 0 losses**), with aggregate `workSpent` 44,638,363,505 → 42,754,637,509 (~4.2% lower). Earlier witness soundness remains 0 alarms across ~861k states.
-> **Decision:** BC1-VX (`STRATEGY_BC1_VERTEX_VOLUME_PRUNE`) has now cleared its representative production A/B strongly positive: 7 gains / 0 losses and lower aggregate canonical work. It remains default-OFF until the prespecified solved-control regression set clears. The positive A/B also satisfies the historical prerequisite for **exploratory** transfer of this different volume consequence into shared hard-prune stages; that transfer is diagnostic only and does not reopen the old pipeline-wide BC1 form.
+> **Last evidence:** 2026-10-16 — representative 300-level production A/B control 225 → treatment 232 (**7 gains / 0 losses**, −4.2% work), followed by disjoint [64-level cold screen](2026-10-16-bc1vx-fresh-cold-solve-paired-screen-001.md) control 49 → treatment 51 (**2 further referee-valid gains / 0 losses**, −1.19% work; R01765 and R02951). Witness soundness remains 0 alarms across ~861k states.
+> **Decision:** BC1-VX (`STRATEGY_BC1_VERTEX_VOLUME_PRUNE`) has two positive level-blind production-budget development cohorts: 7 disjoint gains from the original representative 300 and 2 additional gains from a separate cold-64, each with zero losses and lower aggregate canonical work. It remains default-OFF until the prespecified solved-control regression clears. The positive A/B permits **exploratory**, diagnostic-only transfer of the distinct volume consequence into shared hard-prune stages; it does not reopen the old pipeline-wide BC1 form.
 > **Remaining gate:** run the prespecified solved-control regression set before promotion/default-ON. The current-main full-corpus control attempt 37049775397 was cancelled and is not needed to reinterpret the completed frozen random-300 A/B as anything broader than its own population.
 > **Research question:** `WS2-CUT-BALANCE-PROJECTION`
 > **Evidence role:** discovery
@@ -70,9 +70,9 @@ Cumulative raw-beam effect versus the production BC1-only beam: 42 → 51 on the
 
 Both arms solve **8/8** through the same winning tier on every level, with total `workSpent` 261.2M vs 260.7M (−0.2%). As with BC1, the raw-beam gains are levels the wider ladder already solves. Any cold-solve value has to come from the ladder residual, which only the representative production arm can show.
 
-## What this does not establish
+## What the isolated raw-beam evidence alone does not establish
 
-Production-ladder value is not yet measured. The A/B above is one raw configuration on one population.
+The raw-beam experiment on its own does not establish production-ladder value. Subsequent paired production-ladder studies did measure that value: the separate random-300 A/B gained seven cold solves with no losses, and the disjoint 64-level screen below added two more. Those findings retain their separate cohort boundaries and do not bypass the solved-control promotion gate.
 
 ## 2026-10-16 fresh, disjoint 64-level cold screen
 
