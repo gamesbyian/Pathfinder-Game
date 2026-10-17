@@ -51,7 +51,8 @@ jobs:
           const byMethod={};
           for(const method of ['dfs','admissible']){
             const load=arm=>JSON.parse(readFileSync('tmp/bc1vx-2y/'+method+'-'+arm+'.json','utf8')).levels;
-            const control=load('control'),shadow=load('shadow');
+            const control=load('control').sort((a,b)=>expected.indexOf(a.id)-expected.indexOf(b.id));
+            const shadow=load('shadow').sort((a,b)=>expected.indexOf(a.id)-expected.indexOf(b.id));
             if(control.length!==8||shadow.length!==8)throw Error('Wrong selected cohort size');
             let stats={method,parents:8,comparedRows:0,pairedParity:true,reachedAfterConnectivity:0,supported:0,strandedPositive:0,volumeRejects:0,bc1Conflicts:0,maxStrandedFresh:0,portalSkipped:0,rows:[]};
             for(let i=0;i<8;i++){
