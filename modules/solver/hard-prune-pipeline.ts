@@ -279,6 +279,9 @@ export function evaluatePrunedMove(
                 freshVolume: v?.freshVolume ?? null, strandedFresh: v?.strandedFresh ?? null,
                 bc1Conflict: v?.bc1Conflict ?? null, volumeReject,
             });
+            // 2Y research treatment only. The default observer has no pruneCandidate property.
+            // All existing shared hard checks and ordinary connectivity already passed.
+            if (transferObserver.pruneCandidate === true && volumeReject) return 'reject';
         }
     }
 
