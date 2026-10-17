@@ -94,8 +94,9 @@ function createCollector({ minChildren, maxChildren }) {
     };
 }
 
-function selectGroups(groups, maxStates, selectionMode) {
-    return selectSemanticForcednessCaptureGroups(groups, maxStates, selectionMode);
+function selectGroups(groups, maxStates, selectionMode, level) {
+    return selectSemanticForcednessCaptureGroups(groups, maxStates, selectionMode,
+        {requiredLength:level.requiredLength,portalMap:level.portalMap});
 }
 
 async function captureGate({ level, gateKey, profile, width, workBudget, budgetMs, minChildren, maxChildren, maxStates, selectionMode }) {
@@ -133,7 +134,7 @@ async function captureGate({ level, gateKey, profile, width, workBudget, budgetM
     prep._beamResearchObserver = null;
 
     const snapshot = collector.snapshot();
-    const selected = selectGroups(snapshot.groups, maxStates, selectionMode);
+    const selected = selectGroups(snapshot.groups, maxStates, selectionMode, level);
     const workSpent = prep._workMeter.units - startWork;
     return {
         gateKey,
@@ -176,7 +177,7 @@ async function main() {
         ['max-children', maxChildren], ['max-states-per-gate', maxStatesPerGate]]) {
         if (!Number.isSafeInteger(value) || value < 1) throw new Error(`--${name} must be a positive integer`);
     }
-    if (!['first', 'deepest'].includes(selectionMode)) throw new Error('--selection must be first or deepest');
+    if (!['first', 'deepest', 'middle-counted'].includes(selectionMode)) throw new Error('--selection must be first, deepest or middle-counted');
     if (minChildren < 2 || maxChildren < minChildren) throw new Error('child bounds must satisfy 2 <= min <= max');
     if (!Number.isFinite(budgetMs) || budgetMs <= 0) throw new Error('--budget-ms must be positive');
 
@@ -242,7 +243,9 @@ async function main() {
             minChildren, maxChildren, maxStatesPerGate, selectionMode,
             selection: selectionMode === 'deepest'
                 ? 'deepest eligible multi-successor states by descending search depth, preserving production order on ties; no exact labels at capture'
-                : 'first eligible multi-successor parent states in production generation order; exact labels unavailable at capture',
+                : selectionMode === 'middle-counted'
+                    ? 'among 25%-75% remaining counted-length states, closest to 50% first, production order on ties; portal jumps excluded; exact labels absent at capture'
+                    : 'first eligible multi-successor parent states in production generation order; exact labels unavailable at capture',
         },
         summary: {
             parents: levelIds.length,
