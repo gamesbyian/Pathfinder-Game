@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-parent-technique-response-hardness",
+  "interpretation": {
+    "independentUnit": "parentId",
+    "oneEdge": "familyId + variantId",
+    "baseline": "each parent per isolated technique; identical baseline across repeated mode blocks",
+    "responseVectorChanges": "at least one technique changes its solved status",
+    "solvedCountChanges": "number of successful techniques differs",
+    "equalCardinalityTechniqueSwaps": "winning-technique identity changes with unchanged solve count",
+    "zeroCoverage": "none of tested isolated techniques succeeds within the tested equal-work ceiling",
+    "caution": "selected development cohort; variant rates are not population prevalence"
+  },
+  "summary": {
+    "independentParents": 6,
+    "familyModeBlocks": 18,
+    "edges": 125,
+    "responseVectorChanges": 39,
+    "solvedCountChanges": 31,
+    "equalCardinalityTechniqueSwaps": 8,
+    "zeroCoverage": 0,
+    "oneOrFewerTechniques": 0,
+    "allTechniques": 20,
+    "fullyResponseStableParents": 1,
+    "parentsWithEqualCardinalityTechniqueSwaps": 2,
+    "parentsWithZeroCoverageVariant": 0
+  },
+  "parents": [
+    {
+      "parentId": "P00136",
+      "independentUnit": "parentId",
+      "familyModeBlocks": 3,
+      "techniques": 5,
+      "baselineSolvingTechniques": 4,
+      "edges": 20,
+      "responseVectorChanges": 0,
+      "solvedCountChanges": 0,
+      "equalCardinalityTechniqueSwaps": 0,
+      "zeroCoverage": 0,
+      "oneOrFewerTechniques": 0,
+      "allTechniques": 0,
+      "minSolvingTechniques": 4,
+      "maxSolvingTechniques": 4,
+      "responseChangeRate": 0,
+      "modes": {
+        "local-mutant": {
+          "edges": 7,
+          "responseVectorChanges": 0,
+          "solvedCountChanges": 0,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 4,
+          "maxSolvingTechniques": 4
+        },
+        "swap": {
+          "edges": 6,
+          "responseVectorChanges": 0,
+          "solvedCountChanges": 0,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 4,
+          "maxSolvingTechniques": 4
+        },
+        "symmetry": {
+          "edges": 7,
+          "responseVectorChanges": 0,
+          "solvedCountChanges": 0,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 4,
+          "maxSolvingTechniques": 4
+        }
+      }
+    },
+    {
+      "parentId": "P00144",
+      "independentUnit": "parentId",
+      "familyModeBlocks": 3,
+      "techniques": 5,
+      "baselineSolvingTechniques": 5,
+      "edges": 21,
+      "responseVectorChanges": 4,
+      "solvedCountChanges": 4,
+      "equalCardinalityTechniqueSwaps": 0,
+      "zeroCoverage": 0,
+      "oneOrFewerTechniques": 0,
+      "allTechniques": 17,
+      "minSolvingTechniques": 4,
+      "maxSolvingTechniques": 5,
+      "responseChangeRate": 0.190476,
+      "modes": {
+        "local-mutant": {
+          "edges": 7,
+          "responseVectorChanges": 4,
+          "solvedCountChanges": 4,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 3,
+          "minSolvingTechniques": 4,
+          "maxSolvingTechniques": 5
+        },
+        "swap": {
+          "edges": 7,
+          "responseVectorChanges": 0,
+          "solvedCountChanges": 0,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 7,
+          "minSolvingTechniques": 5,
+          "maxSolvingTechniques": 5
+        },
+        "symmetry": {
+          "edges": 7,
+          "responseVectorChanges": 0,
+          "solvedCountChanges": 0,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 7,
+          "minSolvingTechniques": 5,
+          "maxSolvingTechniques": 5
+        }
+      }
+    },
+    {
+      "parentId": "P00146",
+      "independentUnit": "parentId",
+      "familyModeBlocks": 3,
+      "techniques": 5,
+      "baselineSolvingTechniques": 3,
+      "edges": 21,
+      "responseVectorChanges": 13,
+      "solvedCountChanges": 6,
+      "equalCardinalityTechniqueSwaps": 7,
+      "zeroCoverage": 0,
+      "oneOrFewerTechniques": 0,
+      "allTechniques": 0,
+      "minSolvingTechniques": 2,
+      "maxSolvingTechniques": 4,
+      "responseChangeRate": 0.619048,
+      "modes": {
+        "local-mutant": {
+          "edges": 7,
+          "responseVectorChanges": 6,
+          "solvedCountChanges": 4,
+          "equalCardinalityTechniqueSwaps": 2,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 2,
+          "maxSolvingTechniques": 4
+        },
+        "swap": {
+          "edges": 7,
+          "responseVectorChanges": 0,
+          "solvedCountChanges": 0,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 3,
+          "maxSolvingTechniques": 3
+        },
+        "symmetry": {
+          "edges": 7,
+          "responseVectorChanges": 7,
+          "solvedCountChanges": 2,
+          "equalCardinalityTechniqueSwaps": 5,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 2,
+          "maxSolvingTechniques": 4
+        }
+      }
+    },
+    {
+      "parentId": "R00631",
+      "independentUnit": "parentId",
+      "familyModeBlocks": 3,
+      "techniques": 5,
+      "baselineSolvingTechniques": 4,
+      "edges": 21,
+      "responseVectorChanges": 7,
+      "solvedCountChanges": 7,
+      "equalCardinalityTechniqueSwaps": 0,
+      "zeroCoverage": 0,
+      "oneOrFewerTechniques": 0,
+      "allTechniques": 0,
+      "minSolvingTechniques": 3,
+      "maxSolvingTechniques": 4,
+      "responseChangeRate": 0.333333,
+      "modes": {
+        "local-mutant": {
+          "edges": 7,
+          "responseVectorChanges": 2,
+          "solvedCountChanges": 2,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 3,
+          "maxSolvingTechniques": 4
+        },
+        "swap": {
+          "edges": 7,
+          "responseVectorChanges": 3,
+          "solvedCountChanges": 3,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 3,
+          "maxSolvingTechniques": 4
+        },
+        "symmetry": {
+          "edges": 7,
+          "responseVectorChanges": 2,
+          "solvedCountChanges": 2,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 3,
+          "maxSolvingTechniques": 4
+        }
+      }
+    },
+    {
+      "parentId": "R00792",
+      "independentUnit": "parentId",
+      "familyModeBlocks": 3,
+      "techniques": 5,
+      "baselineSolvingTechniques": 4,
+      "edges": 21,
+      "responseVectorChanges": 4,
+      "solvedCountChanges": 4,
+      "equalCardinalityTechniqueSwaps": 0,
+      "zeroCoverage": 0,
+      "oneOrFewerTechniques": 0,
+      "allTechniques": 2,
+      "minSolvingTechniques": 3,
+      "maxSolvingTechniques": 5,
+      "responseChangeRate": 0.190476,
+      "modes": {
+        "local-mutant": {
+          "edges": 7,
+          "responseVectorChanges": 1,
+          "solvedCountChanges": 1,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 3,
+          "maxSolvingTechniques": 4
+        },
+        "swap": {
+          "edges": 7,
+          "responseVectorChanges": 0,
+          "solvedCountChanges": 0,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 4,
+          "maxSolvingTechniques": 4
+        },
+        "symmetry": {
+          "edges": 7,
+          "responseVectorChanges": 3,
+          "solvedCountChanges": 3,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 2,
+          "minSolvingTechniques": 3,
+          "maxSolvingTechniques": 5
+        }
+      }
+    },
+    {
+      "parentId": "R02976",
+      "independentUnit": "parentId",
+      "familyModeBlocks": 3,
+      "techniques": 5,
+      "baselineSolvingTechniques": 3,
+      "edges": 21,
+      "responseVectorChanges": 11,
+      "solvedCountChanges": 10,
+      "equalCardinalityTechniqueSwaps": 1,
+      "zeroCoverage": 0,
+      "oneOrFewerTechniques": 0,
+      "allTechniques": 1,
+      "minSolvingTechniques": 3,
+      "maxSolvingTechniques": 5,
+      "responseChangeRate": 0.52381,
+      "modes": {
+        "local-mutant": {
+          "edges": 7,
+          "responseVectorChanges": 6,
+          "solvedCountChanges": 5,
+          "equalCardinalityTechniqueSwaps": 1,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 1,
+          "minSolvingTechniques": 3,
+          "maxSolvingTechniques": 5
+        },
+        "swap": {
+          "edges": 7,
+          "responseVectorChanges": 1,
+          "solvedCountChanges": 1,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 3,
+          "maxSolvingTechniques": 4
+        },
+        "symmetry": {
+          "edges": 7,
+          "responseVectorChanges": 4,
+          "solvedCountChanges": 4,
+          "equalCardinalityTechniqueSwaps": 0,
+          "zeroCoverage": 0,
+          "oneOrFewerTechniques": 0,
+          "allTechniques": 0,
+          "minSolvingTechniques": 3,
+          "maxSolvingTechniques": 4
+        }
+      }
+    }
+  ],
+  "source": {
+    "analysisInput": "tmp/pg-i-parent/analysis.json",
+    "analysisKind": "pathfinder-family-technique-response-analysis"
+  },
+  "sourceEvidence": {
+    "runId": 37712397687,
+    "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/37712397687",
+    "artifactId": 11523005793,
+    "artifactName": "controlled-technique-response-analysis",
+    "artifactZipSha256": "4a8c6a6c048bb1c214d609c32ef0d5006981fdd0c4e4337dbc015872f33ea28e",
+    "analysisRunId": 39013986196,
+    "analysisRunUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39013986196",
+    "analysisSourceCommit": "5889cc96c9b667c8ad3da2547953ca0c010fb1a7",
+    "experimentalWorkBudgetPerCell": 10000000,
+    "wallSafetyMsPerCell": 600000,
+    "techniquesPerVariant": 5,
+    "populationSelection": "six response-enriched independent parent families and 125 controlled descendants; retrospective development analysis"
+  }
+}
