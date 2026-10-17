@@ -1,6 +1,6 @@
 # PG-H counted-length-middle opportunity gate 005
 
-> **Status:** concluded-positive (middle-counted opportunity capture; the downstream work-economics successor is now concluded-negative)
+> **Status:** concluded-positive
 > **Last evidence:** 2026-10-17 — deepest-selected PG-H 002 had 35/35 CP-SAT-DEAD children but [work-shadow 004](2026-10-17-pg-h-dead-descendant-work-shadow-004.md) showed 28 never expanded later, 7 only one zero-work event; the extreme-depth pruning form is economically unpersuasive.
 > **Decision:** measure **middle remaining counted-path-length** eligibility in the same eight parent beam attempts before buying any more exact CP-SAT calls or hard-prune code.
 > **Remaining gate:** satisfied by [PG-H 006](2026-10-17-pg-h-middle-descendant-work-result-006.md): source-matched replay found 620/2,705,853 (0.0229%) downstream work across 37 children, R02307 only 29. Width-500 middle-depth hard-prune form closed negative; shallow forcedness survives.
