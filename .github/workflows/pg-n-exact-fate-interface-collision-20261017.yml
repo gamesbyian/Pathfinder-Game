@@ -1,0 +1,43 @@
+# Disposable one-shot research capture. Remove before merge.
+name: PG-N retained exact-fate interface collision census
+on:
+  push:
+    branches:
+      - chatgpt/pg-n-exact-fate-interface-collision-20261017
+    paths:
+      - .github/workflows/pg-n-exact-fate-interface-collision-20261017.yml
+permissions:
+  contents: read
+jobs:
+  retrospective:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+      - name: Check collision invariants
+        run: node scripts/stress/pg-n-exact-fate-interface-collision.mjs --self-test
+      - name: Analyze full frozen reference cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/stress/pg-n-exact-fate-interface-collision.mjs --out=tmp/pg-n/collision-verdict.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('tmp/pg-n/collision-verdict.json','utf8'));
+          if(r.summary.sourceRows!==28 || r.summary.distinctExactPrefixes!==25)throw Error('source coverage');
+          const a=r.candidates['endpoint-raw-depth'];
+          const b=r.candidates['endpoint-raw-depth-visited-support'];
+          if(a.mixedGroups!==7 || a.mixedIndependentParents.length!==4)throw Error('weak collision observation changed');
+          if(b.repeatedGroups!==0)throw Error('support collision coverage changed');
+          console.log('PG-N retention, collision and singleton checks pass');
+          NODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-n-exact-fate-interface-collision-20261017
+          path: tmp/pg-n/collision-verdict.json
+          if-no-files-found: warn
+          retention-days: 90
