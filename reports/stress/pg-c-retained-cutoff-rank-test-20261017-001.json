@@ -1,0 +1,722 @@
+{
+  "schema": "pathfinder.pg-c-near-cutoff-known-support-rank-falsifier/v1",
+  "sourceFiles": [
+    "reports/stress/first-loss-pilot-beam-width2000-001.json",
+    "reports/stress/first-loss-confirmation-beam-width2000-001.json",
+    "reports/stress/first-loss-pilot-beam-width5000-001.json",
+    "reports/stress/first-loss-confirmation-beam-width5000-001.json"
+  ],
+  "evidenceRole": "retrospective-descriptive-posthoc-K-sensitivity",
+  "sampleSize": 28,
+  "seededRepairableIds": [
+    "R02530",
+    "R02590",
+    "R02733",
+    "R02897"
+  ],
+  "rankConvention": "source-file bestKnownRank - configured retained beamWidth; the nearest K discarded candidates are offset less than K. This is measured historical known-support rank, never cold candidate fidelity.",
+  "summary": {
+    "supportedClassAtWidth2000": {
+      "A-clearly-mis-ranked": 28
+    },
+    "supportedClassAtWidth5000": {
+      "A-clearly-mis-ranked": 27,
+      "D-diversity-width-saturation": 1
+    },
+    "thresholds": {
+      "2000": [
+        {
+          "k": 64,
+          "knownBasinPotentiallySeen": 1,
+          "amongFourHistoricallySpliceRepairable": 0
+        },
+        {
+          "k": 128,
+          "knownBasinPotentiallySeen": 3,
+          "amongFourHistoricallySpliceRepairable": 0
+        },
+        {
+          "k": 256,
+          "knownBasinPotentiallySeen": 6,
+          "amongFourHistoricallySpliceRepairable": 0
+        },
+        {
+          "k": 512,
+          "knownBasinPotentiallySeen": 10,
+          "amongFourHistoricallySpliceRepairable": 1
+        },
+        {
+          "k": 1024,
+          "knownBasinPotentiallySeen": 21,
+          "amongFourHistoricallySpliceRepairable": 4
+        },
+        {
+          "k": 2048,
+          "knownBasinPotentiallySeen": 28,
+          "amongFourHistoricallySpliceRepairable": 4
+        },
+        {
+          "k": 4096,
+          "knownBasinPotentiallySeen": 28,
+          "amongFourHistoricallySpliceRepairable": 4
+        }
+      ],
+      "5000": [
+        {
+          "k": 64,
+          "knownBasinPotentiallySeen": 0,
+          "amongFourHistoricallySpliceRepairable": 0
+        },
+        {
+          "k": 128,
+          "knownBasinPotentiallySeen": 2,
+          "amongFourHistoricallySpliceRepairable": 1
+        },
+        {
+          "k": 256,
+          "knownBasinPotentiallySeen": 3,
+          "amongFourHistoricallySpliceRepairable": 1
+        },
+        {
+          "k": 512,
+          "knownBasinPotentiallySeen": 6,
+          "amongFourHistoricallySpliceRepairable": 1
+        },
+        {
+          "k": 1024,
+          "knownBasinPotentiallySeen": 11,
+          "amongFourHistoricallySpliceRepairable": 2
+        },
+        {
+          "k": 2048,
+          "knownBasinPotentiallySeen": 21,
+          "amongFourHistoricallySpliceRepairable": 3
+        },
+        {
+          "k": 4096,
+          "knownBasinPotentiallySeen": 28,
+          "amongFourHistoricallySpliceRepairable": 4
+        }
+      ]
+    }
+  },
+  "warning": "A rank-bound selector that misses the old stored-hint supported basin can still find another live candidate. These retrospective rank offsets do not prove a new cold method will fail nor establish any causal rate.",
+  "rows": [
+    {
+      "id": "R00139",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 4117,
+        "knownBestRank": 3690,
+        "rankOffsetFromLastRetained": 1690,
+        "knownScoreMargin": 108.77796934865887,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 2
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 9416,
+        "knownBestRank": 6837,
+        "rankOffsetFromLastRetained": 1837,
+        "knownScoreMargin": 34.57816091954044,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 2
+      }
+    },
+    {
+      "id": "R00329",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 4522,
+        "knownBestRank": 3323,
+        "rankOffsetFromLastRetained": 1323,
+        "knownScoreMargin": 66.32710345210342,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 3
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 13369,
+        "knownBestRank": 5345,
+        "rankOffsetFromLastRetained": 345,
+        "knownScoreMargin": 4.077994227994168,
+        "lossClassification": "D-diversity-width-saturation",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R00786",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3348,
+        "knownBestRank": 2278,
+        "rankOffsetFromLastRetained": 278,
+        "knownScoreMargin": 14.806349206349182,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 7843,
+        "knownBestRank": 5071,
+        "rankOffsetFromLastRetained": 71,
+        "knownScoreMargin": 1.8648033126296468,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R01023",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 2841,
+        "knownBestRank": 2585,
+        "rankOffsetFromLastRetained": 585,
+        "knownScoreMargin": 55.497076023391855,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 6681,
+        "knownBestRank": 6613,
+        "rankOffsetFromLastRetained": 1613,
+        "knownScoreMargin": 190.15555555555557,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R01097",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 2869,
+        "knownBestRank": 2144,
+        "rankOffsetFromLastRetained": 144,
+        "knownScoreMargin": 20.49670224411625,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 9101,
+        "knownBestRank": 8541,
+        "rankOffsetFromLastRetained": 3541,
+        "knownScoreMargin": 171.55129994526567,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R01190",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 2867,
+        "knownBestRank": 2143,
+        "rankOffsetFromLastRetained": 143,
+        "knownScoreMargin": 11.357609229258685,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 6232,
+        "knownBestRank": 5953,
+        "rankOffsetFromLastRetained": 953,
+        "knownScoreMargin": 65.76622074946818,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 2
+      }
+    },
+    {
+      "id": "R01290",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3114,
+        "knownBestRank": 2869,
+        "rankOffsetFromLastRetained": 869,
+        "knownScoreMargin": 292.0595511767925,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 4
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 8346,
+        "knownBestRank": 6805,
+        "rankOffsetFromLastRetained": 1805,
+        "knownScoreMargin": 217.31800766283516,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 4
+      }
+    },
+    {
+      "id": "R01632",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3047,
+        "knownBestRank": 2718,
+        "rankOffsetFromLastRetained": 718,
+        "knownScoreMargin": 123.01421172988964,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 6038,
+        "knownBestRank": 5807,
+        "rankOffsetFromLastRetained": 807,
+        "knownScoreMargin": 130.31491121872477,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R02025",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3133,
+        "knownBestRank": 3056,
+        "rankOffsetFromLastRetained": 1056,
+        "knownScoreMargin": 78.09810298102974,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 3
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 8393,
+        "knownBestRank": 5253,
+        "rankOffsetFromLastRetained": 253,
+        "knownScoreMargin": 4.877951993805482,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 3
+      }
+    },
+    {
+      "id": "R02170",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3287,
+        "knownBestRank": 2087,
+        "rankOffsetFromLastRetained": 87,
+        "knownScoreMargin": 4.799402628434962,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 6
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 8402,
+        "knownBestRank": 5286,
+        "rankOffsetFromLastRetained": 286,
+        "knownScoreMargin": 5.164516129032279,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 6
+      }
+    },
+    {
+      "id": "R02185",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3569,
+        "knownBestRank": 2447,
+        "rankOffsetFromLastRetained": 447,
+        "knownScoreMargin": 23.842053445851036,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 8444,
+        "knownBestRank": 5365,
+        "rankOffsetFromLastRetained": 365,
+        "knownScoreMargin": 9.067862165963447,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R02210",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3239,
+        "knownBestRank": 3137,
+        "rankOffsetFromLastRetained": 1137,
+        "knownScoreMargin": 81.3859213250517,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 3
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 8912,
+        "knownBestRank": 6135,
+        "rankOffsetFromLastRetained": 1135,
+        "knownScoreMargin": 32.755003450655636,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 3
+      }
+    },
+    {
+      "id": "R02309",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3070,
+        "knownBestRank": 3026,
+        "rankOffsetFromLastRetained": 1026,
+        "knownScoreMargin": 88.8358974358975,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 7640,
+        "knownBestRank": 7068,
+        "rankOffsetFromLastRetained": 2068,
+        "knownScoreMargin": 62.92649572649577,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R02324",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3275,
+        "knownBestRank": 2941,
+        "rankOffsetFromLastRetained": 941,
+        "knownScoreMargin": 232.13700000000003,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 2
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 9351,
+        "knownBestRank": 7963,
+        "rankOffsetFromLastRetained": 2963,
+        "knownScoreMargin": 123.71103174603184,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 2
+      }
+    },
+    {
+      "id": "R02438",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 4067,
+        "knownBestRank": 2347,
+        "rankOffsetFromLastRetained": 347,
+        "knownScoreMargin": 12.480423280423281,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 2
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 10374,
+        "knownBestRank": 6778,
+        "rankOffsetFromLastRetained": 1778,
+        "knownScoreMargin": 25.0555555555556,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R02530",
+      "seededRepairWins": true,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 2984,
+        "knownBestRank": 2919,
+        "rankOffsetFromLastRetained": 919,
+        "knownScoreMargin": 188.5863636363635,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 7826,
+        "knownBestRank": 7594,
+        "rankOffsetFromLastRetained": 2594,
+        "knownScoreMargin": 177.4676767676766,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R02590",
+      "seededRepairWins": true,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3605,
+        "knownBestRank": 2787,
+        "rankOffsetFromLastRetained": 787,
+        "knownScoreMargin": 31.571509971509954,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 3
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 8921,
+        "knownBestRank": 5071,
+        "rankOffsetFromLastRetained": 71,
+        "knownScoreMargin": 1.3533374033373775,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 3
+      }
+    },
+    {
+      "id": "R02733",
+      "seededRepairWins": true,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3190,
+        "knownBestRank": 2745,
+        "rankOffsetFromLastRetained": 745,
+        "knownScoreMargin": 46.94402043922594,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 7383,
+        "knownBestRank": 6315,
+        "rankOffsetFromLastRetained": 1315,
+        "knownScoreMargin": 28.926897151554726,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R02801",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3517,
+        "knownBestRank": 2574,
+        "rankOffsetFromLastRetained": 574,
+        "knownScoreMargin": 34.56324090817759,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 8315,
+        "knownBestRank": 7601,
+        "rankOffsetFromLastRetained": 2601,
+        "knownScoreMargin": 102.91767128792446,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R02897",
+      "seededRepairWins": true,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 2986,
+        "knownBestRank": 2383,
+        "rankOffsetFromLastRetained": 383,
+        "knownScoreMargin": 17.438170313170076,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 7581,
+        "knownBestRank": 5613,
+        "rankOffsetFromLastRetained": 613,
+        "knownScoreMargin": 11.120463320463386,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R03083",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 4129,
+        "knownBestRank": 2951,
+        "rankOffsetFromLastRetained": 951,
+        "knownScoreMargin": 59.81405228758172,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 11214,
+        "knownBestRank": 6132,
+        "rankOffsetFromLastRetained": 1132,
+        "knownScoreMargin": 38.04281045751645,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R03088",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 2704,
+        "knownBestRank": 2190,
+        "rankOffsetFromLastRetained": 190,
+        "knownScoreMargin": 22.161399711399724,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 7938,
+        "knownBestRank": 6820,
+        "rankOffsetFromLastRetained": 1820,
+        "knownScoreMargin": 126.39552669552671,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R03101",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3730,
+        "knownBestRank": 3724,
+        "rankOffsetFromLastRetained": 1724,
+        "knownScoreMargin": 178.37150537634398,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 8334,
+        "knownBestRank": 7730,
+        "rankOffsetFromLastRetained": 2730,
+        "knownScoreMargin": 137.93102918586789,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R03197",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3477,
+        "knownBestRank": 2653,
+        "rankOffsetFromLastRetained": 653,
+        "knownScoreMargin": 85.81699346405242,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 6
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 9472,
+        "knownBestRank": 6191,
+        "rankOffsetFromLastRetained": 1191,
+        "knownScoreMargin": 60.108309990662974,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 6
+      }
+    },
+    {
+      "id": "R03223",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 4044,
+        "knownBestRank": 3266,
+        "rankOffsetFromLastRetained": 1266,
+        "knownScoreMargin": 30.992718049419125,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 9865,
+        "knownBestRank": 5640,
+        "rankOffsetFromLastRetained": 640,
+        "knownScoreMargin": 6.059679266895785,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 2
+      }
+    },
+    {
+      "id": "R03229",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3209,
+        "knownBestRank": 2028,
+        "rankOffsetFromLastRetained": 28,
+        "knownScoreMargin": 2.3857723577235674,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 2
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 7889,
+        "knownBestRank": 6913,
+        "rankOffsetFromLastRetained": 1913,
+        "knownScoreMargin": 55.89913859852868,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 2
+      }
+    },
+    {
+      "id": "R03275",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3979,
+        "knownBestRank": 2707,
+        "rankOffsetFromLastRetained": 707,
+        "knownScoreMargin": 27.748765432098764,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 8828,
+        "knownBestRank": 5881,
+        "rankOffsetFromLastRetained": 881,
+        "knownScoreMargin": 16.804938271604954,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    },
+    {
+      "id": "R03351",
+      "seededRepairWins": false,
+      "width2000": {
+        "width": 2000,
+        "poolSize": 3137,
+        "knownBestRank": 2101,
+        "rankOffsetFromLastRetained": 101,
+        "knownScoreMargin": 3.166433239962771,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      },
+      "width5000": {
+        "width": 5000,
+        "poolSize": 9344,
+        "knownBestRank": 7202,
+        "rankOffsetFromLastRetained": 2202,
+        "knownScoreMargin": 13.21013071895436,
+        "lossClassification": "A-clearly-mis-ranked",
+        "knownFamilies": 1
+      }
+    }
+  ]
+}
