@@ -1,6 +1,6 @@
 # PG-H middle-counted descendant-work opportunity result 006
 
-> **Status:** concluded-negative (the tested width-500 middle-counted *new-prune economics*, not the underlying semantic-forcedness premise)
+> **Status:** concluded-negative
 > **Last evidence:** 2026-10-17 — source-matched read-only [run 39066084621](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39066084621), all eight original gates exactly work-identical to capture run 39009523928.
 > **Decision:** do not purchase CP-SAT labels or a new hard-prune implementation for these selected middle-counted children. Only **620 / 2,705,853 = 0.0229133%** of original attempt canonical work was spent expanding descendants of all 37 selected child prefixes, and their semantic fates are *not* yet known.
 > **Remaining gate:** retain the two shallow R00242 exact LIVE/DEAD sibling contrasts as a distinct semantic premise; before another middle-depth reference campaign, locate a materially higher **retained descendant-work/opportunity** stratum using read-only data, then obtain a small exact contrast only if that additional work could exceed discriminator cost. Do not reinterpret these 37 as all DEAD.
