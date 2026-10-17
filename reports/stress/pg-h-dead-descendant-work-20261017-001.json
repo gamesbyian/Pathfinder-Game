@@ -1,0 +1,64 @@
+{
+  "schema": "pathfinder.pg-h-dead-descendant-work/v1",
+  "sourceRunId": 39008955611,
+  "exactSourceRunId": 39005597866,
+  "sourceCommit": "74bb18bcf9c43861a7e8bc836e78a0b1f39b4ba0",
+  "evidenceRole": "development",
+  "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "protocol": {
+    "profile": "objectiveFirst",
+    "width": 500,
+    "workBudgetPerGate": 500000,
+    "exactWorkEqualityReplayed": true
+  },
+  "summary": {
+    "parents": 8,
+    "states": 16,
+    "cases": 35,
+    "childCasesWithLaterParentExpansion": 7,
+    "childCasesWithoutLaterParentExpansion": 28,
+    "uniqueParentsWithLaterExpansion": 3,
+    "totalAttemptWork": 2705853,
+    "uniqueDescendantExpansionWork": 0,
+    "descendantWorkShare": 0,
+    "caseSummedWorkMayDoubleCount": 0
+  },
+  "laterExpanded": [
+    {
+      "id": "R00242:g458762:s0:d58:c0",
+      "expansions": 1,
+      "attributedWork": 0
+    },
+    {
+      "id": "R00242:g458762:s1:d58:c0",
+      "expansions": 1,
+      "attributedWork": 0
+    },
+    {
+      "id": "R02941:g524294:s1:d70:c1",
+      "expansions": 1,
+      "attributedWork": 0
+    },
+    {
+      "id": "R02561:g196615:s0:d53:c0",
+      "expansions": 1,
+      "attributedWork": 0
+    },
+    {
+      "id": "R02561:g196615:s0:d53:c1",
+      "expansions": 1,
+      "attributedWork": 0
+    },
+    {
+      "id": "R02561:g196615:s1:d53:c0",
+      "expansions": 1,
+      "attributedWork": 0
+    },
+    {
+      "id": "R02561:g196615:s1:d53:c1",
+      "expansions": 1,
+      "attributedWork": 0
+    }
+  ],
+  "caution": "Observer only attributes parent-expansion work in this one width-500 beam; zero does not rule out local evaluation cost or frontier displacement. Full 35 case rows retained in source GHA artifact."
+}
