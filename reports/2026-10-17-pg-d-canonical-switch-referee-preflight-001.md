@@ -1,8 +1,8 @@
 # PG-D: canonical-referee differential for the ordinary trail-switch reduction
 
-> **Status:** active experiment
-> **Last evidence:** 2026-10-15 — 903/903 toy path/subset representations agreed under stripped mechanics; 2026-10-17 canonical-referee test underway on full-level accepted witnesses.
-> **Decision:** no production trail/ZDD engine until the toy reduction has been confronted with the canonical Pathfinder referee and a *novel* real-prefix consequence has been established independently of existing prunes.
+> **Status:** superseded
+> **Last evidence:** 2026-10-17 — 903/903 toy path/subset representations agreed under stripped mechanics; 2026-10-17 canonical-referee test underway on full-level accepted witnesses.
+> **Decision:** (Pre-registered gate completed in [PG-D result 001](2026-10-17-pg-d-canonical-switch-referee-result-001.md).) No production trail/ZDD engine until the toy reduction has been confronted with the canonical Pathfinder referee and a *novel* real-prefix consequence has been established independently of existing prunes.
 > **Remaining gate:** count actual referee-accepted ordinary-path witnesses and all counterexamples; then price a concrete exact-DEAD prefix consequence beyond ordinary connectivity/BC1. Unsupported portals must abstain, never report impossibility.
 > **Research question:** `WS2-TRAIL-SWITCH-FEASIBILITY`
 > **Evidence role:** discovery
