@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { summarizeParentResponseHardness } from './parent-response-hardness-lib.mjs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -73,6 +74,39 @@ try {
     const v2 = analysis.families[0].edges.find(e => e.variantId === 'V2');
     assert.equal(v2.solveResponseHeterogeneous, true);
     assert.equal(v2.solveStateFlip, false);
+    const parentResponse = summarizeParentResponseHardness(analysis.families);
+    assert.equal(parentResponse.summary.independentParents, 1);
+    assert.equal(parentResponse.summary.familyModeBlocks, 1);
+    assert.equal(parentResponse.summary.edges, 2);
+    assert.equal(parentResponse.summary.responseVectorChanges, 1);
+    assert.equal(parentResponse.summary.solvedCountChanges, 1);
+    assert.equal(parentResponse.summary.equalCardinalityTechniqueSwaps, 0);
+    assert.equal(parentResponse.summary.zeroCoverage, 0);
+    assert.equal(parentResponse.parents[0].baselineSolvingTechniques, 1);
+
+    const f = (familyId, variantId, okA, okB, parentBaselineA = true) => ({
+        familyId, parentId:'SWAP-PARENT', relation:'symmetry', techniques:['A','B'],
+        edges:[{variantId,relation:'symmetry',responses:[
+            {technique:'A',parent:{ok:parentBaselineA,status:parentBaselineA?'success':'work-budget-reached',workSpent:10,nodesExpanded:2},variant:{ok:okA}},
+            {technique:'B',parent:{ok:false,status:'work-budget-reached',workSpent:100,nodesExpanded:20},variant:{ok:okB}},
+        ]}],
+    });
+    const swap = summarizeParentResponseHardness([
+        f('swap-1','v1',false,true),
+        f('swap-2','v2',false,false),
+    ]);
+    assert.equal(swap.summary.independentParents, 1, 'two modes from one parent are not two independent parents');
+    assert.equal(swap.summary.responseVectorChanges, 2);
+    assert.equal(swap.summary.equalCardinalityTechniqueSwaps, 1, 'equal success cardinality masks changed technique identity');
+    assert.equal(swap.summary.zeroCoverage, 1, 'zero successful techniques is a measured cohort status, not generic UNSAT');
+    assert.throws(() => summarizeParentResponseHardness([
+        f('swap-1','v1',false,true),
+        f('swap-2','v2',false,false,false),
+    ]),/cross-block baseline mismatch/);
+    assert.throws(() => summarizeParentResponseHardness([{
+        ...f('bad','v',false,false),
+        edges:[{variantId:'v',responses:[{technique:'A',parent:{ok:true},variant:{ok:false}}]}],
+    }]),/incomplete technique coverage/);
 
     const datasetRoot = path.join(dir, 'dataset');
     const familyDir = path.join(datasetRoot, 'data', 'families');
