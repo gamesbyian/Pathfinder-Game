@@ -13,12 +13,25 @@ jobs:
   observe:
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: source
     steps:
+      # Replay the exact original capture source; later default-ON BC1-VX changed the beam.
       - uses: actions/checkout@v7
+        with:
+          ref: e984facf39567d5c35818f0497f23ff2a111f169
+          path: source
+      - uses: actions/checkout@v7
+        with:
+          path: observer
+      - name: Install read-only observer into source-matched tree
+        run: cp ../observer/scripts/stress/pg-h-middle-descendant-work-shadow.mjs scripts/stress/
       - uses: actions/setup-node@v7
         with:
           node-version: '22.23.2'
           cache: npm
+          cache-dependency-path: source/package-lock.json
       - run: npm ci
       - name: Self-check prefix accounting
         shell: bash
@@ -59,6 +72,6 @@ jobs:
         if: always()
         with:
           name: pg-h-middle-descendant-work-result-001
-          path: tmp/pg-h-descendant/work-verdict.json
+          path: source/tmp/pg-h-descendant/work-verdict.json
           if-no-files-found: warn
           retention-days: 90
