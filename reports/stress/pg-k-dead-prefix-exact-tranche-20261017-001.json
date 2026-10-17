@@ -3519,5 +3519,10 @@
         "independentlySelected": "one hash-first geometry proposal in each of twelve hash-selected eligible independent parents"
       }
     }
-  ]
+  ],
+  "dispatchProvenance": {
+    "why": "A GitHub Actions bot commit does not itself trigger push workflows; this metadata-only connector commit activates the already pinned 12-parent exact reference without changing any case.",
+    "caseListUnchanged": true,
+    "sourcePilotRun": 39070668942
+  }
 }
