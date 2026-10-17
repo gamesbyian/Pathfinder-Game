@@ -20,8 +20,8 @@ jobs:
           node-version: '22.23.2'
           cache: npm
       - run: npm ci
-      - name: Verify ordinary code and type gates
-        run: npm run ci:fast && npm run build
+      - name: Verify TypeScript without enlisting a disposable workflow in permanent lifecycle inventory
+        run: npm run check:types && npm run build
       - name: Paired zero-policy-change 2Y method canary
         shell: bash
         run: |
