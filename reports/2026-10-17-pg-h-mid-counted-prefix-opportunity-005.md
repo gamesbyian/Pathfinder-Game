@@ -1,6 +1,6 @@
 # PG-H counted-length-middle opportunity gate 005
 
-> **Status:** capture complete; passive future-work confirmation pending
+> **Status:** active
 > **Last evidence:** 2026-10-17 — deepest-selected PG-H 002 had 35/35 CP-SAT-DEAD children but [work-shadow 004](2026-10-17-pg-h-dead-descendant-work-shadow-004.md) showed 28 never expanded later, 7 only one zero-work event; the extreme-depth pruning form is economically unpersuasive.
 > **Decision:** measure **middle remaining counted-path-length** eligibility in the same eight parent beam attempts before buying any more exact CP-SAT calls or hard-prune code.
 > **Remaining gate:** cheap passive subsequent-expansion/descendant-work check on the 16 frozen middle-counted states, prioritized for R02307. No CP-SAT until meaningful avoidable descendant work is demonstrated.
