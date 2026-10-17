@@ -1,0 +1,42 @@
+# Disposable PG-D short exact-fork opportunity census. Delete before evidence merge.
+name: PG-D exact topology-fork maximal-prune census
+on:
+  push:
+    branches:
+      - chatgpt/pg-d-exact-topology-prefix-gauntlet-20261017
+    paths:
+      - .github/workflows/pg-d-exact-fork-max-gauntlet-20261017.yml
+      - scripts/stress/pg-d-exact-fork-max-gauntlet.mjs
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Identity and path-key self-tests
+        run: node scripts/run-bundled.mjs scripts/stress/pg-d-exact-fork-max-gauntlet.mjs -- --self-test
+      - name: Replay every retained oracle topology fork with maximum hard pruning
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/run-bundled.mjs scripts/stress/pg-d-exact-fork-max-gauntlet.mjs -- --out=tmp/pg-d/exact-fork-max-gauntlet.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync('tmp/pg-d/exact-fork-max-gauntlet.json','utf8'));
+          if(x.summary.distinctPrefixes!==25||x.summary.alarms!==0)throw Error('identity/alarm guard');
+          console.log('PG-D EXACT-FORK PARITY '+JSON.stringify(x.summary));
+          NODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-d-exact-fork-max-gauntlet-20261017
+          path: tmp/pg-d/exact-fork-max-gauntlet.json
+          if-no-files-found: warn
+          retention-days: 90
