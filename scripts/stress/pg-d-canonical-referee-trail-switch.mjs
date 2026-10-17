@@ -21,7 +21,7 @@ const arg=(name,otherwise)=>{const v=process.argv.find(s=>s.startsWith('--'+name
 const limit=Number(arg('max-levels',500));
 const perLevel=Number(arg('hints-per-level',3));
 const output=arg('out',null);
-if(!output||!Number.isSafeInteger(limit)||limit<1||!Number.isSafeInteger(perLevel)||perLevel<1)
+if((!output&&!process.argv.includes('--self-test'))||!Number.isSafeInteger(limit)||limit<1||!Number.isSafeInteger(perLevel)||perLevel<1)
  throw Error('Usage: --out=path [--max-levels=500] [--hints-per-level=3]');
 
 const unpack=k=>({x:k&65535,y:(k>>>16)&65535});
