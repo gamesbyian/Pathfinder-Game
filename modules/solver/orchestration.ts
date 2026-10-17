@@ -124,7 +124,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     prep._cfg = cfg;
     // PG-G research opt-in: computed once from this invocation's *current* normalized puzzle.
     // Symmetric puzzles abstain. Production default-OFF never touches candidate order.
-    if (cfg.STRATEGY_PGG_COLD_D4_CANDIDATE_ORDER === true) {
+    if (cfg?.STRATEGY_PGG_COLD_D4_CANDIDATE_ORDER === true) {
         const coldFrame = currentInputColdD4CandidateOrder(level);
         if (coldFrame) prep._candidateOrderResearchKey = coldFrame.rank;
     }
