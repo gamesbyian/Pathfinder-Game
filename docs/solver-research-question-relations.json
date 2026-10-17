@@ -1284,13 +1284,15 @@
       "answeredBy": [
         "reports/2026-10-15-pg-g-symmetry-ordering-microscope-result-001.md",
         "reports/2026-10-16-pg-g-symmetry-causal-factorial-result-001.md",
-        "reports/2026-10-16-pg-g-cold-d4-frame-feasibility-001.md"
+        "reports/2026-10-16-pg-g-cold-d4-frame-feasibility-001.md",
+        "reports/2026-10-17-pg-g-cold-d4-negative-disposition-002.md"
       ],
-      "result": "Selected-pair causal ordering restoration remains 6/6. The 2026-10-16 current-input D4 frame screen is positive: exact unique frame on 137/160 published and 1700/1700 Corpus-2 puzzles, no invariance alarm; ambiguity on 23 published rows abstains. This removes the cold-geometric-identifiability obstacle, but not the independent-parent causality, setup cost, or fixed-work production solve-rate gates.",
+      "result": "Selected-pair causal ordering restoration remains 6/6. The 2026-10-16 current-input D4 frame screen is positive: exact unique frame on 137/160 published and 1700/1700 Corpus-2 puzzles, no invariance alarm; ambiguity on 23 published rows abstains. This removes the cold-geometric-identifiability obstacle, but not the independent-parent causality, setup cost, or fixed-work production solve-rate gates. Frozen 16-level current-input D4 candidate-order A/B (2026-10-17) was NEGATIVE at production budgets: control 12 solves vs treatment 11; zero gains, one lost current-control win R02389, +25.37% aggregate work. Close this particular cold D4 ordering rule, preserve the independent-parent causal premise and 12-parent confirmation gate; no code promoted.",
       "constrains": [
         "Family ancestry/parent-frame mapping is forbidden production input.",
         "Do not jump to an additive eight-orientation portfolio.",
-        "D4 unique-frame exposure is not a cold solve or valid orientation-parent lookup; do not infer improvement or generality from the 1700/1700 frame coverage."
+        "D4 unique-frame exposure is not a cold solve or valid orientation-parent lookup; do not infer improvement or generality from the 1700/1700 frame coverage.",
+        "The tested cold current-input D4 candidate ordering form lost R02389 and increased work: do not scale or promote unchanged."
       ],
       "reopensOn": null,
       "premiseRefs": [
