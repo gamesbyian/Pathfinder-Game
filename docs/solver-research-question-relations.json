@@ -1054,16 +1054,18 @@
         "reports/2026-09-30-bc1-fresh-only-prefilter-result-001.md",
         "reports/2026-10-01-bc1g-goal-terminal-bridge-result-001.md",
         "reports/2026-10-02-bc1-volume-consequence-result-001.md",
-        "reports/2026-10-16-bc1vx-fresh-cold-solve-paired-screen-001.md"
+        "reports/2026-10-16-bc1vx-fresh-cold-solve-paired-screen-001.md",
+        "reports/2026-10-17-bc1vx-solved-control-150-regression-preflight-001.md"
       ],
-      "result": "CONCLUDED-POSITIVE / PROMOTED 2026-10-01. BC1 fresh-connectivity pruning was reduced to a zero-canonical-work check at the seam where ordinary connectivity already ran, then cleared matched-budget production A/B, gain/loss replay, solved-control, and regression gates. Random-300 at 50M improved 206 -> 225 solved (23 gains / 4 losses); the production flag is default-ON. Unconditional per-candidate checking, pipeline-wide DFS/repair/admissible-order application, every-phase checking, higher-budget probes, and BC1-G production use are closed in their tested forms. BC1-G remains a sound research-only strengthening with low incremental incidence. The BC1-off dead-last whole-ladder retry is parked in solver-future-work.md and is not a current gate. REOPENED 2026-10-02 for BC1-V (volume consequence of the same theorem: fresh cells behind goal-free bridges are unusable, so they leave the volume check; no pending mandatory cell needed). Sound on 861k stored-solution witness states; raw-beam random-300 42 -> 48 (7 gains / 1 loss); representative production A/B completed 2026-10-16: frozen control run 36772815197 solved 225/300 at 44.64B aggregate work; BC1-VX treatment run 37052447194 solved 232/300 at 42.75B, 7 gains / 0 losses. The solved-control regression gate still precedes production promotion. The prior 'positive beam A/B' prerequisite for exploratory BC1-VX shared hard-prune transfer is satisfied. Disjoint frozen fresh-64 development screen (2026-10-16, GHA 38976765549) adds referee-valid production-ladder cold solves R01765 and R02951, paired 49/64 → 51/64 and 0 losses; −1.19% aggregate work. Corpus 2 history limits inference; solved-control regression remains prerequisite to production promotion.",
+      "result": "CONCLUDED-POSITIVE / PROMOTED 2026-10-01. BC1 fresh-connectivity pruning was reduced to a zero-canonical-work check at the seam where ordinary connectivity already ran, then cleared matched-budget production A/B, gain/loss replay, solved-control, and regression gates. Random-300 at 50M improved 206 -> 225 solved (23 gains / 4 losses); the production flag is default-ON. Unconditional per-candidate checking, pipeline-wide DFS/repair/admissible-order application, every-phase checking, higher-budget probes, and BC1-G production use are closed in their tested forms. BC1-G remains a sound research-only strengthening with low incremental incidence. The BC1-off dead-last whole-ladder retry is parked in solver-future-work.md and is not a current gate. REOPENED 2026-10-02 for BC1-V (volume consequence of the same theorem: fresh cells behind goal-free bridges are unusable, so they leave the volume check; no pending mandatory cell needed). Sound on 861k stored-solution witness states; raw-beam random-300 42 -> 48 (7 gains / 1 loss); representative production A/B completed 2026-10-16: frozen control run 36772815197 solved 225/300 at 44.64B aggregate work; BC1-VX treatment run 37052447194 solved 232/300 at 42.75B, 7 gains / 0 losses. The solved-control regression gate still precedes production promotion. The prior 'positive beam A/B' prerequisite for exploratory BC1-VX shared hard-prune transfer is satisfied. Disjoint frozen fresh-64 development screen (2026-10-16, GHA 38976765549) adds referee-valid production-ladder cold solves R01765 and R02951, paired 49/64 → 51/64 and 0 losses; −1.19% aggregate work. Corpus 2 history limits inference; solved-control regression remains prerequisite to production promotion. Solved-control 150 prospective gate 2026-10-17 at GHA 39007506080 is complete and positive: 149 of 150 historically-solved controls solve on current default, all 150 with BC1-VX, +1 treatment-only current solve R02401, 0 attributable losses, 3.748% lower work. The flag remains default-OFF awaiting an explicit validated promotion; this is a regression cohort, not unbiased prevalence.",
       "constrains": [
         "Do not reopen Lane A C0-C2 unchanged: recurring compact interface identity and per-state bridge conservation are different premises.",
         "BC1 fresh-connectivity pruning is promoted/default-ON; do not buy another generic confirmation round for the same treatment.",
         "Unconditional per-candidate, pipeline-wide, every-phase, higher-budget, and BC1-G production forms are closed in their tested forms.",
         "Do not treat BC1-G's soundness as production value: its incremental incidence is too small in the tested regime.",
         "Preserve transition-resource multiplicity: parallel cardinal and portal edges between the same cells are distinct multiedges.",
-        "Other projection families need their own positive premise, soundness argument, perturbation matrix, and economics gate."
+        "Other projection families need their own positive premise, soundness argument, perturbation matrix, and economics gate.",
+        "Historical 150 solved controls are not 150 current-control successes; only 149 pass the fresh control. Promotion gate passed with 0 losses, but no default flip without explicit correctness/CI work and generalization statement."
       ],
       "reopensOn": "A materially different cut/topology fact family with its own soundness proof and perturbation/economics matrix, or an explicitly justified conditional descendant such as the parked BC1-off dead-last retry after its recovery economics become decision-relevant."
     },
@@ -1245,14 +1247,18 @@
       "constrainedBy": [
         "docs/solver-semantic-forcedness-preflight.md",
         "reports/2026-09-25-forced-work-capture-economics-per-parent-consumer-oracle-result-001.md",
-        "reports/2026-10-16-pg-h-deep-prefix-observability-pilot-002.md"
+        "reports/2026-10-16-pg-h-deep-prefix-observability-pilot-002.md",
+        "reports/2026-10-17-pg-h-cheap-dead-branch-falsifier-003.md",
+        "reports/2026-10-17-pg-h-dead-descendant-work-shadow-004.md"
       ],
-      "result": "2026-10-16 PG-H frozen eight-parent development pilot showed two early multi-successor states each with exactly one exact LIVE child and one exact DEAD child, both from R00242 (same independent parent). The other 14/16 states remain unresolved: 38/45 child cases UNKNOWN at 20s. Earns mechanism existence, not prevalence, economics or a production prune. Next: cheap current-input discriminator on the four labelled children, then depth-targeted exact-observability pilot only if it improves informative coverage. Follow-on PG-H-002 deepest-eligible states (same 8 parents, depths 53–105) completed exact reference run 39005597866: 35/35 children DEAD, 0 LIVE/UNKNOWN, and 16/16 sampled multi-child states semantically DEAD. This is extreme-depth-selected development evidence; supports a cheap late-state deadness discriminator and intermediate remaining-counted-length stratification, not a general prevalence or production-prune claim.",
+      "result": "2026-10-16 PG-H frozen eight-parent development pilot showed two early multi-successor states each with exactly one exact LIVE child and one exact DEAD child, both from R00242 (same independent parent). The other 14/16 states remain unresolved: 38/45 child cases UNKNOWN at 20s. Earns mechanism existence, not prevalence, economics or a production prune. Next: cheap current-input discriminator on the four labelled children, then depth-targeted exact-observability pilot only if it improves informative coverage. Follow-on PG-H-002 deepest-eligible states (same 8 parents, depths 53–105) completed exact reference run 39005597866: 35/35 children DEAD, 0 LIVE/UNKNOWN, and 16/16 sampled multi-child states semantically DEAD. This is extreme-depth-selected development evidence; supports a cheap late-state deadness discriminator and intermediate remaining-counted-length stratification, not a general prevalence or production-prune claim. PG-H-003 2026-10-17 checked all 35 exact-DEAD late child prefixes offline (GHA 39007906782): two are already stopped by the existing beam goal-terminal check, zero exceed counted length, zero violate a permissive 0/1 goal-distance lower bound, and 33 remain undetected by these weak checks. Incremental work savings are unmeasured; proceed via full dynamic prune-overlap and descendant-cost census before any pruning consumer. PG-H-004 bounded width500 work shadow exactly replayed all 8 source gates (2,705,853 total units) and found only 7/35 exact-DEAD deep children ever expanded later (one event each) with zero observer-attributed future parent-expansion work. The other 28 never expanded later; close the deepest-selected late-prune economic form, retain shallow forcedness and mid-counted-depth descendant-work alternatives.",
       "constrains": [
         "Do not conflate raw one-successor prevalence with semantic forcedness.",
         "No production exact query, forced move or prune before opportunity and cheaper-consequence gates.",
         "Do not interpret 2/2 resolved states as population prevalence: these are two sibling observations from one independent parent and only 2/16 groups were fully resolved.",
-        "Raw path depth is not counted remaining length on portal-bearing levels; near-terminal depth selection may preferentially capture trivially exhausted branches. Do not infer generic utility from 35/35 DEAD."
+        "Raw path depth is not counted remaining length on portal-bearing levels; near-terminal depth selection may preferentially capture trivially exhausted branches. Do not infer generic utility from 35/35 DEAD.",
+        "Already-terminal/dead reference labels cannot be counted as new pruning capability; only additional early detection that saves measurable future work can justify a consumer.",
+        "CP-SAT DEAD and even nontrivial weak-bound deficiency cannot justify a prune when existing bounded beam discards the branch before meaningful additional work."
       ],
       "reopensOn": null,
       "premiseRefs": [
@@ -1344,12 +1350,15 @@
       "constrainedBy": [
         "docs/variant-level-research.md",
         "reports/2026-09-12-variant-library-evidence-audit-001.md",
-        "reports/2026-10-15-controlled-technique-response-pilot-recovery-result-001.md"
+        "reports/2026-10-15-controlled-technique-response-pilot-recovery-result-001.md",
+        "reports/2026-10-17-pg-i-parent-grouped-response-census-preflight-001.md"
       ],
-      "result": "Activated 2026-10-16 as a retained-data premise lane. Recompute by independent parent and transform/technique response; robust-hard families nominate deeper capability gaps while fragile families nominate policy/representation seams.",
+      "result": "PG-I 2026-10-17 controlled equal-work reanalysis (GHA 39013986196): 6 independent parents, 125 variants, five isolated methods. 39 solve-vector changes, 31 solved-method-count changes, eight equal-count technique swaps (seven P00146 and one R02976), none of 125 variants failed all five methods. Strong nomination for technique-identity sensitivity; cohort response-enriched and insufficient for robust-hard generalization or a cold policy. Next existing-data task: identify resistant different independent parent families with complete comparable method coverage; PG-G owns active symmetry tie consumer.",
       "constrains": [
         "Do not weight sibling rows as independent units.",
-        "Family labels, historical outcomes and response classes are offline evidence only, never cold routing features."
+        "Family labels, historical outcomes and response classes are offline evidence only, never cold routing features.",
+        "Eight same-count swaps are observed in only two of six deliberately selected parent clusters; sibling variants are not independent confirmation or sufficient training data.",
+        "No variants in the selected six-parent pilot were resistant to all five methods; measure a different genuinely hard parent population before expensive robust-hard treatment work."
       ],
       "reopensOn": null,
       "premiseRefs": [
