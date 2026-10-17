@@ -73,3 +73,7 @@ Both arms solve **8/8** through the same winning tier on every level, with total
 ## What this does not establish
 
 Production-ladder value is not yet measured. The A/B above is one raw configuration on one population.
+
+## 2026-10-16 fresh, disjoint 64-level cold screen
+
+[Report](2026-10-16-bc1vx-fresh-cold-solve-paired-screen-001.md) / [machine evidence](stress/bc1vx-fresh-paired-screen-20261016-001.json): [run 38976765549](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/38976765549), source 49504b1773cf59498259031143a795adf7f2486e, 16/16 complete shards, 64 unique ID pairs strictly disjoint from the original representative 300. At 50M nodes / 67M base work with the normal additive retry envelope: **49/64 control → 51/64 treatment**, **two new referee-valid cold solves (R01765 and R02951), zero losses**, and 9,193,084,933 → 9,084,075,977 aggregate canonical work (−1.19%). Development support only (Corpus 2 was previously investigated); this neither displaces the earlier A/B nor clears the prespecified solved-control regression promotion gate. Production BC1-VX remains default-OFF.
