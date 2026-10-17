@@ -303,6 +303,12 @@ export interface PrepLevel {
     _failureProgressObserver?: { observe(record: { family: 'dfs' | 'beam' | 'repair'; workSpent: number; badness: number; kind: 'new-best' | 'terminal' }): void } | null;
     /** Research-only isConnected() rejection observer — see ConnectivityRejectionObserver's doc. */
     _connectivityRejectionObserver?: ConnectivityRejectionObserver | null;
+    /** One-shot read-only 2Y DFS/admissible BC1-VX opportunity probe. Absent in production. */
+    _bc1SharedTransferObserver?: { observe(record: {
+        supported: boolean; portalVolumeApplicable: boolean;
+        freshVolume: number | null; strandedFresh: number | null;
+        bc1Conflict: boolean | null; volumeReject: boolean;
+    }): void } | null;
     /** Research-only portal-free goal-unreachability certificate shadow. One solve/prep lifetime,
      *  never consulted by production policy; see ConnectivityCertificateShadowObserver. */
     _connectivityCertificateShadow?: {
