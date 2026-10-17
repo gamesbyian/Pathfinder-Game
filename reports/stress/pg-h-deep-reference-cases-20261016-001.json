@@ -1,0 +1,277 @@
+{
+  "schema": "pathfinder.pg-h-deep-reference-cases/v1",
+  "role": "development-only",
+  "sourceRunUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39005597866",
+  "sourceCommit": "09221f14279f66209ebaf853e9233fb99cbe7985",
+  "parentPopulation": [
+    "R00242",
+    "R02941",
+    "R03030",
+    "R02405",
+    "R01229",
+    "R02307",
+    "R02561",
+    "R02240"
+  ],
+  "capture": {
+    "mode": "deepest",
+    "selectedGroupCount": 16,
+    "cases": 35,
+    "minDepth": 53,
+    "maxDepth": 105,
+    "meanDepth": 74.5,
+    "profile": "objectiveFirst",
+    "beamWidth": 500,
+    "perGateWorkBudget": 500000,
+    "maxGroupsPerGate": 2
+  },
+  "reference": {
+    "CPsatSecondsPerChild": 20,
+    "completedShards": 8,
+    "reportedCases": 35,
+    "live": 0,
+    "dead": 35,
+    "unknown": 0,
+    "fullyResolvedGroups": 16,
+    "semanticallyDeadGroups": 16,
+    "semanticallyForcedGroups": 0,
+    "genuinelyBranchingGroups": 0,
+    "correctnessAlarms": 0
+  },
+  "cautions": [
+    "Extreme-depth selection is conditioned on depth and can select mostly already-dead near-terminal states.",
+    "Raw prefix depth includes portal hops; it is not remaining counted path length.",
+    "UNSAT from the supported CP-SAT exact reference is offline evidence, not a legal production-time oracle.",
+    "No population-wide prevalence or work saved can be inferred from these deliberately depth-selected sixteen states."
+  ],
+  "groupChildCounts": {
+    "R00242:g458762:s0:d58": 2,
+    "R00242:g458762:s1:d58": 2,
+    "R01229:g393226:s0:d61": 2,
+    "R01229:g393226:s1:d61": 2,
+    "R02240:g196616:s0:d65": 3,
+    "R02240:g196616:s1:d65": 3,
+    "R02307:g4:s0:d84": 2,
+    "R02307:g4:s1:d84": 2,
+    "R02405:g589836:s0:d105": 2,
+    "R02405:g589836:s1:d105": 2,
+    "R02561:g196615:s0:d53": 2,
+    "R02561:g196615:s1:d53": 2,
+    "R02941:g524294:s0:d70": 2,
+    "R02941:g524294:s1:d70": 2,
+    "R03030:g262154:s0:d100": 2,
+    "R03030:g262154:s1:d100": 3
+  },
+  "rows": [
+    {
+      "caseId": "R00242:g458762:s0:d58:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 1
+    },
+    {
+      "caseId": "R00242:g458762:s0:d58:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 2
+    },
+    {
+      "caseId": "R00242:g458762:s1:d58:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 3
+    },
+    {
+      "caseId": "R00242:g458762:s1:d58:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 4
+    },
+    {
+      "caseId": "R01229:g393226:s0:d61:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 2
+    },
+    {
+      "caseId": "R01229:g393226:s0:d61:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 3
+    },
+    {
+      "caseId": "R01229:g393226:s1:d61:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 4
+    },
+    {
+      "caseId": "R01229:g393226:s1:d61:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 5
+    },
+    {
+      "caseId": "R02240:g196616:s0:d65:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 6
+    },
+    {
+      "caseId": "R02240:g196616:s0:d65:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 7
+    },
+    {
+      "caseId": "R02240:g196616:s0:d65:c2",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 8
+    },
+    {
+      "caseId": "R02240:g196616:s1:d65:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 1
+    },
+    {
+      "caseId": "R02240:g196616:s1:d65:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 2
+    },
+    {
+      "caseId": "R02240:g196616:s1:d65:c2",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 3
+    },
+    {
+      "caseId": "R02307:g4:s0:d84:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 6
+    },
+    {
+      "caseId": "R02307:g4:s0:d84:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 7
+    },
+    {
+      "caseId": "R02307:g4:s1:d84:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 8
+    },
+    {
+      "caseId": "R02307:g4:s1:d84:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 1
+    },
+    {
+      "caseId": "R02405:g589836:s0:d105:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 6
+    },
+    {
+      "caseId": "R02405:g589836:s0:d105:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 7
+    },
+    {
+      "caseId": "R02405:g589836:s1:d105:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 8
+    },
+    {
+      "caseId": "R02405:g589836:s1:d105:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 1
+    },
+    {
+      "caseId": "R02561:g196615:s0:d53:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 2
+    },
+    {
+      "caseId": "R02561:g196615:s0:d53:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 3
+    },
+    {
+      "caseId": "R02561:g196615:s1:d53:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 4
+    },
+    {
+      "caseId": "R02561:g196615:s1:d53:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 5
+    },
+    {
+      "caseId": "R02941:g524294:s0:d70:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 5
+    },
+    {
+      "caseId": "R02941:g524294:s0:d70:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 6
+    },
+    {
+      "caseId": "R02941:g524294:s1:d70:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 7
+    },
+    {
+      "caseId": "R02941:g524294:s1:d70:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 8
+    },
+    {
+      "caseId": "R03030:g262154:s0:d100:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 1
+    },
+    {
+      "caseId": "R03030:g262154:s0:d100:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 2
+    },
+    {
+      "caseId": "R03030:g262154:s1:d100:c0",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 3
+    },
+    {
+      "caseId": "R03030:g262154:s1:d100:c1",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 4
+    },
+    {
+      "caseId": "R03030:g262154:s1:d100:c2",
+      "fate": "dead",
+      "reason": "infeasible",
+      "referenceShard": 5
+    }
+  ]
+}
