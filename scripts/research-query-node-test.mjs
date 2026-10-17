@@ -140,8 +140,8 @@ const boundedComputeFixture = {
 };
 assert.ok(buildAnswerabilityView(boundedComputeFixture).boundedCompute.some(row => row.workstreamId === '2X'),
   'bounded-compute gate should be explicitly classified as bounded compute');
-assert.ok(answerability.noFreshSolverExecution.some(row => row.workstreamId === '2X'),
-  'BC1-VX completed production A/B and solved-control regression; immediate gate is explicit implementation/promotion, not new bounded research compute');
+assert.ok(answerability.dormantOrConditional.some(row => row.workstreamId === '2X'),
+  'BC1-VX is promoted default-ON: the completed production promotion should be dormant/reopen-only rather than an active implementation gate');
 assert.ok(answerability.dormantOrConditional.some(row => row.workstreamId === '2R'),
   'reopen-only parity lane should not appear as an active execution gate');
 assert.equal(answerability.unclassified.length, 0,
