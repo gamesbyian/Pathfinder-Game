@@ -1,9 +1,9 @@
 # PG-H counted-length-middle opportunity gate 005
 
-> **Status:** active
+> **Status:** concluded-positive (middle-counted opportunity capture; the downstream work-economics successor is now concluded-negative)
 > **Last evidence:** 2026-10-17 — deepest-selected PG-H 002 had 35/35 CP-SAT-DEAD children but [work-shadow 004](2026-10-17-pg-h-dead-descendant-work-shadow-004.md) showed 28 never expanded later, 7 only one zero-work event; the extreme-depth pruning form is economically unpersuasive.
 > **Decision:** measure **middle remaining counted-path-length** eligibility in the same eight parent beam attempts before buying any more exact CP-SAT calls or hard-prune code.
-> **Remaining gate:** cheap passive subsequent-expansion/descendant-work check on the 16 frozen middle-counted states, prioritized for R02307. No CP-SAT until meaningful avoidable descendant work is demonstrated.
+> **Remaining gate:** satisfied by [PG-H 006](2026-10-17-pg-h-middle-descendant-work-result-006.md): source-matched replay found 620/2,705,853 (0.0229%) downstream work across 37 children, R02307 only 29. Width-500 middle-depth hard-prune form closed negative; shallow forcedness survives.
 > **Research question:** `WS2-SEMANTIC-FORCEDNESS`
 > **Evidence role:** discovery
 > **Selection:** same frozen eight previous parents; intermediate fraction of counted length comes exclusively from current raw puzzle + current beam path, accounting for portal jumps. No historic success/DEAD labels used to select groups.
@@ -27,3 +27,7 @@ The eight frozen parent levels all yielded two count-correct middle-depth states
 
 Of the 16 states, **14 have parentExpansionWork 2–3**; the remaining two, both from **R02307**, have values **39** and **26**, respectively. This is an opportunity localization, **not** a proof of 65 saved units or even a soundly prunable subgraph. The two R02307 states are the only reasonable immediate passive-economics targets. Next: join the frozen captured paths to later beam retention and child descendant expansions using canonical work metering; if little future work is actually attributable, close this consumer without an exact oracle. If substantial retained descendant work is observed, buy the smallest CP-SAT LIVE/DEAD contrast and retain UNKNOWN as abstention. Do not reuse the old late-depth DEAD labels for these new middle states.
 
+
+## Successor disposition (2026-10-17)
+
+[PG-H 006](2026-10-17-pg-h-middle-descendant-work-result-006.md) completed the queued passive descendant-work test against exact original source e984facf and all eight byte-identical gate work totals. Only 620 of 2,705,853 canonical units followed any of the 37 selected middle children (R02307: 29). Do not buy the conditional CP-SAT campaign for this width-500 case or interpret the 39/26 parent-work outliers as saved descendant work; seek a distinct higher-exposure class or return to shallow semantically-forced siblings. The original capture above remains valid historical evidence.
