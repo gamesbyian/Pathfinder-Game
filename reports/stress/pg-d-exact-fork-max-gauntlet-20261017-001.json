@@ -1,0 +1,407 @@
+{
+  "schema": "pathfinder.pg-d-exact-fork-max-gauntlet-census/v1",
+  "evidenceRole": "retrospective-development",
+  "design": {
+    "selection": "all three existing exact topology-fork tables, literal dedupe; portal-bearing levels omitted for future all-ordinary route logic",
+    "maxGauntlet": "after EVERY replayed prefix transition, evaluate whole shared hard-prune pipeline with connectivity=true, irrespective of production stage schedule; optimistic pruning opportunity bound only, not replay of production beam/DFS",
+    "pruneCfg": "production normalized ablation defaults",
+    "inference": "No novel switch constraint is being applied, only existing prune coverage to size its remaining test opportunity."
+  },
+  "inputs": [
+    {
+      "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+      "sha256": "6e044d1ae62cad6e4f678c9b13aabd67b805fab2898ad539ab42b0f5e62209e2",
+      "count": 12
+    },
+    {
+      "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+      "sha256": "3024ce09aa7693ba1c6d852def97192715a87ca725c7052332fe6984455e6589",
+      "count": 8
+    },
+    {
+      "source": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json",
+      "sha256": "13671b809d8e0a6f36d86859f5165bceb82c986d8a011bd9a279fd4d47ebd13e",
+      "count": 8
+    }
+  ],
+  "summary": {
+    "originalObservations": 28,
+    "distinctPrefixes": 25,
+    "aliasRows": 3,
+    "allParents": 7,
+    "supportedRows": 13,
+    "unsupportedRows": 12,
+    "supportedParents": 4,
+    "supportedLive": 9,
+    "supportedDead": 4,
+    "deadSurviveFinalMaxGauntlet": 2,
+    "deadNeverRejectedAlongPrefix": 2,
+    "liveEverRejected": 0,
+    "matchedMixedPassGroups": 2,
+    "parentsWithBothFatesPassing": [
+      "P00009"
+    ],
+    "maximalFinalPassCount": 11,
+    "alarms": 0
+  },
+  "rows": [
+    {
+      "id": "P00075-w2-A0-B5-original",
+      "levelId": "P00075",
+      "referenceLabel": "live",
+      "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+      "rawDepth": 5,
+      "mixedContrast": false,
+      "endpointXY": [
+        4,
+        5
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": null,
+      "finalGauntlet": "pass",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 0,
+        "freshVolume": 55
+      }
+    },
+    {
+      "id": "P00075-w2-A0-B5-alternate",
+      "levelId": "P00075",
+      "referenceLabel": "live",
+      "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+      "rawDepth": 5,
+      "mixedContrast": false,
+      "endpointXY": [
+        4,
+        5
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": null,
+      "finalGauntlet": "pass",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 0,
+        "freshVolume": 55
+      }
+    },
+    {
+      "id": "P00136-w2-A6-B12-original",
+      "levelId": "P00136",
+      "referenceLabel": "live",
+      "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+      "rawDepth": 12,
+      "mixedContrast": false,
+      "endpointXY": [
+        9,
+        7
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": null,
+      "finalGauntlet": "pass",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 2,
+        "freshVolume": 83
+      }
+    },
+    {
+      "id": "P00136-w2-A6-B12-alternate",
+      "levelId": "P00136",
+      "referenceLabel": "live",
+      "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+      "rawDepth": 12,
+      "mixedContrast": false,
+      "endpointXY": [
+        9,
+        7
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": null,
+      "finalGauntlet": "pass",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 2,
+        "freshVolume": 83
+      }
+    },
+    {
+      "id": "P00136-w2-A3-B10-original",
+      "levelId": "P00136",
+      "referenceLabel": "live",
+      "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+      "rawDepth": 10,
+      "mixedContrast": false,
+      "endpointXY": [
+        9,
+        5
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": null,
+      "finalGauntlet": "pass",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 2,
+        "freshVolume": 85
+      }
+    },
+    {
+      "id": "P00136-w2-A3-B10-alternate",
+      "levelId": "P00136",
+      "referenceLabel": "live",
+      "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+      "rawDepth": 10,
+      "mixedContrast": false,
+      "endpointXY": [
+        9,
+        5
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": null,
+      "finalGauntlet": "pass",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 2,
+        "freshVolume": 85
+      }
+    },
+    {
+      "id": "P00009-w1-A1-B5-original",
+      "levelId": "P00009",
+      "referenceLabel": "live",
+      "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+      "rawDepth": 5,
+      "mixedContrast": true,
+      "endpointXY": [
+        7,
+        7
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": null,
+      "finalGauntlet": "pass",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 1,
+        "freshVolume": 35
+      }
+    },
+    {
+      "id": "P00009-w1-A1-B5-alternate",
+      "levelId": "P00009",
+      "referenceLabel": "dead",
+      "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+      "rawDepth": 5,
+      "mixedContrast": true,
+      "endpointXY": [
+        7,
+        7
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": null,
+      "finalGauntlet": "pass",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 3,
+        "freshVolume": 35
+      }
+    },
+    {
+      "id": "P00009-w1-A0-B6-original",
+      "levelId": "P00009",
+      "referenceLabel": "live",
+      "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+      "rawDepth": 6,
+      "mixedContrast": true,
+      "endpointXY": [
+        7,
+        6
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": null,
+      "finalGauntlet": "pass",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 1,
+        "freshVolume": 34
+      }
+    },
+    {
+      "id": "P00009-w1-A0-B6-alternate",
+      "levelId": "P00009",
+      "referenceLabel": "dead",
+      "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+      "rawDepth": 6,
+      "mixedContrast": true,
+      "endpointXY": [
+        7,
+        6
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": null,
+      "finalGauntlet": "pass",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 7,
+        "freshVolume": 34
+      }
+    },
+    {
+      "id": "P00148-w0-A6-B10-original",
+      "levelId": "P00148",
+      "referenceLabel": "live",
+      "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+      "rawDepth": 10,
+      "mixedContrast": true,
+      "endpointXY": [
+        2,
+        4
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": null,
+      "finalGauntlet": "pass",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 2,
+        "freshVolume": 14
+      }
+    },
+    {
+      "id": "P00148-w0-A6-B10-alternate",
+      "levelId": "P00148",
+      "referenceLabel": "dead",
+      "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+      "rawDepth": 10,
+      "mixedContrast": true,
+      "endpointXY": [
+        2,
+        4
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": {
+        "rawDepth": 8,
+        "reason": "PRUNE_SURROUND_LB",
+        "realLen": 8
+      },
+      "finalGauntlet": "reject",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 1,
+        "freshVolume": 14
+      }
+    },
+    {
+      "id": "P00148-w0-A5-B10-alternate",
+      "levelId": "P00148",
+      "referenceLabel": "dead",
+      "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+      "rawDepth": 10,
+      "mixedContrast": true,
+      "endpointXY": [
+        2,
+        4
+      ],
+      "maximalConnectivityEveryStep": true,
+      "firstReject": {
+        "rawDepth": 8,
+        "reason": "PRUNE_SURROUND_LB",
+        "realLen": 8
+      },
+      "finalGauntlet": "reject",
+      "bc1": {
+        "bc1Conflict": false,
+        "vertexConflict": false,
+        "strandedFresh": 0,
+        "freshVolume": 14
+      }
+    }
+  ],
+  "unsupported": [
+    {
+      "levelId": "P00124",
+      "id": "P00124-w1-A0-B15-original",
+      "reason": "portal-bearing-level"
+    },
+    {
+      "levelId": "P00124",
+      "id": "P00124-w1-A0-B15-alternate",
+      "reason": "portal-bearing-level"
+    },
+    {
+      "levelId": "P00124",
+      "id": "P00124-w1-A0-B16-original",
+      "reason": "portal-bearing-level"
+    },
+    {
+      "levelId": "P00124",
+      "id": "P00124-w1-A0-B16-alternate",
+      "reason": "portal-bearing-level"
+    },
+    {
+      "levelId": "P00137",
+      "id": "P00137-w1-A2-B9-original",
+      "reason": "portal-bearing-level"
+    },
+    {
+      "levelId": "P00137",
+      "id": "P00137-w1-A2-B9-alternate",
+      "reason": "portal-bearing-level"
+    },
+    {
+      "levelId": "P00137",
+      "id": "P00137-w1-A2-B10-original",
+      "reason": "portal-bearing-level"
+    },
+    {
+      "levelId": "P00137",
+      "id": "P00137-w1-A2-B10-alternate",
+      "reason": "portal-bearing-level"
+    },
+    {
+      "levelId": "P00140",
+      "id": "P00140-w2-A0-B15-original",
+      "reason": "portal-bearing-level"
+    },
+    {
+      "levelId": "P00140",
+      "id": "P00140-w2-A0-B15-alternate",
+      "reason": "portal-bearing-level"
+    },
+    {
+      "levelId": "P00140",
+      "id": "P00140-w2-A0-B16-original",
+      "reason": "portal-bearing-level"
+    },
+    {
+      "levelId": "P00140",
+      "id": "P00140-w2-A0-B16-alternate",
+      "reason": "portal-bearing-level"
+    }
+  ],
+  "alarms": [],
+  "caveats": [
+    "Exactly labelled historical selected topology forks are a forensic development cohort, not a representative random sample.",
+    "A DEAD prefix surviving an optimistic full per-step gauntlet is not proof a novel switch-only condition can reject it.",
+    "A LIVE prefix rejected by maximum sound pruning is a correctness alarm requiring investigation, not an accepted outcome.",
+    "Historical family labels and witness paths are prohibited as cold solver features."
+  ],
+  "provenance": {
+    "runId": 39079609236,
+    "runHead": "4a12f5268196cab5c1741a74e4745b1cb152d34f",
+    "artifactId": 12117574028,
+    "artifactName": "pg-d-exact-fork-max-gauntlet-20261017",
+    "digest": "sha256:064e25b2b83d7c699ae23ae10cb5b089ccdea46a1a54071e3ee32ab8f559b5b3",
+    "note": "Result rows and source checksums derived from assertion-checked run artifact; provenance block appended on repository integration."
+  }
+}
