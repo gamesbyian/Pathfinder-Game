@@ -1,0 +1,54 @@
+# One-shot PG-I recovered-evidence analysis; remove after archived output.
+name: PG-I parent-clustered response census
+on:
+  push:
+    branches:
+      - chatgpt/pg-i-parent-response-hardness-20261017
+    paths:
+      - .github/workflows/pg-i-parent-response-census-20261017.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Retrieve retained, identity-audited 715-cell pilot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/pg-i-parent
+          gh run download 37712397687 --repo "$GITHUB_REPOSITORY" \
+            --name controlled-technique-response-analysis --dir tmp/pg-i-parent
+          test -s tmp/pg-i-parent/combined-cells.json
+      - name: Reuse canonical technique-response analyzer and independently group parents
+        run: |
+          set -euo pipefail
+          node scripts/analyze-family-technique-response.mjs \
+            --input=tmp/pg-i-parent/combined-cells.json --out=tmp/pg-i-parent/analysis.json
+          node scripts/parent-response-hardness-census.mjs \
+            --analysis=tmp/pg-i-parent/analysis.json --out=tmp/pg-i-parent/parent-verdict.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('tmp/pg-i-parent/combined-cells.json','utf8'));
+          const r=JSON.parse(readFileSync('tmp/pg-i-parent/parent-verdict.json','utf8'));
+          if(c.results.length!==715 || new Set(c.results.map(x=>x.cellId)).size!==715)throw Error('original cell count/identity mismatch');
+          if(r.summary.independentParents!==6||r.summary.familyModeBlocks!==18||r.summary.edges!==125||r.summary.responseVectorChanges!==39)throw Error('unexpected source cohort');
+          console.log('PG-I PARENT CENSUS VERIFIED '+JSON.stringify(r.summary));
+          NODE
+      - name: Preserve all source and derived evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-i-parent-response-census-001
+          path: tmp/pg-i-parent/
+          retention-days: 90
+          if-no-files-found: warn
