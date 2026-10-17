@@ -1,14 +1,14 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, execution state, and next gates.
-> **Program state (2026-10-16):** BC1-VX representative A/B is positive: control 36772815197 solved 225/300 at 44.64B `workSpent`; treatment 37052447194 solved 232/300 at 42.75B, **7 gains / 0 losses**. Disjoint fresh cold-64 adds R01765 and R02951 (+2/−0, 1.19% lower work); promotion remains default-OFF pending solved-control regression. Premise discovery is broadly active after the [blocker audit](../reports/2026-10-16-solver-blocker-suspicion-audit-001.md).
+> **Program state (2026-10-16):** BC1-VX representative A/B is positive: control 36772815197 solved 225/300 at 44.64B `workSpent`; treatment 37052447194 solved 232/300 at 42.75B, **7 gains / 0 losses**. Disjoint fresh cold-64 adds R01765 and R02951 (+2/−0, 1.19% lower work); promotion remains default-OFF pending an explicit, verified production change now that solved-control regression has passed. Premise discovery is broadly active after the [blocker audit](../reports/2026-10-16-solver-blocker-suspicion-audit-001.md).
 > **History:** detailed narratives remain in the [2026-09-25 snapshot](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md), [2026-10-02 snapshot](../reports/2026-10-02-solver-optimization-workstreams-precompaction-snapshot-002.md), dated reports, and the [queue reconciliation](../reports/2026-10-16-solver-research-queue-exhumation-reconciliation-001.md).
 
 Method: [operating model](solver-research-operating-model.md) · [evidence](solver-evaluation-evidence.md) · [future work](solver-future-work.md) · [reasoning atlas](solver-reasoning-capability-atlas.md).
 
 ## Current priority
 
-1. Run BC1-VX solved-control regression.
+1. Decide and validate BC1-VX default-ON promotion: solved-control 150 gate passed at 149→150 (+1/−0); full solver correctness, work/wall economics, runtime default/rollback and evidence caveats remain.
 2. In parallel, run retained/shadow lanes PG-C/H/I/L/M/N and PG-G independent confirmation plus cold-key feasibility.
 3. Continue bounded semantic microscopes PG-D/J/K.
 4. Run PG-O and PG-P as cheap blocker-bypass diagnostics, not architecture/operator promotions.
@@ -25,7 +25,7 @@ This table is the machine-readable authority. IDs identify workstreams; they are
 | 2 | Repair-deadline allocation | `closed` | `reopen-only` | promoted 2026-09-26; 7 gains/0 losses, 180/180 regression | materially different dose/premise | `WS2-REPAIR-DEADLINE-ALLOCATION` |
 | 2I | Capability invention | `closed` | `reopen-only` | CID-0027/0028 promoted; 8 new solves, 0 regressions | materially different exposure | `WS2-CAPABILITY-INVENTION-DEMAND` |
 | 1 | Automatic action selection | `on-demand` | `reopen-only` | offline capture confirmed; consumer is work-only, no cold-solve upside | explicit work-reduction objective or different signal | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
-| 2X | BC1-VX production candidate | `active` | `bounded-compute` | theorem sound; prior random-300 +7/−0 (−4.2% work); disjoint cold-64 49→51, +2/−0 (R01765, R02951), −1.19% work | prespecified solved-control regression before default-ON promotion | `WS2-CUT-BALANCE-PROJECTION` |
+| 2X | BC1-VX production candidate | `active` | `implementation` | theorem sound (~861k witness states, 0 alarms); prior 300 +7/−0, cold-64 +2/−0, frozen solved-controls current 149→150 (+1/−0; −3.75% work), 0 attributable losses | explicit default-ON promotion decision, full solver correctness/CI and runtime budget checks; preserve independent-transfer caveats | `WS2-CUT-BALANCE-PROJECTION` |
 | 2Y | BC1-VX shared hard-prune transfer | `active` | `instrument-only` | positive-A/B prerequisite satisfied; distinct volume consequence, not closed pipeline-wide BC1 | DFS/admissible participation/economics probe; repair opt-out | `WS2-CUT-BALANCE-PROJECTION` |
 | 2F | Forced-work economics | `closed` | `reopen-only` | global/post-recognition/raw-degree forms closed | materially different sound recognizer | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
 | 2R | Parity response | `on-demand` | `reopen-only` | tested static response vocabulary closed | materially different parity mechanism | `WS2-PARITY-RESPONSE-SIGNATURE` |
