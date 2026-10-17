@@ -1,0 +1,309 @@
+{
+  "schema": "pathfinder.bc1vx-2y-25k-shared-stage-opportunity/v1",
+  "evidenceRole": "development",
+  "decision": "positive-passive-opportunity-not-behavioral-transfer",
+  "sourceCommit": "ff7611150c63d8ab5b85b3bf940825dd8e174240",
+  "sourceBranch": "chatgpt/bc1vx-2y-strict-cap-recovery-20261017",
+  "runId": 39071741958,
+  "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39071741958",
+  "artifactId": 12115477479,
+  "artifactName": "bc1vx-shared-stage-opportunity-canary-001",
+  "artifactZipSha256": "e20961b2de15f5482450bc28b26a7fa45520ee694ee646b05449ee5821ede2a6",
+  "sourceFileSha256": {
+    "dfs-control.json": "f5c5c076816958439e32e4b5d3c48de0b08ae5d1f59124f9ce088324ff45ad4b",
+    "dfs-shadow.json": "18bc3dd0981b291d85f652b0ac1e8bde23db8505fbfddb6c5f5b897964793fba",
+    "admissible-control.json": "bfac6ff08040a26567de14906f7b05b357f81e010221692bdf01da0e30dc62e0",
+    "admissible-shadow.json": "cdd67875366ba9383010ebe1975c000fa4e79789b910fc81fdbd0597828dabbd",
+    "verdict.json": "45f53211c990e5f3f561cf18c3fc0425cd2280356e2e4d246e2e2942b95958e5"
+  },
+  "population": {
+    "ids": [
+      "R00242",
+      "R01229",
+      "R02240",
+      "R02307",
+      "R02405",
+      "R02561",
+      "R02941",
+      "R03030"
+    ],
+    "corpus": "data/stress/stress-levels-random.json",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "selection": "retrospective reuse of PG-H multi-successor development parent population (8), not outcome-blind BC1-VX selection nor transfer confirmation"
+  },
+  "protocol": {
+    "methodConfigs": {
+      "dfs": "dfs|score=objectiveFirst|bias=none",
+      "admissible": "admissible-order|tieBreak=default|lds=off"
+    },
+    "perParentCanonicalWorkCeiling": 25000,
+    "wallSafetyMs": 600000,
+    "strictAdmissibleWorkCap": true,
+    "behavioralTreatment": false,
+    "controlVsObserverParityFields": [
+      "id",
+      "ok",
+      "status",
+      "winningConfigKey",
+      "winningGate",
+      "solution",
+      "workSpent",
+      "nodesExpanded",
+      "deadlineTruncated",
+      "validDeterministicEvidence"
+    ],
+    "pairedRows": 16,
+    "deadlineTruncatedRows": 0,
+    "errors": 0,
+    "allSourceDeterministicEvidenceValid": true,
+    "bc1SharedTransferIsReadOnly": true
+  },
+  "summaries": {
+    "dfs": {
+      "parents": 8,
+      "pairedWorkAndOutcomeExact": true,
+      "observedAfterConnectivity": 2055,
+      "strandedPositive": 2052,
+      "volumeRejects": 218,
+      "bc1Conflicts": 563,
+      "controlSolved": 0,
+      "controlTotalWork": 202089,
+      "controlTotalElapsedMs": 662,
+      "shadowTotalElapsedMs": 686
+    },
+    "admissible": {
+      "parents": 8,
+      "pairedWorkAndOutcomeExact": true,
+      "observedAfterConnectivity": 2293,
+      "strandedPositive": 2293,
+      "volumeRejects": 317,
+      "bc1Conflicts": 439,
+      "controlSolved": 1,
+      "controlTotalWork": 179732,
+      "controlTotalElapsedMs": 492,
+      "shadowTotalElapsedMs": 528
+    }
+  },
+  "rows": {
+    "dfs": [
+      {
+        "levelId": "R00242",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 165,
+        "strandedPositive": 165,
+        "volumeRejects": 66,
+        "bc1Conflicts": 141,
+        "maxStrandedFresh": 49,
+        "canonicalWork": 25222,
+        "nodesExpanded": 48657,
+        "controlElapsedMs": 104,
+        "shadowElapsedMs": 123
+      },
+      {
+        "levelId": "R01229",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 140,
+        "strandedPositive": 140,
+        "volumeRejects": 29,
+        "bc1Conflicts": 81,
+        "maxStrandedFresh": 72,
+        "canonicalWork": 25208,
+        "nodesExpanded": 46525,
+        "controlElapsedMs": 140,
+        "shadowElapsedMs": 144
+      },
+      {
+        "levelId": "R02240",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 293,
+        "strandedPositive": 293,
+        "volumeRejects": 4,
+        "bc1Conflicts": 118,
+        "maxStrandedFresh": 43,
+        "canonicalWork": 25348,
+        "nodesExpanded": 52047,
+        "controlElapsedMs": 101,
+        "shadowElapsedMs": 95
+      },
+      {
+        "levelId": "R02307",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 265,
+        "strandedPositive": 265,
+        "volumeRejects": 25,
+        "bc1Conflicts": 0,
+        "maxStrandedFresh": 104,
+        "canonicalWork": 25254,
+        "nodesExpanded": 49566,
+        "controlElapsedMs": 64,
+        "shadowElapsedMs": 61
+      },
+      {
+        "levelId": "R02405",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 306,
+        "strandedPositive": 306,
+        "volumeRejects": 66,
+        "bc1Conflicts": 107,
+        "maxStrandedFresh": 108,
+        "canonicalWork": 25230,
+        "nodesExpanded": 53327,
+        "controlElapsedMs": 70,
+        "shadowElapsedMs": 77
+      },
+      {
+        "levelId": "R02561",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 292,
+        "strandedPositive": 292,
+        "volumeRejects": 0,
+        "bc1Conflicts": 11,
+        "maxStrandedFresh": 15,
+        "canonicalWork": 25267,
+        "nodesExpanded": 50923,
+        "controlElapsedMs": 29,
+        "shadowElapsedMs": 30
+      },
+      {
+        "levelId": "R02941",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 301,
+        "strandedPositive": 298,
+        "volumeRejects": 28,
+        "bc1Conflicts": 0,
+        "maxStrandedFresh": 37,
+        "canonicalWork": 25326,
+        "nodesExpanded": 48943,
+        "controlElapsedMs": 43,
+        "shadowElapsedMs": 40
+      },
+      {
+        "levelId": "R03030",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 293,
+        "strandedPositive": 293,
+        "volumeRejects": 0,
+        "bc1Conflicts": 105,
+        "maxStrandedFresh": 16,
+        "canonicalWork": 25234,
+        "nodesExpanded": 53957,
+        "controlElapsedMs": 111,
+        "shadowElapsedMs": 116
+      }
+    ],
+    "admissible": [
+      {
+        "levelId": "R00242",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 204,
+        "strandedPositive": 204,
+        "volumeRejects": 102,
+        "bc1Conflicts": 204,
+        "maxStrandedFresh": 26,
+        "canonicalWork": 25063,
+        "nodesExpanded": 18432,
+        "controlElapsedMs": 132,
+        "shadowElapsedMs": 140
+      },
+      {
+        "levelId": "R01229",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 0,
+        "strandedPositive": 0,
+        "volumeRejects": 0,
+        "bc1Conflicts": 0,
+        "maxStrandedFresh": 0,
+        "canonicalWork": 25114,
+        "nodesExpanded": 18432,
+        "controlElapsedMs": 96,
+        "shadowElapsedMs": 102
+      },
+      {
+        "levelId": "R02240",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 92,
+        "strandedPositive": 92,
+        "volumeRejects": 66,
+        "bc1Conflicts": 92,
+        "maxStrandedFresh": 45,
+        "canonicalWork": 25271,
+        "nodesExpanded": 19968,
+        "controlElapsedMs": 81,
+        "shadowElapsedMs": 98
+      },
+      {
+        "levelId": "R02307",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 1478,
+        "strandedPositive": 1478,
+        "volumeRejects": 37,
+        "bc1Conflicts": 0,
+        "maxStrandedFresh": 35,
+        "canonicalWork": 25123,
+        "nodesExpanded": 4096,
+        "controlElapsedMs": 29,
+        "shadowElapsedMs": 38
+      },
+      {
+        "levelId": "R02405",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 129,
+        "strandedPositive": 129,
+        "volumeRejects": 102,
+        "bc1Conflicts": 25,
+        "maxStrandedFresh": 25,
+        "canonicalWork": 25127,
+        "nodesExpanded": 20480,
+        "controlElapsedMs": 57,
+        "shadowElapsedMs": 47
+      },
+      {
+        "levelId": "R02561",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 155,
+        "strandedPositive": 155,
+        "volumeRejects": 0,
+        "bc1Conflicts": 48,
+        "maxStrandedFresh": 14,
+        "canonicalWork": 25230,
+        "nodesExpanded": 23296,
+        "controlElapsedMs": 16,
+        "shadowElapsedMs": 14
+      },
+      {
+        "levelId": "R02941",
+        "status": "success",
+        "reachedAfterConnectivity": 165,
+        "strandedPositive": 165,
+        "volumeRejects": 10,
+        "bc1Conflicts": 0,
+        "maxStrandedFresh": 19,
+        "canonicalWork": 3440,
+        "nodesExpanded": 871,
+        "controlElapsedMs": 2,
+        "shadowElapsedMs": 4
+      },
+      {
+        "levelId": "R03030",
+        "status": "work-budget-reached",
+        "reachedAfterConnectivity": 70,
+        "strandedPositive": 70,
+        "volumeRejects": 0,
+        "bc1Conflicts": 70,
+        "maxStrandedFresh": 25,
+        "canonicalWork": 25364,
+        "nodesExpanded": 18176,
+        "controlElapsedMs": 79,
+        "shadowElapsedMs": 85
+      }
+    ]
+  },
+  "limits": [
+    "Observer volumeReject counts are possible eliminations after ordinary connectivity, not directly saved work or proven additional eliminations after all already-applied hard-prune checks.",
+    "Observer time differences are tiny unpaired timing measurements; no economical CPU overhead or wall-speedup conclusion is supported.",
+    "The original 250k-work stage was cancelled; this 25k screening dose does not substitute for it.",
+    "Selected development parents and isolated methods do not support population solve rates or production default change. Portal policy is not independently tested.",
+    "Overlap between volume rejection and bc1 mandatory conflicts was not separately measured; do not add counts as unique rejected states.",
+    "One pre-existing admissible success is reproduced without a policy change, not a new solve."
+  ]
+}
