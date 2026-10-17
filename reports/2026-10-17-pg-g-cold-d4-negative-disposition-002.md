@@ -1,9 +1,10 @@
 # PG-G cold current-input D4 candidate order: paired development result (002)
 
 > **Status:** concluded-negative
-> **Evidence:** [completed four-shard paired workflow 39008986903](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39008986903); source `045982f639693263693c0ec980e821e7134e5377`. [Full combined machine verdict](stress/pg-g-cold-d4-paired-16-20261017-001.json).
+> **Last evidence:** 2026-10-17 — [completed four-shard paired workflow 39008986903](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39008986903); source `045982f639693263693c0ec980e821e7134e5377`. [Full combined machine verdict](stress/pg-g-cold-d4-paired-16-20261017-001.json).
+> **Remaining gate:** Confirm parent-frame ordering causality across 12 independent parents; no repeat of negative current-input D4 rule.
 > **Research question:** `WS2-SYMMETRY-TIE-ORDER-CANONICALIZATION`.
-> **Disposition:** Do not integrate the default-OFF cold-D4 candidate ordering code from experimental PR #2167 into production or enlarge this exact form. The selected historical parent-frame phenomenon remains separate; independent-parent 12-parent causal confirmation is still an actionable research gate.
+> **Decision:** Do not integrate the default-OFF cold-D4 candidate ordering code from experimental PR #2167 into production or enlarge this exact form. The selected historical parent-frame phenomenon remains separate; independent-parent 12-parent causal confirmation is still an actionable research gate.
 
 ## Paired actual outcome
 
