@@ -1,4 +1,5 @@
 # Disposable research execution, remove before production evidence integration.
+# Short 25k/source-identical screening dose; original 250k run 39067228905 stays separately authoritative.
 # Validate at a head that also records this workflow in .github/workflows/README.md.
 name: BC1-VX 2Y DFS admissible opportunity canary
 on:
@@ -39,7 +40,7 @@ jobs:
               node scripts/run-bundled.mjs scripts/method-probe.mjs -- \
                 --corpus=data/stress/stress-levels-random.json \
                 --levels=R00242,R02941,R03030,R02405,R01229,R02307,R02561,R02240 \
-                --only="$key" --work-budget=250000 --budget-ms=600000 \
+                --only="$key" --work-budget=25000 --budget-ms=600000 \
                 "${observe_flag[@]}" --out="tmp/bc1vx-2y/${method}-${arm}.json"
             done
           done
@@ -71,7 +72,7 @@ jobs:
             }
             byMethod[method]=stats;
           }
-          const verdict={schema:'pathfinder.bc1vx-2y-availability/v1',sourceCommit:process.env.GITHUB_SHA,corpusHash,role:'selected-development-canary-not-population-confirmation',workBudgetPerLevel:250000,methods:byMethod};
+          const verdict={schema:'pathfinder.bc1vx-2y-availability/v1',sourceCommit:process.env.GITHUB_SHA,corpusHash,role:'selected-development-canary-not-population-confirmation',workBudgetPerLevel:25000,methods:byMethod};
           writeFileSync('tmp/bc1vx-2y/verdict.json',JSON.stringify(verdict,null,2)+'\n');
           console.log('2Y WORK/RESULT PARITY VERIFIED '+JSON.stringify(Object.fromEntries(Object.entries(byMethod).map(([k,v])=>[k,{comparedRows:v.comparedRows,reached:v.reachedAfterConnectivity,strandedPositive:v.strandedPositive,volumeRejects:v.volumeRejects,bc1Conflicts:v.bc1Conflicts}]))));
           NODE
