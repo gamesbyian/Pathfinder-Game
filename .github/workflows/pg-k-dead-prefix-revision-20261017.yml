@@ -6,6 +6,7 @@ on:
       - chatgpt/pg-k-dead-prefix-segment-revision-20261017
     paths:
       - .github/workflows/pg-k-dead-prefix-revision-20261017.yml
+      - scripts/stress/pg-k-dead-prefix-commuting-revision.mjs
 permissions:
   contents: read
 jobs:
