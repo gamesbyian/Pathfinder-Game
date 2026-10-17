@@ -225,12 +225,13 @@ async function probeLevel(entry) {
     prep._forcedPortalExitKey = null;
     // 2Y disposable passive transfer pilot. No cold behavior changes and no
     // path/level identities used to decide whether to observe an eligible state.
-    const bc1Transfer = flags.has('--bc1-shared-transfer-observe') ? {
+    const bc1Treatment = flags.has('--bc1-shared-transfer-prune');
+    const bc1Transfer = (flags.has('--bc1-shared-transfer-observe') || bc1Treatment) ? {
         reachedAfterConnectivity: 0, supported: 0, portalSkipped: 0,
         strandedPositive: 0, volumeRejects: 0, bc1Conflicts: 0,
         maxStrandedFresh: 0,
     } : null;
-    if (bc1Transfer) prep._bc1SharedTransferObserver = { observe(row) {
+    if (bc1Transfer) prep._bc1SharedTransferObserver = { pruneCandidate: bc1Treatment, observe(row) {
         bc1Transfer.reachedAfterConnectivity++;
         if (!row.portalVolumeApplicable) bc1Transfer.portalSkipped++;
         if (row.supported) bc1Transfer.supported++;
