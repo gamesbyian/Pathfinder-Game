@@ -1245,14 +1245,16 @@
       "constrainedBy": [
         "docs/solver-semantic-forcedness-preflight.md",
         "reports/2026-09-25-forced-work-capture-economics-per-parent-consumer-oracle-result-001.md",
-        "reports/2026-10-16-pg-h-deep-prefix-observability-pilot-002.md"
+        "reports/2026-10-16-pg-h-deep-prefix-observability-pilot-002.md",
+        "reports/2026-10-17-pg-h-cheap-dead-branch-falsifier-003.md"
       ],
-      "result": "2026-10-16 PG-H frozen eight-parent development pilot showed two early multi-successor states each with exactly one exact LIVE child and one exact DEAD child, both from R00242 (same independent parent). The other 14/16 states remain unresolved: 38/45 child cases UNKNOWN at 20s. Earns mechanism existence, not prevalence, economics or a production prune. Next: cheap current-input discriminator on the four labelled children, then depth-targeted exact-observability pilot only if it improves informative coverage. Follow-on PG-H-002 deepest-eligible states (same 8 parents, depths 53–105) completed exact reference run 39005597866: 35/35 children DEAD, 0 LIVE/UNKNOWN, and 16/16 sampled multi-child states semantically DEAD. This is extreme-depth-selected development evidence; supports a cheap late-state deadness discriminator and intermediate remaining-counted-length stratification, not a general prevalence or production-prune claim.",
+      "result": "2026-10-16 PG-H frozen eight-parent development pilot showed two early multi-successor states each with exactly one exact LIVE child and one exact DEAD child, both from R00242 (same independent parent). The other 14/16 states remain unresolved: 38/45 child cases UNKNOWN at 20s. Earns mechanism existence, not prevalence, economics or a production prune. Next: cheap current-input discriminator on the four labelled children, then depth-targeted exact-observability pilot only if it improves informative coverage. Follow-on PG-H-002 deepest-eligible states (same 8 parents, depths 53–105) completed exact reference run 39005597866: 35/35 children DEAD, 0 LIVE/UNKNOWN, and 16/16 sampled multi-child states semantically DEAD. This is extreme-depth-selected development evidence; supports a cheap late-state deadness discriminator and intermediate remaining-counted-length stratification, not a general prevalence or production-prune claim. PG-H-003 2026-10-17 checked all 35 exact-DEAD late child prefixes offline (GHA 39007906782): two are already stopped by the existing beam goal-terminal check, zero exceed counted length, zero violate a permissive 0/1 goal-distance lower bound, and 33 remain undetected by these weak checks. Incremental work savings are unmeasured; proceed via full dynamic prune-overlap and descendant-cost census before any pruning consumer.",
       "constrains": [
         "Do not conflate raw one-successor prevalence with semantic forcedness.",
         "No production exact query, forced move or prune before opportunity and cheaper-consequence gates.",
         "Do not interpret 2/2 resolved states as population prevalence: these are two sibling observations from one independent parent and only 2/16 groups were fully resolved.",
-        "Raw path depth is not counted remaining length on portal-bearing levels; near-terminal depth selection may preferentially capture trivially exhausted branches. Do not infer generic utility from 35/35 DEAD."
+        "Raw path depth is not counted remaining length on portal-bearing levels; near-terminal depth selection may preferentially capture trivially exhausted branches. Do not infer generic utility from 35/35 DEAD.",
+        "Already-terminal/dead reference labels cannot be counted as new pruning capability; only additional early detection that saves measurable future work can justify a consumer."
       ],
       "reopensOn": null,
       "premiseRefs": [
