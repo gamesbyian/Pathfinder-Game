@@ -1,0 +1,56 @@
+# One-shot PG-H read-only cheap-bound census; remove before merge.
+name: PG-H late-dead weak bound audit
+on:
+  push:
+    branches:
+      - chatgpt/pg-h-dead-branch-cheap-bound-audit-20261017
+    paths:
+      - .github/workflows/pg-h-deep-weak-bound-audit-20261017.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+      - name: Run self-test before reading cases
+        run: node scripts/stress/pg-h-deep-weak-bound-audit.mjs --self-test
+      - name: Fetch exact completed input from PG-H source run
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/pg-h-weak
+          gh run download 39005597866 --repo "$GITHUB_REPOSITORY" \
+            --name pg-h-deep-exact-complete --dir tmp/pg-h-weak
+          test -s tmp/pg-h-weak/cases.json
+          test -s tmp/pg-h-weak/reference.json
+      - name: Compute zero-search weak-current-state diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/stress/pg-h-deep-weak-bound-audit.mjs \
+            --corpus=data/stress/stress-levels-random.json \
+            --cases=tmp/pg-h-weak/cases.json \
+            --out=tmp/pg-h-weak/bound-verdict.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const v=JSON.parse(readFileSync('tmp/pg-h-weak/bound-verdict.json','utf8'));
+          if(v.rows!==35||v.states!==16||v.independentParents!==8)throw Error('Wrong frozen sample');
+          if(v.sourceCorpusSha256!=='d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb')throw Error('Input corpus changed since reference run');
+          console.log('FROZEN EXACT CASE OVERLAP VERIFIED');
+          NODE
+          cat tmp/pg-h-weak/bound-verdict.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-h-deep-weak-bound-audit-001
+          path: tmp/pg-h-weak/bound-verdict.json
+          if-no-files-found: warn
+          retention-days: 90
