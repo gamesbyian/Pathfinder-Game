@@ -261,6 +261,12 @@ async function probeLevel(entry) {
                 },
             } : null;
             prep._beamResearchObserver = beamObserver;
+            // Admissible-order's hot loop deliberately ignores the soft _workCap unless
+            // its separate strict cap is set. Without this, a 25k-work research probe
+            // can run for the full wall deadline and consume BILLIONS of work units.
+            // Scope the strict cap to this action; do not perturb DFS/beam/repair.
+            prep._strictWorkCap = config.admissibleOrder && Number.isFinite(WORK_BUDGET)
+                ? workStart + WORK_BUDGET : undefined;
             const r = await runAttempt(gateKey, level, prep, config, BUDGET_MS, Date.now(), null, remaining);
             prep._beamResearchObserver = null;
             attempts.push({ configKey: key, gateKey, ...r.attempt,
