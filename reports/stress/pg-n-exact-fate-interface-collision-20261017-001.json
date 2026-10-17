@@ -1,0 +1,495 @@
+{
+  "schema": "pathfinder.pg-n-retained-exact-fate-interface-collision-verdict/v1",
+  "status": "concluded-negative-on-tested-compact-keys",
+  "evidenceRole": "retrospective-falsifier",
+  "runId": 39068642585,
+  "artifactId": 12113808163,
+  "artifactZipSha256": "a63b07308dc886f1b19985417d13ec8712f7da19c7ddd8413e0ee2ed6fe6286b",
+  "runnerSourceSha": "0948269064878b0e2bab0ec74e291c0e7a66deb9",
+  "sources": [
+    {
+      "path": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+      "sha256": "6e044d1ae62cad6e4f678c9b13aabd67b805fab2898ad539ab42b0f5e62209e2",
+      "rowCount": 12
+    },
+    {
+      "path": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+      "sha256": "3024ce09aa7693ba1c6d852def97192715a87ca725c7052332fe6984455e6589",
+      "rowCount": 8
+    },
+    {
+      "path": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json",
+      "sha256": "13671b809d8e0a6f36d86859f5165bceb82c986d8a011bd9a279fd4d47ebd13e",
+      "rowCount": 8
+    }
+  ],
+  "population": {
+    "sourceRows": 28,
+    "uniquePrefixRows": 25,
+    "aliases": 3,
+    "independentParents": 7,
+    "live": 17,
+    "dead": 8,
+    "selection": "all three pre-existing oracle-labelled published topology-fork datasets; rows were selected in earlier research, not an outcome-blind sample"
+  },
+  "duplicates": [
+    {
+      "kept": "P00075-w2-A0-B5-alternate",
+      "duplicate": "P00075-w5-A0-B5-original"
+    },
+    {
+      "kept": "P00075-w2-A0-B5-original",
+      "duplicate": "P00075-w5-A0-B5-alternate"
+    },
+    {
+      "kept": "P00148-w0-A6-B10-original",
+      "duplicate": "P00148-w0-A5-B10-original"
+    }
+  ],
+  "candidates": {
+    "endpoint-raw-depth": {
+      "distinctSignatures": 12,
+      "repeatedGroups": 12,
+      "repeatedRows": 25,
+      "mixedGroups": 7,
+      "mixedIndependentParents": [
+        "P00009",
+        "P00124",
+        "P00137",
+        "P00148"
+      ],
+      "mixedWitnesses": [
+        {
+          "signature": [
+            "data/levels.json",
+            "P00124",
+            [
+              7,
+              9
+            ],
+            15
+          ],
+          "cases": [
+            {
+              "id": "P00124-w1-A0-B15-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json"
+            },
+            {
+              "id": "P00124-w1-A0-B15-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00124",
+            [
+              6,
+              9
+            ],
+            16
+          ],
+          "cases": [
+            {
+              "id": "P00124-w1-A0-B16-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json"
+            },
+            {
+              "id": "P00124-w1-A0-B16-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00009",
+            [
+              7,
+              7
+            ],
+            5
+          ],
+          "cases": [
+            {
+              "id": "P00009-w1-A1-B5-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "id": "P00009-w1-A1-B5-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00009",
+            [
+              7,
+              6
+            ],
+            6
+          ],
+          "cases": [
+            {
+              "id": "P00009-w1-A0-B6-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "id": "P00009-w1-A0-B6-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00148",
+            [
+              2,
+              4
+            ],
+            10
+          ],
+          "cases": [
+            {
+              "id": "P00148-w0-A6-B10-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "id": "P00148-w0-A6-B10-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "id": "P00148-w0-A5-B10-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00137",
+            [
+              2,
+              2
+            ],
+            9
+          ],
+          "cases": [
+            {
+              "id": "P00137-w1-A2-B9-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json"
+            },
+            {
+              "id": "P00137-w1-A2-B9-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00137",
+            [
+              3,
+              2
+            ],
+            10
+          ],
+          "cases": [
+            {
+              "id": "P00137-w1-A2-B10-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json"
+            },
+            {
+              "id": "P00137-w1-A2-B10-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json"
+            }
+          ]
+        }
+      ]
+    },
+    "endpoint-unique-visit-count": {
+      "distinctSignatures": 12,
+      "repeatedGroups": 12,
+      "repeatedRows": 25,
+      "mixedGroups": 7,
+      "mixedIndependentParents": [
+        "P00009",
+        "P00124",
+        "P00137",
+        "P00148"
+      ],
+      "mixedWitnesses": [
+        {
+          "signature": [
+            "data/levels.json",
+            "P00124",
+            [
+              7,
+              9
+            ],
+            16
+          ],
+          "cases": [
+            {
+              "id": "P00124-w1-A0-B15-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json"
+            },
+            {
+              "id": "P00124-w1-A0-B15-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00124",
+            [
+              6,
+              9
+            ],
+            17
+          ],
+          "cases": [
+            {
+              "id": "P00124-w1-A0-B16-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json"
+            },
+            {
+              "id": "P00124-w1-A0-B16-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00009",
+            [
+              7,
+              7
+            ],
+            6
+          ],
+          "cases": [
+            {
+              "id": "P00009-w1-A1-B5-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "id": "P00009-w1-A1-B5-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00009",
+            [
+              7,
+              6
+            ],
+            7
+          ],
+          "cases": [
+            {
+              "id": "P00009-w1-A0-B6-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "id": "P00009-w1-A0-B6-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00148",
+            [
+              2,
+              4
+            ],
+            11
+          ],
+          "cases": [
+            {
+              "id": "P00148-w0-A6-B10-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "id": "P00148-w0-A6-B10-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "id": "P00148-w0-A5-B10-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00137",
+            [
+              2,
+              2
+            ],
+            10
+          ],
+          "cases": [
+            {
+              "id": "P00137-w1-A2-B9-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json"
+            },
+            {
+              "id": "P00137-w1-A2-B9-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00137",
+            [
+              3,
+              2
+            ],
+            11
+          ],
+          "cases": [
+            {
+              "id": "P00137-w1-A2-B10-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json"
+            },
+            {
+              "id": "P00137-w1-A2-B10-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json"
+            }
+          ]
+        }
+      ]
+    },
+    "endpoint-raw-depth-bbox": {
+      "distinctSignatures": 20,
+      "repeatedGroups": 4,
+      "repeatedRows": 9,
+      "mixedGroups": 2,
+      "mixedIndependentParents": [
+        "P00009",
+        "P00148"
+      ],
+      "mixedWitnesses": [
+        {
+          "signature": [
+            "data/levels.json",
+            "P00009",
+            [
+              7,
+              7
+            ],
+            5,
+            [
+              5,
+              7,
+              4,
+              7
+            ]
+          ],
+          "cases": [
+            {
+              "id": "P00009-w1-A1-B5-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "id": "P00009-w1-A1-B5-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            }
+          ]
+        },
+        {
+          "signature": [
+            "data/levels.json",
+            "P00148",
+            [
+              2,
+              4
+            ],
+            10,
+            [
+              1,
+              5,
+              1,
+              4
+            ]
+          ],
+          "cases": [
+            {
+              "id": "P00148-w0-A6-B10-original",
+              "fate": "live",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "id": "P00148-w0-A6-B10-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "id": "P00148-w0-A5-B10-alternate",
+              "fate": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            }
+          ]
+        }
+      ]
+    },
+    "endpoint-raw-depth-visited-support": {
+      "distinctSignatures": 25,
+      "repeatedGroups": 0,
+      "repeatedRows": 0,
+      "mixedGroups": 0,
+      "mixedIndependentParents": [],
+      "mixedWitnesses": []
+    }
+  },
+  "caveat": "Raw prefix transitions are not game-counted length on portal levels. One opposite-fate signature disproves exact sufficiency for that specific lossy signature. Zero repeated visited-support groups supplies no compression or exactness test. Evidence is selected historic prefixes, not prevalence/cold solver impact."
+}
