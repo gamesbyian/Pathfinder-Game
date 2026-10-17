@@ -223,6 +223,24 @@ async function probeLevel(entry) {
     if (Number.isFinite(WORK_BUDGET)) prep._workCap = workStart + WORK_BUDGET;
     prep._forcedFirstStepKey = null;
     prep._forcedPortalExitKey = null;
+    // 2Y disposable passive transfer pilot. No cold behavior changes and no
+    // path/level identities used to decide whether to observe an eligible state.
+    const bc1Transfer = flags.has('--bc1-shared-transfer-observe') ? {
+        reachedAfterConnectivity: 0, supported: 0, portalSkipped: 0,
+        strandedPositive: 0, volumeRejects: 0, bc1Conflicts: 0,
+        maxStrandedFresh: 0,
+    } : null;
+    if (bc1Transfer) prep._bc1SharedTransferObserver = { observe(row) {
+        bc1Transfer.reachedAfterConnectivity++;
+        if (!row.portalVolumeApplicable) bc1Transfer.portalSkipped++;
+        if (row.supported) bc1Transfer.supported++;
+        if ((row.strandedFresh ?? 0) > 0) {
+            bc1Transfer.strandedPositive++;
+            bc1Transfer.maxStrandedFresh = Math.max(bc1Transfer.maxStrandedFresh, row.strandedFresh);
+        }
+        if (row.volumeReject) bc1Transfer.volumeRejects++;
+        if (row.bc1Conflict) bc1Transfer.bc1Conflicts++;
+    } };
     const orderingRecords = [];
     let orderingObserved = 0;
     if (ORDERING_PROFILES.length) prep._orderingResearchObserver = {
@@ -303,6 +321,7 @@ async function probeLevel(entry) {
         attempts,
         ...(beamDecisions ? { beamDecisionObservations: beamDecisions.snapshot() } : {}),
         ...(ORDERING_PROFILES.length ? { orderingResearch: summarizeOrdering(orderingRecords, orderingObserved) } : {}),
+        ...(bc1Transfer ? { bc1SharedTransfer: bc1Transfer } : {}),
     };
 }
 
