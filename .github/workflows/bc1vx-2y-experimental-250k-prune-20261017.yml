@@ -1,0 +1,102 @@
+# Disposable 2Y source-isolated post-gauntlet research treatment. NEVER integrate workflow or hook.
+# Strict 250k per level/method canonical-work dose; known old unbounded admissible harness is fixed.
+name: BC1-VX 2Y 250k DFS/admissible prune treatment pilot
+on:
+  push:
+    branches:
+      - chatgpt/bc1vx-2y-experimental-250k-prune-20261017
+    paths:
+      - .github/workflows/bc1vx-2y-experimental-250k-prune-20261017.yml
+      - modules/solver/hard-prune-pipeline.ts
+      - modules/solver/types.ts
+      - scripts/method-probe.mjs
+permissions:
+  contents: read
+jobs:
+  contrast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Verify source and TS build without registering temporary workflow
+        run: npm run check:types && npm run build
+      - name: Strict canonical-work paired read-only-or-control vs treatment
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/bc1vx-2y-behavior
+          for method in dfs admissible; do
+            if [ "$method" = dfs ]; then
+              key='dfs|score=objectiveFirst|bias=none'
+            else
+              key='admissible-order|tieBreak=default|lds=off'
+            fi
+            for arm in control treatment; do
+              flags=()
+              if [ "$arm" = treatment ]; then flags+=(--bc1-shared-transfer-prune); fi
+              node scripts/run-bundled.mjs scripts/method-probe.mjs -- \
+                --corpus=data/stress/stress-levels-random.json \
+                --levels=R00242,R02941,R03030,R02405,R01229,R02307,R02561,R02240 \
+                --only="$key" --work-budget=250000 --budget-ms=600000 \
+                "${flags[@]}" --out="tmp/bc1vx-2y-behavior/${method}-${arm}.json"
+            done
+          done
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          const ids=['R00242','R02941','R03030','R02405','R01229','R02307','R02561','R02240'];
+          const corpusHash=createHash('sha256').update(readFileSync('data/stress/stress-levels-random.json')).digest('hex');
+          if(corpusHash!=='d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb')throw Error('corpus changed');
+          const outputs={};
+          for(const m of ['dfs','admissible']){
+            const load=arm=>{
+              const f='tmp/bc1vx-2y-behavior/'+m+'-'+arm+'.json';
+              const d=JSON.parse(readFileSync(f,'utf8'));
+              if(d.workBudget!==250000||d.levels.length!==8||d.budgetMs!==600000)throw Error('dose changed '+f);
+              return d.levels;
+            };
+            const control=load('control'),treatment=load('treatment');
+            const byId=new Map(treatment.map(r=>[r.id,r]));
+            if(byId.size!==8||new Set(control.map(r=>r.id)).size!==8)throw Error('duplicates');
+            let gains=0,losses=0,controlWins=0,treatmentWins=0,actualWouldRejects=0;
+            let controlWork=0,treatmentWork=0,records=[];
+            for(const id of ids){
+              const c=control.find(x=>x.id===id),t=byId.get(id);
+              if(!c||!t||c.error||t.error||c.deadlineTruncated||t.deadlineTruncated||
+                 c.validDeterministicEvidence!==true||t.validDeterministicEvidence!==true)throw Error('invalid attempt '+m+':'+id);
+              if(c.workSpent>252500||t.workSpent>252500)throw Error('work overshoot '+m+':'+id);
+              if(!t.bc1SharedTransfer)throw Error('treatment did not participate '+m+':'+id);
+              if(c.ok)controlWins++;
+              if(t.ok)treatmentWins++;
+              if(!c.ok&&t.ok)gains++;
+              if(c.ok&&!t.ok)losses++;
+              controlWork+=c.workSpent;treatmentWork+=t.workSpent;
+              actualWouldRejects+=t.bc1SharedTransfer.volumeRejects;
+              records.push({levelId:id,control:{status:c.status,ok:c.ok,workSpent:c.workSpent,nodesExpanded:c.nodesExpanded,solution:c.solution},
+                treatment:{status:t.status,ok:t.ok,workSpent:t.workSpent,nodesExpanded:t.nodesExpanded,solution:t.solution,volumeRejects:t.bc1SharedTransfer.volumeRejects}});
+            }
+            outputs[m]={gains,losses,controlWins,treatmentWins,controlWork,treatmentWork,
+              deltaWorkPct:100*(treatmentWork-controlWork)/controlWork,treatedVolumeRejects:actualWouldRejects,rows:records};
+          }
+          const result={schema:'pathfinder.bc1vx-2y-strict-250k-behavioral-pilot/v1',
+            sourceCommit:process.env.GITHUB_SHA,corpusHash,ids,workBudgetPerLevel:250000,
+            evidenceRole:'selected-development-pilot-not-production-or-population',
+            producer:'source-isolated opt-in research hard-prune after all shared existing hard prunes',
+            methods:outputs};
+          writeFileSync('tmp/bc1vx-2y-behavior/verdict.json',JSON.stringify(result,null,2)+'\n');
+          console.log('BC1-VX 2Y 250k PRUNE VERDICT '+JSON.stringify(Object.fromEntries(Object.entries(outputs).map(([k,v])=>[k,
+            {gains:v.gains,losses:v.losses,controlWins:v.controlWins,treatmentWins:v.treatmentWins,
+              controlWork:v.controlWork,treatmentWork:v.treatmentWork,deltaWorkPct:v.deltaWorkPct,treatedVolumeRejects:v.treatedVolumeRejects}]))));
+          NODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: bc1vx-2y-250k-behavior-pilot-20261017
+          path: tmp/bc1vx-2y-behavior/
+          if-no-files-found: warn
+          retention-days: 90
