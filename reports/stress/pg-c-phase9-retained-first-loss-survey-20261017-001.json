@@ -30,7 +30,7 @@
     "firstIrreversibleLossProven": 0,
     "earliestUnresolvedParentCount": 28
   },
-  "interpretation": "All 28 selected previously known-valid hint-supported basins are lost via score-width cull under both observed beam widths. This is witness-relative F6 and not proof that all still-live futures are lost or that F2-F5 is causally excluded; all 28 remain UNRESOLVED_EARLIER_CLASS. Repair can solve four cases only when seeded with unavailable-to-cold solver hint prefixes; does not certify an implementable cold handoff.",
+  "interpretation": "All 28 selected previously known-valid hint-supported basins are lost via score-width cull under both observed beam widths. This is witness-relative F6 and not proof that all still-live futures are lost or that F2-F5 is causally excluded; all 28 remain UNRESOLVED_EARLIER_CLASS. Repair can solve four cases only when seeded with unavailable-to-cold solver hint prefixes; does not certify an implementable cold handoff. Full-action work/node censoring is deliberately UNKNOWN; witness label cull was observed before additional work.",
   "parents": [
     {
       "id": "R03101",
@@ -76,12 +76,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 16",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -128,12 +129,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 13",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -180,12 +182,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 15",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -232,12 +235,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 16",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -284,12 +288,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 19",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -336,12 +341,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 34",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -388,12 +394,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 22",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -440,12 +447,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 10",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -492,12 +500,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 13",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -544,12 +553,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 16",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -596,12 +606,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 22",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -648,12 +659,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 13",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -700,12 +712,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 16",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -752,12 +765,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 16",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -804,12 +818,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 17",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -856,12 +871,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 22",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -908,12 +924,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 41",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -960,12 +977,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 14",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -1012,12 +1030,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 21",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -1064,12 +1083,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 11",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -1116,12 +1136,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 16",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -1168,12 +1189,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 14",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -1220,12 +1242,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 12",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -1272,12 +1295,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 18",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -1324,12 +1348,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 13",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -1376,12 +1401,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 16",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -1428,12 +1454,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 11",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     },
     {
@@ -1480,12 +1507,13 @@
       "firstLoss": {
         "observedMechanism": "F6 known-label beam score-width retention loss",
         "earliestUnresolvedClass": "F2/F3/F4/F5 for all future-basin disappearance; F6 is witness-relative only",
-        "workCensored": false,
+        "workCensored": null,
         "independentExactLiveSupport": "valid historical hint label observed through depth 12",
         "sourceReachability": "one known-live basin reaches beam; whole future/source coverage unknown",
         "routeDeployment": "repair seeded exact historical hint prefix only as offline counterfactual",
         "causalInterventionEstablished": "none cold-available",
-        "finalClassification": "UNRESOLVED_EARLIER_CLASS"
+        "finalClassification": "UNRESOLVED_EARLIER_CLASS",
+        "workCensoringMeaning": "known-label loss observed before subsequent real beam work; whole-action budget censoring not classified from this join"
       }
     }
   ]
