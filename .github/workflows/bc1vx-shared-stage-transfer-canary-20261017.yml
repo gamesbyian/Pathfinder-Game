@@ -1,4 +1,5 @@
 # Disposable research execution, remove before production evidence integration.
+# Validate at a head that also records this workflow in .github/workflows/README.md.
 name: BC1-VX 2Y DFS admissible opportunity canary
 on:
   push:
