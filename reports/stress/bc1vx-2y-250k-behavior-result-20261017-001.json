@@ -1,0 +1,350 @@
+{
+  "schema": "pathfinder.bc1vx-2y-250k-research-treatment/v1",
+  "role": "selected-development-behavioral-negative-economics",
+  "sourceCommit": "45460f2e3f1c233fa3703cd243f7cbc0c37afca5",
+  "sourceBranch": "chatgpt/bc1vx-2y-experimental-250k-prune-20261017",
+  "runId": 39076954725,
+  "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39076954725",
+  "artifactId": 12117575866,
+  "artifactName": "bc1vx-2y-250k-behavior-pilot-20261017",
+  "artifactZipSha256": "a0391a6d7c84fbf11ef968d4fb22f0ccc66fd4a6563f8dfeb292dd287ef84c2b",
+  "rawFileSha256": {
+    "dfs-control.json": "e75aca8a59c2f3af201fd172306f04cdbff90b210022f0f2202605bd79ef68b2",
+    "dfs-treatment.json": "e3b5d1fca1d4ceb0176752d217ac08fac79ec130715d686e32cf79bdf3dd3cbd",
+    "admissible-control.json": "e1af41b752fef630437fa56440d4a7e1ee9bd41fdf1005d5bddfa13aecb69a4f",
+    "admissible-treatment.json": "9b9864b3a97ed3febc85b6dd889143c43002722591912a4c29d5f8f20b7962d3",
+    "verdict.json": "f7983a0eb43f09640b55e41db303af148ceca6154979bdc7fccf38fc6569e9f9"
+  },
+  "population": {
+    "corpus": "data/stress/stress-levels-random.json",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "levelIds": [
+      "R00242",
+      "R02941",
+      "R03030",
+      "R02405",
+      "R01229",
+      "R02307",
+      "R02561",
+      "R02240"
+    ],
+    "selection": "same eight previously selected PG-H development parents as 25k exposure; treatment results unknown at selection; not independent unseen evaluation"
+  },
+  "protocol": {
+    "perLevelPerMethodWorkBudget": 250000,
+    "budgetMs": 600000,
+    "methodConfigs": {
+      "dfs": "dfs|score=objectiveFirst|bias=none",
+      "admissible": "admissible-order|tieBreak=default|lds=off"
+    },
+    "treatment": "research-only explicit candidate reject after every preceding shared hard prune and ordinary connectivity; exact BC1-VX volume consequence",
+    "control": "identical source, no research flag, no new rejection",
+    "repairExcluded": true,
+    "errorRows": 0,
+    "deadlineTruncatedRows": 0,
+    "maximumOvershootFraction": 0.01,
+    "sourceVerdictAndFullControlTreatmentPaths": "original artifact, keyed by level and method"
+  },
+  "summary": {
+    "dfs": {
+      "parents": 8,
+      "methodAndTreatmentRows": 16,
+      "controlSolved": 0,
+      "treatmentSolved": 0,
+      "gains": 0,
+      "losses": 0,
+      "controlCanonicalWork": 2002161,
+      "treatmentCanonicalWork": 2001998,
+      "deltaCanonicalWork": -163,
+      "deltaCanonicalWorkPct": -0.008141203429694216,
+      "observedTreatmentVolumeRejections": 1628,
+      "controlElapsedMs": 2335,
+      "treatmentElapsedMs": 2573
+    },
+    "admissible": {
+      "parents": 8,
+      "methodAndTreatmentRows": 16,
+      "controlSolved": 2,
+      "treatmentSolved": 2,
+      "gains": 0,
+      "losses": 0,
+      "controlCanonicalWork": 1546721,
+      "treatmentCanonicalWork": 1546186,
+      "deltaCanonicalWork": -535,
+      "deltaCanonicalWorkPct": -0.03458930214304971,
+      "observedTreatmentVolumeRejections": 2835,
+      "controlElapsedMs": 1321,
+      "treatmentElapsedMs": 1429
+    }
+  },
+  "rows": {
+    "dfs": [
+      {
+        "levelId": "R00242",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250219,
+          "nodesExpanded": 435453
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250203,
+          "nodesExpanded": 429924,
+          "volumeRejections": 342
+        }
+      },
+      {
+        "levelId": "R02941",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250304,
+          "nodesExpanded": 443644
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250207,
+          "nodesExpanded": 444150,
+          "volumeRejections": 332
+        }
+      },
+      {
+        "levelId": "R03030",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250260,
+          "nodesExpanded": 522744
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250260,
+          "nodesExpanded": 522744,
+          "volumeRejections": 0
+        }
+      },
+      {
+        "levelId": "R02405",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250256,
+          "nodesExpanded": 527439
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250272,
+          "nodesExpanded": 529231,
+          "volumeRejections": 337
+        }
+      },
+      {
+        "levelId": "R01229",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250311,
+          "nodesExpanded": 468669
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250243,
+          "nodesExpanded": 466365,
+          "volumeRejections": 199
+        }
+      },
+      {
+        "levelId": "R02307",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250248,
+          "nodesExpanded": 482974
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250307,
+          "nodesExpanded": 483478,
+          "volumeRejections": 231
+        }
+      },
+      {
+        "levelId": "R02561",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250349,
+          "nodesExpanded": 498667
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250213,
+          "nodesExpanded": 497899,
+          "volumeRejections": 5
+        }
+      },
+      {
+        "levelId": "R02240",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250214,
+          "nodesExpanded": 475683
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250293,
+          "nodesExpanded": 475209,
+          "volumeRejections": 182
+        }
+      }
+    ],
+    "admissible": [
+      {
+        "levelId": "R00242",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250094,
+          "nodesExpanded": 150016
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250016,
+          "nodesExpanded": 164864,
+          "volumeRejections": 1173
+        }
+      },
+      {
+        "levelId": "R02941",
+        "control": {
+          "ok": true,
+          "status": "success",
+          "workSpent": 3440,
+          "nodesExpanded": 871
+        },
+        "treatment": {
+          "ok": true,
+          "status": "success",
+          "workSpent": 3298,
+          "nodesExpanded": 847,
+          "volumeRejections": 1
+        }
+      },
+      {
+        "levelId": "R03030",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250085,
+          "nodesExpanded": 176640
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250085,
+          "nodesExpanded": 176640,
+          "volumeRejections": 0
+        }
+      },
+      {
+        "levelId": "R02405",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250102,
+          "nodesExpanded": 210688
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250249,
+          "nodesExpanded": 211968,
+          "volumeRejections": 787
+        }
+      },
+      {
+        "levelId": "R01229",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250131,
+          "nodesExpanded": 185856
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250285,
+          "nodesExpanded": 187648,
+          "volumeRejections": 3
+        }
+      },
+      {
+        "levelId": "R02307",
+        "control": {
+          "ok": true,
+          "status": "success",
+          "workSpent": 42573,
+          "nodesExpanded": 6845
+        },
+        "treatment": {
+          "ok": true,
+          "status": "success",
+          "workSpent": 42026,
+          "nodesExpanded": 6732,
+          "volumeRejections": 37
+        }
+      },
+      {
+        "levelId": "R02561",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250015,
+          "nodesExpanded": 233728
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250015,
+          "nodesExpanded": 233728,
+          "volumeRejections": 0
+        }
+      },
+      {
+        "levelId": "R02240",
+        "control": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250281,
+          "nodesExpanded": 200704
+        },
+        "treatment": {
+          "ok": false,
+          "status": "work-budget-reached",
+          "workSpent": 250212,
+          "nodesExpanded": 200960,
+          "volumeRejections": 834
+        }
+      }
+    ]
+  },
+  "scope": [
+    "The 4463 volume rejection event count is not the number of unique eliminated states, independent puzzles, or successfully solved levels.",
+    "Aggregate work difference is minimal under fixed work caps; spent work mostly saturates on unsolved cases.",
+    "Wall elapsed times were measured sequentially, not randomized, so the apparent ~10% time cost is not a rigorous estimate.",
+    "Same two admissible controls solved in each arm with identical complete accepted source-level solution paths, but no new cold solves.",
+    "A positive theorem-based prune on selected development parents does not earn production use or an unbiased population conclusion.",
+    "Original 25k passive observer run is 39071741958, not the 250k treatment; the two doses have separate claims."
+  ]
+}
