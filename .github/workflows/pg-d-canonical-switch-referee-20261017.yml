@@ -1,0 +1,43 @@
+# Disposable PG-D canonical referee differential; remove before evidence merge.
+name: PG-D canonical trail-switch referee differential
+on:
+  push:
+    branches:
+      - chatgpt/pg-d-canonical-switch-referee-differential-20261017
+    paths:
+      - .github/workflows/pg-d-canonical-switch-referee-20261017.yml
+      - scripts/stress/pg-d-canonical-referee-trail-switch.mjs
+permissions:
+  contents: read
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Independence and unsupported-transition canary
+        run: node scripts/run-bundled.mjs scripts/stress/pg-d-canonical-referee-trail-switch.mjs -- --self-test
+      - name: Frozen complete-witness source differential
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/run-bundled.mjs scripts/stress/pg-d-canonical-referee-trail-switch.mjs -- --max-levels=500 --hints-per-level=3 --out=tmp/pg-d/referee-trail-switch-verdict.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('tmp/pg-d/referee-trail-switch-verdict.json','utf8'));
+          if(r.sources.length!==2||r.totals.staticFalseRejects!==0)throw Error('PG-D witness coverage or soundness failure');
+          if(r.totals.ordinarySupportedAccepted<50)throw Error('insufficient actual ordinary-route coverage');
+          console.log('PG-D CANONICAL CHECK '+JSON.stringify(r.totals));
+          NODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-d-referee-trail-switch-20261017
+          path: tmp/pg-d/referee-trail-switch-verdict.json
+          if-no-files-found: warn
+          retention-days: 90
