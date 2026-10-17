@@ -7,6 +7,7 @@
 import { legacyMsToWork } from './budget-units.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { prepLevel } from './prep.js';
+import { currentInputColdD4CandidateOrder } from './cold-d4-order.js';
 import { withSolverStage } from './stage-policy.js';
 import { buildSolverStagePlan } from './stage-plan.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -121,6 +122,12 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // disable every other unset flag.
     const cfg = normalizeAblationConfig(opts.ablation);
     prep._cfg = cfg;
+    // PG-G research opt-in: computed once from this invocation's *current* normalized puzzle.
+    // Symmetric puzzles abstain. Production default-OFF never touches candidate order.
+    if (cfg.STRATEGY_PGG_COLD_D4_CANDIDATE_ORDER === true) {
+        const coldFrame = currentInputColdD4CandidateOrder(level);
+        if (coldFrame) prep._candidateOrderResearchKey = coldFrame.rank;
+    }
     prep._metrics = { nodesExpanded: 0 };
     // Offline tooling hook (hint-diversification audits): when set, the very first
     // move out of a gate is restricted to this single packed cell key. Read by
