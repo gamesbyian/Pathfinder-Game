@@ -31,12 +31,17 @@ assert.equal(inventory.frontDoorInputs.unfinishedLifecycle.some(row =>
     row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md'), false,
     'completed consolidation plan must not remain in unfinished front-door execution references');
 assert.ok(Array.isArray(inventory.frontDoorInputs.structuredCloseouts));
-const distributedKnowledgeCloseout = inventory.frontDoorInputs.structuredCloseouts.find(row =>
-    row.path === 'reports/2026-09-20-distributed-knowledge-hardening-audit-001.md');
-assert.ok(distributedKnowledgeCloseout,
-    'front door should consume a recent real structured closeout inside its bounded recent-evidence window');
-assert.match(distributedKnowledgeCloseout.scope.inferenceScope, /research-system architecture/u);
-assert.ok(distributedKnowledgeCloseout.sourceArtifacts.includes('scripts/research-domain-ownership-node-test.mjs'));
+// The front door is a rolling bounded recent-evidence window, not a fixed historical
+// index. As newer closeouts arrive, old ones must age out without breaking validation.
+assert.ok(inventory.frontDoorInputs.structuredCloseouts.length > 0,
+    'front door should include recent structured closeouts');
+assert.ok(inventory.frontDoorInputs.structuredCloseouts.some(row =>
+    typeof row.scope?.inferenceScope === 'string' && row.scope.inferenceScope.length > 0
+    && Array.isArray(row.sourceArtifacts) && row.sourceArtifacts.length > 0),
+    'recent structured closeouts should retain inferential scope and source evidence');
+assert.ok(inventory.documentation.roles.some(row =>
+    row.path === 'reports/2026-09-20-distributed-knowledge-hardening-audit-001.md' && row.closeout),
+    'aged-out distributed-knowledge closeout must remain in full documentation history');
 assert.equal(inventory.integrationHealth.errorCount, 0, 'inventory should surface existing integration-audit errors');
 assert.ok(inventory.integrationHealth.semanticJoinCoverage.authoredAssetRelationships >= 1);
 assert.equal(inventory.integrationHealth.questionCount, inventory.currentState.questions);
@@ -110,9 +115,7 @@ assert.equal(inventory.diagnostics.structuredCloseoutCount, inventory.documentat
 assert.ok(inventory.documentation.roles.some(row =>
     row.path === 'reports/2026-09-19-research-authority-ownership-audit-001.md' && row.closeout),
     'older structured closeouts must remain in the full documentation inventory even after aging out of the bounded front-door window');
-assert.ok(inventory.frontDoorInputs.structuredCloseouts.some(row =>
-    row.path === 'reports/2026-09-20-distributed-knowledge-hardening-audit-001.md'),
-    'recent distributed-knowledge audit should participate in the bounded structured-closeout front door');
+
 assert.ok(Number.isInteger(inventory.documentation.legacyStatusBlockEvidenceCount));
 assert.equal(inventory.documentation.structuredWorkstreamExecutionStateCount, inventory.currentState.queueEntries,
     'every current workstream row should carry explicit execution state');
