@@ -1,3 +1,14 @@
+test('BC1-VX is enabled by production default but remains independently disableable', () => {
+    const flag = 'STRATEGY_BC1_VERTEX_VOLUME_PRUNE';
+    assert.ok(flag in FEATURES);
+    assert.equal(OPT_IN_FEATURES.has(flag), false, 'default polarity must be ON');
+    assert.equal(defaultConfig()[flag], true, 'ordinary production must actually enable vertex-volume');
+    assert.equal(normalizeAblationConfig({})?.[flag], true, 'sparse config default must match production');
+    assert.equal(normalizeAblationConfig({ [flag]: false })?.[flag], false, 'explicit OFF must persist for rollback and A/B control');
+    assert.equal(withFeatureDisabled(flag)[flag], false, 'historical control constructor must remain effective');
+    assert.equal(defaultConfig().STRATEGY_BC1_VOLUME_PRUNE, false, 'bridge-only research attribution must remain default-OFF');
+});
+
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import {
@@ -6,6 +17,8 @@ import {
     isKnownHistoricalAblationFeatureName,
     normalizeHistoricalAblationFeatureName,
     withFeatureDisabled,
+    defaultConfig,
+    OPT_IN_FEATURES,
     FEATURES,
 } from './ablation-config.js';
 import { normalizeAblationConfig, normalizeHistoricalAblationConfig } from './orchestration.js';
