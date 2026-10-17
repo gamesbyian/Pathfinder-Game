@@ -67,7 +67,7 @@ export function bc1FreshConnectivityPrunes(next: number, ws: SolverSearchState, 
 export const bc1VolumeCounters = { evaluated: 0, rejected: 0, strandedPositive: 0 };
 
 /**
- * STRATEGY_BC1_VOLUME_PRUNE / STRATEGY_BC1_VERTEX_VOLUME_PRUNE consumer (opt-in, research; the vertex flag adds
+ * STRATEGY_BC1_VOLUME_PRUNE / STRATEGY_BC1_VERTEX_VOLUME_PRUNE consumer (bridge-only is opt-in, vertex form default-ON; the vertex flag adds
  * goal-free blocks behind non-revisitable cut vertices once no free intersection remains): same freshness precondition as
  * `bc1FreshConnectivityPrunes`. Rejects when the fresh cells left after removing goal-free bridge
  * sides cannot cover the remaining counted steps (`bc1StrandedFreshVolume`). Mirrors isConnected's
@@ -75,7 +75,7 @@ export const bc1VolumeCounters = { evaluated: 0, rejected: 0, strandedPositive: 
  */
 export function bc1VolumePrunes(next: number, ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, rSteps: number): boolean {
     if (level.portalMap.size > 0 && prep._cfg?.PRUNE_CONNECTIVITY_VOLUME_PORTAL === false) return false;
-    const v = bc1StrandedFreshVolume(next, ws, level, prep._cfg?.STRATEGY_BC1_VERTEX_VOLUME_PRUNE === true);
+    const v = bc1StrandedFreshVolume(next, ws, level, (!prep._cfg || prep._cfg.STRATEGY_BC1_VERTEX_VOLUME_PRUNE === true));
     if (!v) return false;
     bc1VolumeCounters.evaluated++;
     if (v.strandedFresh === 0) return false;
@@ -93,7 +93,7 @@ export function bc1VolumePrunes(next: number, ws: SolverSearchState, level: Norm
  */
 export function bc1WithVolumePrunes(next: number, ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, rSteps: number): boolean {
     const portalVolumeOff = level.portalMap.size > 0 && prep._cfg?.PRUNE_CONNECTIVITY_VOLUME_PORTAL === false;
-    const v = portalVolumeOff ? null : bc1StrandedFreshVolume(next, ws, level, prep._cfg?.STRATEGY_BC1_VERTEX_VOLUME_PRUNE === true);
+    const v = portalVolumeOff ? null : bc1StrandedFreshVolume(next, ws, level, (!prep._cfg || prep._cfg.STRATEGY_BC1_VERTEX_VOLUME_PRUNE === true));
     if (!v) return bc1FreshConnectivityPrunes(next, ws, level, prep) || bc1VolumePrunes(next, ws, level, prep, rSteps);
     if (v.bc1Conflict) return true;
     bc1VolumeCounters.evaluated++;
