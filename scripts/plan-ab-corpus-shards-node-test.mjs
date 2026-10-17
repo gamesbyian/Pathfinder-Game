@@ -9,6 +9,7 @@
  * today's research-corpus sizes are not.
  */
 import assert from 'node:assert/strict';
+import { parseLevelPositions } from './level-data-io.mjs';
 import { mkdtemp, rm, writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
@@ -23,7 +24,14 @@ function positionsCovered(shards, corpusKey) {
     const positions = new Set();
     for (const shard of shards) {
         if (shard.corpus_key !== corpusKey) continue;
-        for (const token of shard.levels.replace(/^pos:/, '').split(',')) positions.add(Number(token));
+        const tokens = shard.levels.split(',');
+        const parsed = parseLevelPositions(shard.levels, { maxLevel: 100_000, sorted: false });
+        assert.equal(parsed.length, tokens.length, 'every shard position token must resolve exactly once');
+        for (const token of tokens) assert.match(token, /^pos:[1-9][0-9]*$/, 'every position must carry its own explicit prefix');
+        for (const position of parsed) {
+            assert.equal(positions.has(position), false, 'each corpus position must appear in only one shard');
+            positions.add(position);
+        }
     }
     return positions;
 }
@@ -91,6 +99,19 @@ async function main() {
         const emptyCorpus1Shards = empty.shards.filter(s => s.corpus_key === 'corpus1');
         assert.equal(emptyCorpus1Shards.length, Math.min(6, corpus1Count), 'empty-sample fallback caps Corpus 1 shard count at the requested Corpus 2 shard count');
         assert.deepEqual(positionsCovered(empty.shards, 'corpus1'), new Set(Array.from({ length: corpus1Count }, (_, i) => i + 1)), 'empty-sample fallback still covers every Corpus 1 position');
+
+        // These inline workflow planners must produce the same strict CLI grammar as the
+        // maintained scripts; a single 'pos:' followed by bare comma-separated numbers
+        // is rejected by the real production-sweep parser.
+        for (const [name, expectedOccurrences] of [
+            ['solver-broad-confirmation.yml', 1],
+            ['solver-residual-confirmation.yml', 2],
+        ]) {
+            const source = await readFile(path.join(ROOT, '.github', 'workflows', name), 'utf8');
+            const formatter = "levels: slice.map(position => 'pos:' + position).join(',')";
+            assert.equal(source.split(formatter).length - 1, expectedOccurrences,
+                `${name}: every inline shard planner must use per-token pos: prefixes`);
+        }
 
         console.log('plan-ab-corpus-shards tests: all passed');
     } finally {

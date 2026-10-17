@@ -3,7 +3,7 @@ import { expandShardsByArm, resolveExpectedIds } from './plan-routing-regime-ab-
 import { assertMatchingPopulationSeals, buildPopulationSeal } from './seal-routing-regime-population.mjs';
 
 const baseShards = [
-  { idx: 'corpus1', corpus: 'c1.json', corpus_key: 'corpus1', levels: 'pos:1,2' },
+  { idx: 'corpus1', corpus: 'c1.json', corpus_key: 'corpus1', levels: 'pos:1,pos:2' },
   { idx: 'corpus2-01', corpus: 'c2.json', corpus_key: 'corpus2', levels: 'pos:1' },
 ];
 
@@ -12,8 +12,13 @@ assert.equal(doubled.length, 4);
 assert.deepEqual(doubled.map(s => s.idx), ['control-corpus1', 'control-corpus2-01', 'treatment-corpus1', 'treatment-corpus2-01']);
 assert.equal(doubled[0].arm, 'control');
 assert.equal(doubled[2].arm, 'treatment');
-assert.equal(doubled[0].levels, 'pos:1,2', 'both arms must reuse the exact same position list');
-assert.equal(doubled[2].levels, 'pos:1,2');
+assert.equal(doubled[0].levels, 'pos:1,pos:2', 'both arms must reuse the exact same position list');
+assert.equal(doubled[2].levels, 'pos:1,pos:2');
+
+assert.throws(
+  () => resolveExpectedIds([{ idx: 'invalid', corpus_key: 'corpus1', levels: 'pos:1,2' }], () => [{id:'A'}, {id:'B'}]),
+  /invalid explicit position token/,
+);
 
 const levels = {
   corpus1: [{ id: 'C1-A', width: 4 }, { id: 'C1-B', width: 5 }],
