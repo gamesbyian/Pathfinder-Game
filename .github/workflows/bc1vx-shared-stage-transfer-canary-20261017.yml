@@ -1,13 +1,15 @@
 # Disposable research execution, remove before production evidence integration.
-# Short 25k/source-identical screening dose; original 250k run 39067228905 stays separately authoritative.
+# Source-identical 25k zero-policy-change 2Y recovery after merged strict admissible cap fix.
+# Do not confuse cancelled 39067937869 / 39067228905 with negative mechanism evidence.
 # Validate at a head that also records this workflow in .github/workflows/README.md.
 name: BC1-VX 2Y DFS admissible opportunity canary
 on:
   push:
     branches:
-      - chatgpt/bc1vx-shared-dfs-admissible-opportunity-20261017
+      - chatgpt/bc1vx-2y-strict-cap-recovery-20261017
     paths:
       - .github/workflows/bc1vx-shared-stage-transfer-canary-20261017.yml
+      - scripts/method-probe.mjs
 permissions:
   contents: read
 jobs:
