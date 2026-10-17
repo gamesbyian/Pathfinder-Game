@@ -1,7 +1,7 @@
 # PG-K exact-DEAD prefix segment revision result 001
 
 > **Status:** concluded-negative
-> **Last evidence:** 2026-10-17. [Run 39070668942](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39070668942) completed all 75 source cases with fully native move legality and suffix referee verification; [run 39070952304](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39070952304) completed the preselected twelve-parent CP-SAT reference 0 LIVE / 12 DEAD / 0 UNKNOWN, 0 alarms.
+> **Last evidence:** 2026-10-17 — [Run 39070668942](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39070668942) completed all 75 source cases with fully native move legality and suffix referee verification; [run 39070952304](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39070952304) completed the preselected twelve-parent CP-SAT reference 0 LIVE / 12 DEAD / 0 UNKNOWN, 0 alarms.
 > **Decision:** Close the **tested equal-raw-length, historical-hint-segment substitution and historical-hint-suffix completion form** as economically/inferentially unpersuasive. No restored LIVE state or completed solution was found. The broader dependency-defined, length-changing, current-state-guided revision premise remains open, not disproved by these data.
 > **Remaining gate:** Stop this hint-guided equal-raw-length patch/suffix form. For the distinct PG-K premise, use current-search failure structure and an outcome-blind edit selector to establish a *different* dependency-defined or length-changing revision opportunity before additional exact queries or cold A/B; coordinate with PG-P's commitment shadow.
 > **Research question:** `WS2-RESIDUAL-INTERFACE-COMMUTATIVITY-REVISION`
