@@ -48,7 +48,7 @@ jobs:
           const prior = new Set(readFileSync('data/stress/bc1-prune-ab-001-ids.txt', 'utf8').split(/\s+/).filter(Boolean));
           for (const row of JSON.parse(readFileSync('reports/stress/bc1vx-fresh-paired-screen-20261016-001.json','utf8')).rows) prior.add(row.id);
           for (const id of JSON.parse(readFileSync('data/stress/ws2-repair-deadline-solved-control-confirmation-150-ids.json','utf8'))) prior.add(id);
-          // Historical cohort exclusions are fixed before observing any PG-G treatment result.
+          // Historical cohort exclusions are fixed before observing any BC1-VX treatment result.
           const salt = 'pathfinder-bc1vx-second-disjoint-64-20261017-001';
           const eligible = levels.map((level, i) => ({
             id: level.id, position: i + 1,
@@ -126,7 +126,7 @@ jobs:
           assert(cProjected.ablation?.flags?.[flag]===false,'Control effective flag not disabled');
           assert(tProjected.ablation?.flags?.[flag]===true,'Treatment effective flag not enabled');
           cProjected.ablation.flags[flag]=true;
-          assert(JSON.stringify(cProjected)===JSON.stringify(tProjected),'Unexpected effective solver-request difference beyond PG-G D4');
+          assert(JSON.stringify(cProjected)===JSON.stringify(tProjected),'Unexpected effective solver-request difference beyond BC1-VX vertex-volume pruning');
           const cRows=new Map(c.levels.map(row=>[row.id,row]));
           const tRows=new Map(t.levels.map(row=>[row.id,row]));
           const expected=manifest.selectedShard.map(row=>row.id);
