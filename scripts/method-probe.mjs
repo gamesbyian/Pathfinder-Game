@@ -279,6 +279,11 @@ async function probeLevel(entry) {
                 },
             } : null;
             prep._beamResearchObserver = beamObserver;
+            // Strict research work ceiling: admissible-order ignores soft _workCap
+            // inside its hot loop (cancelled canary 39067937869 overspent ~79k-fold).
+            // Scope this cap only to admissible attempts; do not change DFS/beam policy.
+            prep._strictWorkCap = config.admissibleOrder && Number.isFinite(WORK_BUDGET)
+                ? workStart + WORK_BUDGET : undefined;
             const r = await runAttempt(gateKey, level, prep, config, BUDGET_MS, Date.now(), null, remaining);
             prep._beamResearchObserver = null;
             attempts.push({ configKey: key, gateKey, ...r.attempt,
