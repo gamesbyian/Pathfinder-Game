@@ -1403,16 +1403,21 @@
         "reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md",
         "reports/2026-09-21-relational-query-next-question-reconciliation-001.md"
       ],
-      "result": "LIVE->LIVE phenomenon is positive: 1,453/3,121 length-matched candidate substitutions are referee-valid. The live gate is a bounded search for suitable DEAD/near-miss populations and capability restoration; legality alone does not earn a revision operator.",
+      "result": "LIVE->LIVE phenomenon is positive: 1,453/3,121 length-matched candidate substitutions are referee-valid. The live gate is a bounded search for suitable DEAD/near-miss populations and capability restoration; legality alone does not earn a revision operator. 2026-10-17 PG-K-001 completed the first bounded hint-assisted DEAD-prefix revision falsifier on all 75 previously CP-SAT-DEAD prefixes across 25 Corpus-2 parents. 796 edited same-endpoint/equal-raw-length candidates on 73 cases; 92 move-legal patched prefixes across 22 parents, so legal geometry was real. Zero of 911 historical-hint-suffix complete-path candidates passed the independent native referee. A literal 12-independent-parent geometry-hash-selected exact-reference tranche (GHA 39070952304, 20s each) gave 0 LIVE, 12 DEAD, 0 UNKNOWN/input/correctness alarms. Tested historic-hint-guided equal-length splice/suffix revision form closed negative; this does not negate a distinct current-input dependency- or length-changing repair mechanism. Source full verdict reports/stress/pg-k-dead-prefix-revisions-20261017-001.json and exact result reports/stress/pg-k-exact-12-parent-dead-revisions-20261017-001.json.",
       "constrains": [
         "Do not reopen generic detour-gadget mining.",
-        "Zero suitable DEAD/near-miss candidates is a valid population closure."
+        "Zero suitable DEAD/near-miss candidates is a valid population closure.",
+        "PG-K-001: no further CP-SAT spend on the same historical-hint equal-raw-length splice class without an independently reasoned current-state causal discriminator; 92 move-legal is not 92 LIVE.",
+        "Actual CP-SAT DEAD on 12 blind independent parents answers that tranche only; do not convert the remaining 80 unqueried patched prefixes to DEAD, nor treat 911 failed borrowed suffix completions as prefix-oracle decisions."
       ],
       "reopensOn": null,
       "premiseRefs": [
         "P169"
       ],
-      "acquisitionNeed": "representation-or-candidate"
+      "acquisitionNeed": "representation-or-candidate",
+      "answeredBy": [
+        "reports/2026-10-17-pg-k-dead-prefix-segment-revision-result-001.md"
+      ]
     },
     {
       "id": "WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR",
