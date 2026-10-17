@@ -1345,10 +1345,12 @@
         "docs/solver-algebraic-decoding-research-plan.md",
         "reports/2026-10-15-trail-transition-system-prior-art-and-toy-falsifier.md"
       ],
-      "result": "Discovery-positive only. The restricted ordinary-route model is bijective on 903/903 tiny independent toy walks and has an 11-edge connected-but-switch-incompatible witness. Next gate is canonical-referee differential plus one exact supported real-prefix DEAD/LIVE discriminator beyond current production inference; no frontier/ZDD/ASP engine is earned.",
+      "result": "Discovery-positive only. The restricted ordinary-route model is bijective on 903/903 tiny independent toy walks and has an 11-edge connected-but-switch-incompatible witness. Next gate is canonical-referee differential plus one exact supported real-prefix DEAD/LIVE discriminator beyond current production inference; no frontier/ZDD/ASP engine is earned. PG-D-001 canonical-referee differential (run 39078826165) examined first 160 published plus first 500 Corpus-2 board rows, up to 3 independently validated stored paths per board: 1,955 referee-approved, 1,020 completely ordinary. Independent selected-edge switch-route representation accepted all 1,020 (957 with crossing revisits); no false reject, and 1,020 forced-reused-edge negative controls were rejected by both native referee and static checker. The other 935 nonordinary-transition routes explicitly abstained. This closes the supported whole-solution differential gate but not the real-prefix novelty/early work savings gate; no new cold solution or pruning consumer.",
       "constrains": [
         "Abstract SAT/connected does not imply a real Pathfinder witness.",
-        "Unsupported mechanics must return UNKNOWN/unsupported, never false NO."
+        "Unsupported mechanics must return UNKNOWN/unsupported, never false NO.",
+        "PG-D-001: whole-solution soundness exposure alone does not show a new prunable real-prefix consequence; must compare against production parity/connectivity/BC1 and demonstrate remaining work before any solver treatment.",
+        "A portal-using/nonordinary route must be UNSUPPORTED, not UNSAT, under ordinary-only edge/switch graph."
       ],
       "reopensOn": null,
       "premiseRefs": [
@@ -1358,7 +1360,10 @@
         "P198",
         "P204"
       ],
-      "acquisitionNeed": "representation-or-candidate"
+      "acquisitionNeed": "representation-or-candidate",
+      "answeredBy": [
+        "reports/2026-10-17-pg-d-canonical-switch-referee-result-001.md"
+      ]
     },
     {
       "id": "WS2-VARIANT-RESPONSE-HARDNESS",

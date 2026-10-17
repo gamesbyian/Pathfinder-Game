@@ -1,0 +1,233 @@
+{
+  "schema": "pathfinder.pg-d-canonical-referee-trail-switch-differential/v1",
+  "selected": "published and first N Corpus-2 levels by corpus order, no hint/outcome-based selection",
+  "sampleCaps": {
+    "maxLevelsPerCorpus": 500,
+    "maxHintsPerLevel": 3
+  },
+  "sources": [
+    {
+      "source": "data/levels.json",
+      "sha256": "7904f5ae4ce75f172ac8b769d7672bb7d24f2469048b1fb8a7b12eafbf6fb4c0",
+      "totalLevels": 160,
+      "considered": 160,
+      "withHints": 160,
+      "refereeAccepted": 473,
+      "refereeRejected": 0,
+      "ordinarySupported": 374,
+      "abstained": 99,
+      "staticFalseRejects": 0,
+      "crossingWitnesses": 314,
+      "negativeControls": 374
+    },
+    {
+      "source": "data/stress/stress-levels-random.json",
+      "sha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+      "totalLevels": 1700,
+      "considered": 500,
+      "withHints": 500,
+      "refereeAccepted": 1482,
+      "refereeRejected": 0,
+      "ordinarySupported": 646,
+      "abstained": 836,
+      "staticFalseRejects": 0,
+      "crossingWitnesses": 643,
+      "negativeControls": 646
+    }
+  ],
+  "totals": {
+    "levelsConsidered": 660,
+    "levelsWithHints": 660,
+    "refereeAccepted": 1955,
+    "refereeRejected": 0,
+    "ordinarySupportedAccepted": 1020,
+    "portalOrNonordinaryAbstain": 935,
+    "staticFalseRejects": 0,
+    "strictEdgeReuseNegativeControls": 1020,
+    "negativeControlUnexpectedAcceptance": 0,
+    "ordinaryCrossingWitnesses": 957
+  },
+  "alarms": [],
+  "examples": {
+    "crossings": [
+      {
+        "source": "data/levels.json",
+        "levelId": "P00002",
+        "hintIndex": 0,
+        "crossings": 1,
+        "rawDepth": 21
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00002",
+        "hintIndex": 1,
+        "crossings": 1,
+        "rawDepth": 21
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00002",
+        "hintIndex": 2,
+        "crossings": 1,
+        "rawDepth": 21
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00003",
+        "hintIndex": 0,
+        "crossings": 1,
+        "rawDepth": 21
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00003",
+        "hintIndex": 1,
+        "crossings": 1,
+        "rawDepth": 21
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00003",
+        "hintIndex": 2,
+        "crossings": 1,
+        "rawDepth": 21
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00005",
+        "hintIndex": 0,
+        "crossings": 1,
+        "rawDepth": 19
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00005",
+        "hintIndex": 1,
+        "crossings": 1,
+        "rawDepth": 19
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00005",
+        "hintIndex": 2,
+        "crossings": 1,
+        "rawDepth": 19
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00006",
+        "hintIndex": 0,
+        "crossings": 1,
+        "rawDepth": 29
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00006",
+        "hintIndex": 1,
+        "crossings": 1,
+        "rawDepth": 29
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00006",
+        "hintIndex": 2,
+        "crossings": 1,
+        "rawDepth": 29
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00009",
+        "hintIndex": 0,
+        "crossings": 2,
+        "rawDepth": 30
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00009",
+        "hintIndex": 1,
+        "crossings": 2,
+        "rawDepth": 30
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00009",
+        "hintIndex": 2,
+        "crossings": 2,
+        "rawDepth": 30
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00010",
+        "hintIndex": 0,
+        "crossings": 1,
+        "rawDepth": 20
+      }
+    ],
+    "unsupported": [
+      {
+        "source": "data/levels.json",
+        "levelId": "P00001",
+        "hintIndex": 2,
+        "reason": "nonordinary-transition"
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00004",
+        "hintIndex": 1,
+        "reason": "nonordinary-transition"
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00004",
+        "hintIndex": 2,
+        "reason": "nonordinary-transition"
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00007",
+        "hintIndex": 1,
+        "reason": "nonordinary-transition"
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00008",
+        "hintIndex": 0,
+        "reason": "nonordinary-transition"
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00008",
+        "hintIndex": 2,
+        "reason": "nonordinary-transition"
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00014",
+        "hintIndex": 0,
+        "reason": "nonordinary-transition"
+      },
+      {
+        "source": "data/levels.json",
+        "levelId": "P00014",
+        "hintIndex": 2,
+        "reason": "nonordinary-transition"
+      }
+    ],
+    "negativeUnexpected": []
+  },
+  "limitations": [
+    "Referee-accepted historical hints are a convenience source of actual solutions, not independent cold solves.",
+    "Portal-using routes are unsupported by the ordinary static graph and explicitly abstain.",
+    "Only complete already-known routes are checked; this does not establish a useful NEW pruning consequence or savings.",
+    "First-N level and per-level witness caps are development sampling, not solve-rate or population prevalence."
+  ],
+  "sourceRun": {
+    "runId": 39078826165,
+    "sourceHead": "ad45eab14aa87682e8ac41bceb736c400dd75037",
+    "artifactId": 12118370698,
+    "artifactName": "pg-d-referee-trail-switch-20261017",
+    "artifactDigest": "sha256:b9e76e8c1bde7ed2b6874f5be28b02227a7c69087c91b9c06d2551a22b8b8716",
+    "rawMachineArtifact": "referee-trail-switch-verdict.json",
+    "source": "Assertion-checked successful run and raw artifact; extra sourceRun is repository integration metadata."
+  }
+}
