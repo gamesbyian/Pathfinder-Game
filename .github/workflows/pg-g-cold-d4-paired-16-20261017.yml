@@ -45,7 +45,7 @@ jobs:
           const levelsDocument = JSON.parse(readFileSync('data/stress/stress-levels-random.json', 'utf8'));
           const levels = Array.isArray(levelsDocument) ? levelsDocument : levelsDocument.levels;
           const prior = new Set(readFileSync('data/stress/bc1-prune-ab-001-ids.txt', 'utf8').split(/\s+/).filter(Boolean));
-          for (const row of JSON.parse(readFileSync('reports/stress/pg-g-cold-d4-paired-screen-20261016-001.json','utf8')).rows) prior.add(row.id);
+          for (const row of JSON.parse(readFileSync('reports/stress/bc1vx-fresh-paired-screen-20261016-001.json','utf8')).rows) prior.add(row.id);
           for (const id of JSON.parse(readFileSync('data/stress/ws2-repair-deadline-solved-control-confirmation-150-ids.json','utf8'))) prior.add(id);
           // Historical cohort exclusions are fixed before observing any PG-G treatment result.
           const salt = 'pathfinder-pg-g-cold-d4-20261017-001';
