@@ -1512,17 +1512,22 @@
         "docs/solver-separator-dynamic-interface-contract-preflight.md",
         "docs/solver-reasoning-capability-atlas.md"
       ],
-      "result": "Activated by the 2026-10-16 blocker audit. The falsifier does not need PG-D to first produce a useful trail/switch consequence: existing separator, topology and relational candidate signatures can already be attacked for exact-fate collisions. A single collision falsifies exact sufficiency for that candidate. Only a candidate with soundness/fidelity plus useful compression can earn a frontier/ZDD/backward/plan architecture.",
+      "result": "Activated by the 2026-10-16 blocker audit. The falsifier does not need PG-D to first produce a useful trail/switch consequence: existing separator, topology and relational candidate signatures can already be attacked for exact-fate collisions. A single collision falsifies exact sufficiency for that candidate. Only a candidate with soundness/fidelity plus useful compression can earn a frontier/ZDD/backward/plan architecture. PG-N-001 retained published topology-fork reference census (GHA 39068642585) compared all 28 exact observations, 25 distinct prefixes/7 independent parents. Endpoint+raw depth aliases opposed exact LIVE/DEAD fates in 7 groups across four parents; adding full path bounding box still leaves 2 mixed groups. Endpoint+raw depth+full visited-cell support has no mixed groups only because every sampled prefix gets a unique signature (zero nontrivial merges). These tested lossy forms are insufficient or fail compression; no full-history equivalence or cold consumer inferred.",
       "constrains": [
         "Approximate/predictive signatures cannot authorize exact caching or pruning.",
-        "Architecture implementation is not earned merely by surviving a bounded collision search."
+        "Architecture implementation is not earned merely by surviving a bounded collision search.",
+        "PG-N-001: endpoint, raw depth, simple visit count, and bounding-box abstractions admit exact LIVE/DEAD collisions on selected topology forks; never use them for sound cache/prune identity.",
+        "Zero mixed outcomes among signature singletons is not future-sufficiency evidence; require independent repeated-key support and exact-fate comparison before any quotient/compression claim."
       ],
       "reopensOn": null,
       "premiseRefs": [
         "P198",
         "P204"
       ],
-      "acquisitionNeed": "representation-or-candidate"
+      "acquisitionNeed": "representation-or-candidate",
+      "answeredBy": [
+        "reports/2026-10-17-pg-n-retained-exact-fate-interface-collision-001.md"
+      ]
     }
   ]
 }
