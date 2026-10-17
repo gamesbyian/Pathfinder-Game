@@ -1,0 +1,326 @@
+{
+  "schema": "pathfinder.pg-h-middle-descendant-work/v1",
+  "runId": 39066084621,
+  "headCommit": "7a7027c921a6bf5cdd338613a7644d953f04dade",
+  "originalSourceCommit": "e984facf39567d5c35818f0497f23ff2a111f169",
+  "sourceCaptureRun": 39009523928,
+  "captureArtifactId": 12092132347,
+  "workArtifactId": 12113243242,
+  "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "protocol": {
+    "profile": "objectiveFirst",
+    "width": 500,
+    "perGateCanonicalWorkBudget": 500000,
+    "sourceWorkEqualityAsserted": true
+  },
+  "summary": {
+    "parents": 8,
+    "groups": 16,
+    "cases": 37,
+    "childCasesWithLaterParentExpansion": 23,
+    "childCasesWithoutLaterParentExpansion": 14,
+    "uniqueParentsWithLaterExpansion": 7,
+    "totalAttemptWork": 2705853,
+    "uniqueDescendantExpansionWork": 620,
+    "descendantWorkShare": 0.00022913292037667974,
+    "caseSummedWorkMayDoubleCount": 620,
+    "r02307CaseCount": 5,
+    "r02307ExpandedCases": 3,
+    "r02307DescendantWork": 29
+  },
+  "gates": [
+    [
+      "R00242",
+      458762,
+      276552,
+      55,
+      354
+    ],
+    [
+      "R02941",
+      524294,
+      315280,
+      2,
+      39
+    ],
+    [
+      "R03030",
+      262154,
+      505119,
+      0,
+      0
+    ],
+    [
+      "R02405",
+      589836,
+      500495,
+      4,
+      8
+    ],
+    [
+      "R01229",
+      393226,
+      213413,
+      12,
+      115
+    ],
+    [
+      "R02307",
+      4,
+      312213,
+      17,
+      29
+    ],
+    [
+      "R02561",
+      196615,
+      205425,
+      18,
+      63
+    ],
+    [
+      "R02240",
+      196616,
+      377356,
+      4,
+      12
+    ]
+  ],
+  "gateColumns": [
+    "levelId",
+    "gateKey",
+    "workSpent",
+    "matchingParentEvents",
+    "uniqueMatchedWork"
+  ],
+  "caseColumns": [
+    "id",
+    "expandedParents",
+    "descendantExpansionWork",
+    "deepestExpandedRawDepth"
+  ],
+  "cases": [
+    [
+      "R00242:g458762:s0:d31:c0",
+      1,
+      0,
+      32
+    ],
+    [
+      "R00242:g458762:s0:d31:c1",
+      1,
+      1,
+      32
+    ],
+    [
+      "R00242:g458762:s1:d31:c0",
+      19,
+      83,
+      40
+    ],
+    [
+      "R00242:g458762:s1:d31:c1",
+      34,
+      270,
+      44
+    ],
+    [
+      "R02941:g524294:s0:d40:c0",
+      0,
+      0,
+      null
+    ],
+    [
+      "R02941:g524294:s0:d40:c1",
+      0,
+      0,
+      null
+    ],
+    [
+      "R02941:g524294:s1:d40:c0",
+      1,
+      13,
+      41
+    ],
+    [
+      "R02941:g524294:s1:d40:c1",
+      1,
+      26,
+      41
+    ],
+    [
+      "R03030:g262154:s0:d58:c0",
+      0,
+      0,
+      null
+    ],
+    [
+      "R03030:g262154:s0:d58:c1",
+      0,
+      0,
+      null
+    ],
+    [
+      "R03030:g262154:s0:d58:c2",
+      0,
+      0,
+      null
+    ],
+    [
+      "R03030:g262154:s1:d58:c0",
+      0,
+      0,
+      null
+    ],
+    [
+      "R03030:g262154:s1:d58:c1",
+      0,
+      0,
+      null
+    ],
+    [
+      "R03030:g262154:s1:d58:c2",
+      0,
+      0,
+      null
+    ],
+    [
+      "R02405:g589836:s0:d71:c0",
+      0,
+      0,
+      null
+    ],
+    [
+      "R02405:g589836:s0:d71:c1",
+      2,
+      4,
+      73
+    ],
+    [
+      "R02405:g589836:s1:d71:c0",
+      0,
+      0,
+      null
+    ],
+    [
+      "R02405:g589836:s1:d71:c1",
+      2,
+      4,
+      73
+    ],
+    [
+      "R01229:g393226:s0:d38:c0",
+      0,
+      0,
+      null
+    ],
+    [
+      "R01229:g393226:s0:d38:c1",
+      1,
+      1,
+      39
+    ],
+    [
+      "R01229:g393226:s1:d38:c0",
+      7,
+      71,
+      43
+    ],
+    [
+      "R01229:g393226:s1:d38:c1",
+      2,
+      28,
+      40
+    ],
+    [
+      "R01229:g393226:s1:d38:c2",
+      2,
+      15,
+      40
+    ],
+    [
+      "R02307:g4:s0:d58:c0",
+      2,
+      2,
+      60
+    ],
+    [
+      "R02307:g4:s0:d58:c1",
+      2,
+      1,
+      60
+    ],
+    [
+      "R02307:g4:s0:d58:c2",
+      13,
+      26,
+      65
+    ],
+    [
+      "R02307:g4:s1:d58:c0",
+      0,
+      0,
+      null
+    ],
+    [
+      "R02307:g4:s1:d58:c1",
+      0,
+      0,
+      null
+    ],
+    [
+      "R02561:g196615:s0:d48:c0",
+      7,
+      30,
+      54
+    ],
+    [
+      "R02561:g196615:s0:d48:c1",
+      5,
+      29,
+      53
+    ],
+    [
+      "R02561:g196615:s1:d48:c0",
+      3,
+      2,
+      50
+    ],
+    [
+      "R02561:g196615:s1:d48:c1",
+      3,
+      2,
+      51
+    ],
+    [
+      "R02240:g196616:s0:d34:c0",
+      1,
+      3,
+      35
+    ],
+    [
+      "R02240:g196616:s0:d34:c1",
+      1,
+      3,
+      35
+    ],
+    [
+      "R02240:g196616:s0:d34:c2",
+      0,
+      0,
+      null
+    ],
+    [
+      "R02240:g196616:s1:d34:c0",
+      1,
+      3,
+      35
+    ],
+    [
+      "R02240:g196616:s1:d34:c1",
+      1,
+      3,
+      35
+    ]
+  ]
+}
