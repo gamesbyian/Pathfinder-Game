@@ -20,6 +20,8 @@ jobs:
           node-version: '22.23.2'
           cache: npm
       - run: npm ci
+      - name: Validate canonical family response and PG-I parent contracts
+        run: node scripts/family-technique-response-node-test.mjs
       - name: Retrieve retained, identity-audited 715-cell pilot
         env:
           GH_TOKEN: ${{ github.token }}
