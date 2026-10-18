@@ -1,0 +1,70 @@
+# One-shot, evidence-only beam checkpoint microscope for PG-I's already-known 10M
+# source-valid isolated paths. Never auto-harvest into production or route a winner.
+name: PG-I winning corridor frontier locus
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/pg-i-winning-corridor-frontier-locus-20261018.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: pg-i-winning-corridor-frontier-locus-20261018
+  cancel-in-progress: false
+permissions:
+  contents: read
+
+jobs:
+  checkpoint:
+    name: Three isolated current-beam source checkpoints
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout immutable execution source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - name: Install exact Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Bundled observer self-test
+        run: node scripts/run-bundled.mjs scripts/stress/pg-i-winning-corridor-frontier-locus.mjs -- --self-test
+      - name: Run frozen three-cell microscope
+        id: microscope
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs/pg-i-winning-corridor
+          timeout -k 30s --preserve-status 40m \
+            node scripts/run-bundled.mjs scripts/stress/pg-i-winning-corridor-frontier-locus.mjs -- \
+              --out=logs/pg-i-winning-corridor/result.json
+      - name: Upload durable recoverable evidence on failure or success
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-i-winning-corridor-checkpoint-evidence
+          path: logs/pg-i-winning-corridor/result.json
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Enforce source and nonzero checkpoint participation
+        if: always()
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.microscope.outcome }}
+        run: |
+          set -euo pipefail
+          test "$OUTCOME" = success
+          node --input-type=module - <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('logs/pg-i-winning-corridor/result.json','utf8'));
+          if(r.sourceExecutionCommit!==process.env.GITHUB_SHA
+            || r.summary.cells!==3 || r.summary.independentParents!==2
+            || r.rows.some(x=>x.checkpoints.length===0&&!x.sourceValidSolve))
+            throw Error('incomplete or source-mismatched PG-I frontier microscope');
+          console.log(JSON.stringify(r.summary));
+          NODE
