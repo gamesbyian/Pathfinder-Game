@@ -1,0 +1,41 @@
+# One-shot PG-L zero-solver-work static policy eligibility test; remove before merge.
+name: PG-L static production policy eligibility
+on:
+  push:
+    branches:
+      - chatgpt/pg-l-policy-eligibility-census-20261017
+    paths:
+      - .github/workflows/pg-l-static-policy-eligibility-20261017.yml
+      - scripts/stress/pg-l-static-policy-eligibility.mjs
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/run-bundled.mjs scripts/stress/pg-l-static-policy-eligibility.mjs -- --self-test
+      - name: Measure exact selected parents' configured actions
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/run-bundled.mjs scripts/stress/pg-l-static-policy-eligibility.mjs -- --out=tmp/pg-l/policy-eligibility.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const j=JSON.parse(readFileSync('tmp/pg-l/policy-eligibility.json'));
+          if(j.summary.parents!==8||j.rows.some(x=>!Array.isArray(x.targets.objectiveFirst.configs)||!Array.isArray(x.targets.intersectionHarvest.configs)))throw Error('coverage invalid');
+          console.log('PG-L STATIC POLICY COVERAGE VERIFIED',j.summary);
+          NODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-l-static-policy-eligibility-20261017
+          path: tmp/pg-l/policy-eligibility.json
+          if-no-files-found: warn
+          retention-days: 90
