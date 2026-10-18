@@ -269,6 +269,7 @@ test('strict whole-solve cap censors a batched attempt without overcharging or l
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), opts);
     assert.equal(result.ok, false);
     assert.equal(result.workSpent, 3, 'whole solve must never pay the fourth atomic move');
+    assert.equal(result.status, 'work-budget-reached', 'a refused atomic charge is a budget censor even if work remains');
     assert.equal(result.attempts.reduce((total, a) => total + (a.workSpent ?? 0), 0), 3);
     assert.ok(result.attempts.some(a => a.outcome === 'timed-out'),
         'strict interruption must remain a censored search outcome');
