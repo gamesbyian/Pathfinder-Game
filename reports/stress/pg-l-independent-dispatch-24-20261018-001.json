@@ -1,0 +1,443 @@
+{
+  "schema": "pathfinder.pg-l-independent-actual-dispatch-24/v1",
+  "evidenceRole": "development",
+  "selection": "24 source-only frozen systematic-position eligible levels; 8 original PG-L parents excluded before any fresh solve result",
+  "source": {
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "populationManifest": "reports/stress/pg-l-independent-dispatch-holdout-20261018-population.json",
+    "runId": 39103200622,
+    "runSourceSha": "b551a17be7bbd5755a7132de8047ce540a3e4e23",
+    "artifactId": 12126758325,
+    "artifactDigest": "sha256:ad1da02b77f778c954800046618f8d614f10c43a5f4746844fcce3f9f65b05d1"
+  },
+  "protocol": {
+    "type": "one actual unmodified production solveLevel invocation per frozen parent; zero hints",
+    "baseWorkBudget": 250000,
+    "nodeBudget": 250000,
+    "budgetMs": 600000,
+    "strictTotalWorkBudget": true,
+    "attemptIdentity": "scoringProfileId + positive beamWidth + positive workSpent + gateKey"
+  },
+  "summary": {
+    "independentParents": 24,
+    "bothScorersAnyPositiveWork": 10,
+    "bothScorersWidth5000": 9,
+    "withoutEitherTargetScorer": 14,
+    "targetScorerOnlyOne": 0,
+    "allAttemptRecords": 1929,
+    "fullInvocationSuccesses": 1,
+    "errors": 0
+  },
+  "rowFields": [
+    "positiveWorkTargetBeams order is source attempt log order; each tuple is profile/width/work/gate"
+  ],
+  "rows": [
+    {
+      "id": "R00323",
+      "status": "work-budget-reached",
+      "actualWork": 254100,
+      "attemptRecords": 69,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R00720",
+      "status": "node-budget-reached",
+      "actualWork": 273071,
+      "attemptRecords": 130,
+      "gateKey": 131077,
+      "positiveWorkTargetBeams": [
+        {
+          "profile": "objectiveFirst",
+          "width": 5000,
+          "work": 30569,
+          "gate": 131077
+        },
+        {
+          "profile": "intersectionHarvest",
+          "width": 5000,
+          "work": 31575,
+          "gate": 131077
+        }
+      ],
+      "bothAnyWidth": true,
+      "bothSameWide5000": true
+    },
+    {
+      "id": "R01151",
+      "status": "work-budget-reached",
+      "actualWork": 253009,
+      "attemptRecords": 50,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R01584",
+      "status": "work-budget-reached",
+      "actualWork": 261047,
+      "attemptRecords": 83,
+      "gateKey": 327689,
+      "positiveWorkTargetBeams": [
+        {
+          "profile": "intersectionHarvest",
+          "width": 2000,
+          "work": 21612,
+          "gate": 327689
+        },
+        {
+          "profile": "objectiveFirst",
+          "width": 2000,
+          "work": 21612,
+          "gate": 327689
+        },
+        {
+          "profile": "intersectionHarvest",
+          "width": 5000,
+          "work": 36560,
+          "gate": 327689
+        },
+        {
+          "profile": "objectiveFirst",
+          "width": 5000,
+          "work": 43401,
+          "gate": 327689
+        }
+      ],
+      "bothAnyWidth": true,
+      "bothSameWide5000": true
+    },
+    {
+      "id": "R02003",
+      "status": "work-budget-reached",
+      "actualWork": 260911,
+      "attemptRecords": 79,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R02076",
+      "status": "work-budget-reached",
+      "actualWork": 254598,
+      "attemptRecords": 50,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R02149",
+      "status": "work-budget-reached",
+      "actualWork": 263350,
+      "attemptRecords": 90,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R02222",
+      "status": "node-budget-reached",
+      "actualWork": 255465,
+      "attemptRecords": 72,
+      "gateKey": 393219,
+      "positiveWorkTargetBeams": [
+        {
+          "profile": "intersectionHarvest",
+          "width": 2000,
+          "work": 19514,
+          "gate": 393219
+        },
+        {
+          "profile": "objectiveFirst",
+          "width": 2000,
+          "work": 19490,
+          "gate": 393219
+        },
+        {
+          "profile": "intersectionHarvest",
+          "width": 5000,
+          "work": 26861,
+          "gate": 393219
+        },
+        {
+          "profile": "objectiveFirst",
+          "width": 5000,
+          "work": 26861,
+          "gate": 393219
+        }
+      ],
+      "bothAnyWidth": true,
+      "bothSameWide5000": true
+    },
+    {
+      "id": "R02295",
+      "status": "work-budget-reached",
+      "actualWork": 253986,
+      "attemptRecords": 69,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R02368",
+      "status": "work-budget-reached",
+      "actualWork": 253481,
+      "attemptRecords": 69,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R02441",
+      "status": "work-budget-reached",
+      "actualWork": 254480,
+      "attemptRecords": 67,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R02514",
+      "status": "node-budget-reached",
+      "actualWork": 256281,
+      "attemptRecords": 72,
+      "gateKey": 65544,
+      "positiveWorkTargetBeams": [
+        {
+          "profile": "intersectionHarvest",
+          "width": 2000,
+          "work": 20419,
+          "gate": 65544
+        },
+        {
+          "profile": "objectiveFirst",
+          "width": 2000,
+          "work": 19130,
+          "gate": 65544
+        },
+        {
+          "profile": "intersectionHarvest",
+          "width": 5000,
+          "work": 24098,
+          "gate": 65544
+        },
+        {
+          "profile": "objectiveFirst",
+          "width": 5000,
+          "work": 24098,
+          "gate": 65544
+        }
+      ],
+      "bothAnyWidth": true,
+      "bothSameWide5000": true
+    },
+    {
+      "id": "R02587",
+      "status": "work-budget-reached",
+      "actualWork": 267768,
+      "attemptRecords": 90,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R02660",
+      "status": "node-budget-reached",
+      "actualWork": 271400,
+      "attemptRecords": 126,
+      "gateKey": 12,
+      "positiveWorkTargetBeams": [
+        {
+          "profile": "objectiveFirst",
+          "width": 5000,
+          "work": 25315,
+          "gate": 12
+        },
+        {
+          "profile": "intersectionHarvest",
+          "width": 5000,
+          "work": 24820,
+          "gate": 12
+        }
+      ],
+      "bothAnyWidth": true,
+      "bothSameWide5000": true
+    },
+    {
+      "id": "R02733",
+      "status": "node-budget-reached",
+      "actualWork": 283544,
+      "attemptRecords": 146,
+      "gateKey": 589833,
+      "positiveWorkTargetBeams": [
+        {
+          "profile": "objectiveFirst",
+          "width": 5000,
+          "work": 23162,
+          "gate": 589833
+        },
+        {
+          "profile": "intersectionHarvest",
+          "width": 5000,
+          "work": 24176,
+          "gate": 589833
+        }
+      ],
+      "bothAnyWidth": true,
+      "bothSameWide5000": true
+    },
+    {
+      "id": "R02806",
+      "status": "work-budget-reached",
+      "actualWork": 253238,
+      "attemptRecords": 50,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R02879",
+      "status": "node-budget-reached",
+      "actualWork": 272308,
+      "attemptRecords": 130,
+      "gateKey": 524298,
+      "positiveWorkTargetBeams": [
+        {
+          "profile": "objectiveFirst",
+          "width": 5000,
+          "work": 35448,
+          "gate": 524298
+        },
+        {
+          "profile": "intersectionHarvest",
+          "width": 5000,
+          "work": 35451,
+          "gate": 524298
+        }
+      ],
+      "bothAnyWidth": true,
+      "bothSameWide5000": true
+    },
+    {
+      "id": "R02952",
+      "status": "work-budget-reached",
+      "actualWork": 262103,
+      "attemptRecords": 92,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R03025",
+      "status": "success",
+      "actualWork": 11182,
+      "attemptRecords": 1,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R03098",
+      "status": "work-budget-reached",
+      "actualWork": 253736,
+      "attemptRecords": 39,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R03171",
+      "status": "node-budget-reached",
+      "actualWork": 266184,
+      "attemptRecords": 110,
+      "gateKey": 5,
+      "positiveWorkTargetBeams": [
+        {
+          "profile": "objectiveFirst",
+          "width": 5000,
+          "work": 21599,
+          "gate": 5
+        },
+        {
+          "profile": "intersectionHarvest",
+          "width": 5000,
+          "work": 20642,
+          "gate": 5
+        }
+      ],
+      "bothAnyWidth": true,
+      "bothSameWide5000": true
+    },
+    {
+      "id": "R03244",
+      "status": "work-budget-reached",
+      "actualWork": 259563,
+      "attemptRecords": 48,
+      "gateKey": null,
+      "positiveWorkTargetBeams": [],
+      "bothAnyWidth": false,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R03317",
+      "status": "node-budget-reached",
+      "actualWork": 263071,
+      "attemptRecords": 87,
+      "gateKey": 393223,
+      "positiveWorkTargetBeams": [
+        {
+          "profile": "objectiveFirst",
+          "width": 2000,
+          "work": 21161,
+          "gate": 393223
+        },
+        {
+          "profile": "intersectionHarvest",
+          "width": 5000,
+          "work": 26678,
+          "gate": 393223
+        }
+      ],
+      "bothAnyWidth": true,
+      "bothSameWide5000": false
+    },
+    {
+      "id": "R00156",
+      "status": "node-budget-reached",
+      "actualWork": 278436,
+      "attemptRecords": 110,
+      "gateKey": 9,
+      "positiveWorkTargetBeams": [
+        {
+          "profile": "objectiveFirst",
+          "width": 5000,
+          "work": 36554,
+          "gate": 9
+        },
+        {
+          "profile": "intersectionHarvest",
+          "width": 5000,
+          "work": 43675,
+          "gate": 9
+        }
+      ],
+      "bothAnyWidth": true,
+      "bothSameWide5000": true
+    }
+  ],
+  "caveat": "One out-of-sample *bounded* 250k work invocation per puzzle, not a near-typical 50M solve; all 24 parent IDs frozen before attempt results. Actual work may exceed nominal phase work cap. Observed co-dispatch is only participation, not same-state duplicate work or reusable proof. One R03317 pair has mismatched widths (2k vs 5k); only nine source parents have matching width5000 positive-work target scorer pairs. No historical hints provided; a success is cold under this invocation only, not first-ever puzzle solution."
+}
