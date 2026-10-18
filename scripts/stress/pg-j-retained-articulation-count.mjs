@@ -96,12 +96,29 @@ for(const r of unique.values()) {
   const end=r.prefix.at(-1),start=cell(end[0],end[1]);
   fail(remaining.has(start),'frozen prefix endpoint unavailable '+r.caseId);
   const measured=articulationCount(start,neighbors);
+  // A separate, intentionally non-authoritative residual-geometry diagnostic:
+  // number of endpoint-reachable graph leaves (excluding endpoint/goal), and
+  // shortest unweighted endpoint-to-goal hops through available grid/portal edges.
+  // Never use exact fate labels to construct either quantity.
+  const dist=new Map([[start,0]]),queue=[start];
+  for(let i=0;i<queue.length;i++)for(const next of neighbors(queue[i])){
+    if(dist.has(next))continue;
+    dist.set(next,dist.get(queue[i])+1);queue.push(next);
+  }
+  const goalCell=cell(level.goal.x,level.goal.y);
+  const residualLeafCount=queue.filter(i=>i!==start&&i!==goalCell
+    &&neighbors(i).filter(n=>dist.has(n)).length===1).length;
+  const residualGoalHops=dist.get(goalCell)??null;
   const base=[r.levelId,r.depth,end];
   records.push({caseId:r.caseId,levelId:r.levelId,referenceLabel:r.referenceLabel,
     baseSignature:JSON.stringify(base),
     countSignature:JSON.stringify([...base,measured.count]),
+    leafSignature:JSON.stringify([...base,residualLeafCount]),
+    countGoalSignature:JSON.stringify([...base,measured.count,residualGoalHops]),
+    compositeSignature:JSON.stringify([...base,measured.count,residualLeafCount,residualGoalHops]),
     rawDepth:r.depth,endpoint:end,articulationCount:measured.count,
     reachableVertices:measured.reachable,remainingVertices:remaining.size,
+    residualLeafCount,residualGoalHops,
     mechanics:{portals:portalEdges.length,geese:(level.geese??[]).length},
   });
 }
@@ -123,10 +140,13 @@ function evaluate(keyName) {
   };
 }
 const base=evaluate('baseSignature'),count=evaluate('countSignature');
+const leaf=evaluate('leafSignature'),countGoal=evaluate('countGoalSignature');
+const composite=evaluate('compositeSignature');
 const summary={sourceRows:sourceObjects.reduce((sum,s)=>sum+s.rows.length,0),
   distinctPrefixes:records.length,duplicateAliases:dupes.length,
   independentParents:new Set(records.map(x=>x.levelId)).size,
   baseCount:base,countAugmented:count,
+  leafAugmented:leaf,countGoalAugmented:countGoal,compositeAugmented:composite,
   baseMixedGroupsSeparated:base.mixedGroups.filter(ids=> {
     const keyByCase=new Map(records.map(r=>[r.caseId,r.countSignature]));
     const byCount=new Map();
@@ -150,6 +170,13 @@ fail(base.signatureKeys===12&&base.repeatedRows===25&&base.mixedKeys===7,
 fail(count.signatureKeys===21&&count.repeatedRows===8&&count.mixedKeys===2
   &&summary.baseMixedGroupsSeparated===5,
   'retained articulation-count collision/compression verdict drifted');
+// Retrospective post-hoc candidate, not another attempted proof of exact fate
+// equivalence. The untouched 25 prefixes retain one exact LIVE/DEAD composite
+// collision, and only four distinct prefixes share composite keys.
+fail(leaf.signatureKeys===18&&leaf.repeatedRows===14&&leaf.mixedKeys===5
+  &&countGoal.signatureKeys===22&&countGoal.repeatedRows===6&&countGoal.mixedKeys===1
+  &&composite.signatureKeys===23&&composite.repeatedRows===4&&composite.mixedKeys===1,
+  'retained leaf/goal composite falsifier drifted');
 const verdict={
  schema:'pathfinder.pg-j-retained-articulation-count/v1',
  evidenceRole:'retrospective-development',
@@ -168,4 +195,8 @@ writeFileSync(target,JSON.stringify(verdict,null,2)+'\n');
 console.log(JSON.stringify({sourceRows:summary.sourceRows,unique:summary.distinctPrefixes,
   parents:summary.independentParents,baseline:{keys:base.signatureKeys,mixed:base.mixedKeys,repeatedRows:base.repeatedRows},
   count:{keys:count.signatureKeys,mixed:count.mixedKeys,repeatedRows:count.repeatedRows},
-  mixedSeparated:summary.baseMixedGroupsSeparated}));
+  mixedSeparated:summary.baseMixedGroupsSeparated,
+  leaf:{keys:leaf.signatureKeys,mixed:leaf.mixedKeys,repeatedRows:leaf.repeatedRows},
+  countGoal:{keys:countGoal.signatureKeys,mixed:countGoal.mixedKeys,repeatedRows:countGoal.repeatedRows},
+  composite:{keys:composite.signatureKeys,mixed:composite.mixedKeys,
+    repeatedRows:composite.repeatedRows,mixedGroups:composite.mixedGroups}}));
