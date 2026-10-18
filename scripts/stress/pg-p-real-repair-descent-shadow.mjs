@@ -123,11 +123,24 @@ for(const source of selected){
    descentChoices:trajectory,
    comparison:compareElite(e,hint.path,level)};
  });
+// Independent same-source uninstrumented parity control: no observer may change
+ // native PRNG consumption, terminal path, node/work meter or stop semantics.
+ const controlPrep=api.prepLevel(level);controlPrep._cfg=null;controlPrep._metrics={nodesExpanded:0};
+ const controlStartWork=controlPrep._workMeter.units,controlOut={};
+ const controlSolution=await repairSearchFromGate(gate,level,controlPrep,api.SCORING_PROFILES.repair,
+  180000,Date.now(),null,null,false,nodeBudget,controlOut);
+ const controlWork=controlPrep._workMeter.units-controlStartWork;
+ const controlParity={workEqual:controlWork===work,
+  nodesEqual:controlPrep._metrics.nodesExpanded===prep._metrics.nodesExpanded,
+  solutionEqual:JSON.stringify(controlSolution)===JSON.stringify(solution),
+  timedOutEqual:!!controlOut.timedOut===!!outcome.timedOut,
+  stopReasonEqual:controlOut.stopReason===outcome.stopReason};
+ if(!Object.values(controlParity).every(Boolean))throw Error('observer changed native repair! '+source.id+' '+JSON.stringify({controlParity,controlWork,work,controlOut,outcome}));
  const sameBadnessDistinct=top.filter((x,i)=>i>0&&x.badness===top[0]?.badness&&commonPrefix(x.path,top[0].path)<Math.min(x.path.length,top[0].path.length)-2);
  report.push({levelId:source.id,acceptedHintCount:hints.length,gate,normalRepairOutcome:solution?'solved':outcome.timedOut?'timed-out':'not-solved',
    elapsedMs:Date.now()-start,measuredCanonicalWork:work,nodesExpanded:prep._metrics.nodesExpanded,
    observedChoices:totalChoices,distinctChosenPrefixes:choices.size,forcedChoices,choiceEventsWithBranch,
-   choiceModeCounts:modeCounts,observedEliteEvents:elites.length,distinctElitePaths:unique.size,
+   choiceModeCounts:modeCounts,controlParity,controlWork,observedEliteEvents:elites.length,distinctElitePaths:unique.size,
    bestEliteBadness:top[0]?.badness??null,
    sameBadnessEarlyDistinctEliteCount:sameBadnessDistinct.length,elites:rows});
  console.log('PG-P DESCENT PARENT '+JSON.stringify({id:source.id,choices:totalChoices,elites:elites.length,uniqueElites:unique.size,best:top[0]?.badness,work,nodesExpanded:prep._metrics.nodesExpanded}));
@@ -135,8 +148,8 @@ for(const source of selected){
 const valid=report.filter(x=>x.observedEliteEvents>0);
 const output={schema:'pathfinder.pg-p-real-repair-descent-shadow/v1',
  source:{corpusPath,corpusSha256:sha(readFileSync(corpusPath)),solverHead:process.env.GITHUB_SHA??null},
- protocol:{selectedBy:'SHA256(pathfinder pg-p real descent seed + level id) over hint-bearing Corpus-2 parents; hint availability offline selection criterion only',levelIds:selected.map(x=>x.id),maxParents,nodeBudget,maxElites,attemptProfile:'repair',researchHooks:['repairChoice','repairElite'],backend:'actual current repairSearchFromGate unchanged',mechanicTags:'history-derived events are descriptive, not proof of causality or exact completion fate; retained exact elite path and choice chronology',noReferenceQueries:true},
- summary:{parents:report.length,parentsWithElite:valid.length,parentsWithMultipleElites:report.filter(r=>r.distinctElitePaths>=2).length,parentsWithSameBadnessEarlyDivergentElites:report.filter(r=>r.sameBadnessEarlyDistinctEliteCount>0).length,totalObservedChoices:report.reduce((n,x)=>n+x.observedChoices,0),totalCanonicalWork:report.reduce((n,x)=>n+x.measuredCanonicalWork,0),parentsSolvedByProbe:report.filter(x=>x.normalRepairOutcome==='solved').length},
+ protocol:{selectedBy:'SHA256(pathfinder pg-p real descent seed + level id) over hint-bearing Corpus-2 parents; hint availability offline selection criterion only',levelIds:selected.map(x=>x.id),maxParents,nodeBudget,maxElites,attemptProfile:'repair',researchHooks:['repairChoice','repairElite'],backend:'actual current repairSearchFromGate unchanged',instrumentedVersusUninstrumentedParity:'same frozen gate/seed/node budget; compare canonical work, nodes, complete solution, timeout status and stop reason',mechanicTags:'history-derived events are descriptive, not proof of causality or exact completion fate; retained exact elite path and choice chronology',noReferenceQueries:true},
+ summary:{parents:report.length,parentsWithElite:valid.length,parentsWithMultipleElites:report.filter(r=>r.distinctElitePaths>=2).length,parentsWithSameBadnessEarlyDivergentElites:report.filter(r=>r.sameBadnessEarlyDistinctEliteCount>0).length,totalObservedChoices:report.reduce((n,x)=>n+x.observedChoices,0),totalCanonicalWork:report.reduce((n,x)=>n+x.measuredCanonicalWork,0),parentsSolvedByProbe:report.filter(x=>x.normalRepairOutcome==='solved').length,exactObserverOffOnParityParents:report.filter(x=>Object.values(x.controlParity).every(Boolean)).length},
  rows:report,
  caveat:'Historical accepted paths are used ONLY in the offline elite comparison, never to direct repair; deficits/commitments compared descriptively. If no independent parent has an early shared commitment signature and a marked real-solve economic gap, a repair operator is not earned.'};
 if(output.summary.parentsWithElite<3)throw Error('insufficient observed elite parents');
