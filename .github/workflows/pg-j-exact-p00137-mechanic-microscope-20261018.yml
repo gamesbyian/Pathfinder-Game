@@ -1,0 +1,53 @@
+# One-shot, source-frozen P00137 exact-fate mechanic microscope; retire after evidence.
+name: PG-J exact P00137 mechanics microscope
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/pg-j-exact-p00137-mechanic-microscope-20261018.yml']
+permissions:
+  contents: read
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Reconstruct four exact-labelled prefixes through canonical production mechanics
+        id: evidence
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p logs/pg-j-p00137
+          node scripts/run-bundled.mjs scripts/stress/pg-j-exact-prefix-mechanic-replay.mjs -- \
+            --out=logs/pg-j-p00137/verdict.json
+      - name: Upload full source-authentic evidence regardless of outcome
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-j-p00137-mechanic-microscope
+          path: logs/pg-j-p00137/verdict.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Qualify replay
+        if: always()
+        shell: bash
+        env:
+          SOURCE_REPLAY_OUTCOME: ${{ steps.evidence.outcome }}
+        run: |
+          set -euo pipefail
+          test "$SOURCE_REPLAY_OUTCOME" = success
+          node --input-type=module - <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const j=JSON.parse(readFileSync('logs/pg-j-p00137/verdict.json','utf8'));
+          if(j.sourceHead!==process.env.GITHUB_SHA||j.summary.replayLegal!==4
+          ||j.summary.exactLive!==2||j.summary.exactDead!==2)
+            throw Error('source identity or canonical prefix-legality gate failed');
+          console.log(JSON.stringify(j.summary));
+          NODE
