@@ -89,6 +89,7 @@ function makePlan() {
         schema: 'pathfinder.pg-i-parent-equal-work-plan/v1', sourceCoverageGitBlobSha1: sha,
         corpusSha256, selectionSource: FREEZE_FILE, independentParentCount: parentSelection.length,
         equalWorkBudgetPerTechnique: freeze.protocol.workBudgetPerIsolatedTechnique,
+        expectedShards: 3,
         methods: keys, parentSelection, expectedCells: cells.length, cells,
         inference: '12 historically nominated independent parents; current isolated five-method exposure only. No technique-vector-based production routing.',
     };
@@ -108,9 +109,14 @@ function collectShardFiles(dir) {
 function combine(plan, inputDir) {
     assert(plan.schema === 'pathfinder.pg-i-parent-equal-work-plan/v1', 'unknown plan schema');
     const expected = new Map(plan.cells.map(c => [c.cellId, c]));
-    assert(expected.size === 60 && plan.parentSelection.length === 12, 'unexpected frozen population');
+    assert(expected.size === 60 && plan.parentSelection.length === 12
+        && plan.cells.every(c => c.workBudget === plan.equalWorkBudgetPerTechnique)
+        && [250000, 10000000].includes(plan.equalWorkBudgetPerTechnique),
+        'unexpected or mixed work/population envelope');
     const files = collectShardFiles(inputDir);
-    assert(files.length === 3, 'need exactly three shard result files, found ' + files.length);
+    const expectedShards = plan.expectedShards ?? 3;
+    assert([1, 3].includes(expectedShards), 'unsupported frozen shard count');
+    assert(files.length === expectedShards, 'need exactly ' + expectedShards + ' shard result files, found ' + files.length);
     const rows = [];
     for (const file of files) {
         const shard = json(file);
