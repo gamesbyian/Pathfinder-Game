@@ -118,10 +118,18 @@ function combine(plan, inputDir) {
     assert([1, 3].includes(expectedShards), 'unsupported frozen shard count');
     assert(files.length === expectedShards, 'need exactly ' + expectedShards + ' shard result files, found ' + files.length);
     const rows = [];
+    const executionCommits = new Set();
     for (const file of files) {
         const shard = json(file);
         assert(shard.partial === false, 'shard ended partial: ' + file);
+        assert(/^[a-f0-9]{40}$/.test(shard.commit ?? ''), 'shard has no immutable execution source commit: ' + file);
+        executionCommits.add(shard.commit);
         rows.push(...(shard.results ?? []));
+    }
+    assert(executionCommits.size === 1, 'mixed source revisions among technique shards');
+    const executionCommit = [...executionCommits][0];
+    if (process.env.GITHUB_SHA) {
+        assert(executionCommit === process.env.GITHUB_SHA, 'shard source differs from combine checkout');
     }
     const observed = new Map();
     for (const r of rows) {
@@ -178,7 +186,8 @@ function combine(plan, inputDir) {
     return {
         schema: 'pathfinder.pg-i-parent-equal-work-exposure-result/v1',
         population: plan.parentSelection, sourceCoverageGitBlobSha1: plan.sourceCoverageGitBlobSha1,
-        corpusSha256: plan.corpusSha256, workBudgetPerTechnique: plan.equalWorkBudgetPerTechnique,
+        corpusSha256: plan.corpusSha256, executionCommit,
+        workBudgetPerTechnique: plan.equalWorkBudgetPerTechnique,
         methods: plan.methods, sourcePlan: plan.selectionSource,
         summary, parents, rows: [...observed.values()].sort((a, b) => a.cellId.localeCompare(b.cellId)),
         interpretation: {
