@@ -1,0 +1,44 @@
+# Disposable PG-P pure observer on retained CP-SAT-LIVE/DEAD divergence witnesses.
+# Remove from integration branch once full result and provenance are preserved.
+name: PG-P retained dependency divergence shadow
+on:
+  push:
+    branches:
+      - chatgpt/pg-p-dependency-divergence-readonly-20261018
+    paths:
+      - .github/workflows/pg-p-dependency-divergence-20261018.yml
+permissions:
+  contents: read
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Run retained exact LIVE/DEAD read-only divergence observer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/pg-p
+          node scripts/run-bundled.mjs scripts/stress/ws6-dependency-interface-observer.mjs --             --out=tmp/pg-p/divergence-verdict.json | tee tmp/pg-p/summary.log
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('tmp/pg-p/divergence-verdict.json','utf8'));
+          if(!r.comparisonCount || !r.independentDivergencePoints || r.comparisons.length!==r.comparisonCount)throw Error('No complete case coverage');
+          if(r.comparisons.some(x=>x.dead.exactLabel!=='dead'||x.live.exactLabel!=='live'))throw Error('Reference identity mismatch');
+          console.log('PG-P EVIDENCE REPLAY '+JSON.stringify({comparisonCount:r.comparisonCount,independentDivergencePoints:r.independentDivergencePoints, classifications:r.classifications,coherentSemanticFamilies:r.coherentSemanticFamilies, advancementEligible:r.advancementEligible}));
+          NODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-p-dependency-divergence-readonly-001
+          path: |
+            tmp/pg-p/divergence-verdict.json
+            tmp/pg-p/summary.log
+          retention-days: 90
+          if-no-files-found: warn
