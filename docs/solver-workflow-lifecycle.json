@@ -287,6 +287,13 @@
       "status": "maintained",
       "currentConsumer": "WS1 remaining-length intra-solve Stage A bridge",
       "retirementTrigger": "retire after the frozen Stage A result is reconciled and no successor requires this exact one-shot execution surface"
+    },
+    {
+      "workflow": "pg-i-resistant-parent-exposure-20261018.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "PG-I 12 independent historical-resistant-parent current-code five-method equal-work exposure",
+      "retirementTrigger": "delete this one-shot after exact per-cell and per-parent result plus source/protocol provenance are preserved in a permanent report and machine evidence"
     }
   ],
   "retiredWorkflows": [
