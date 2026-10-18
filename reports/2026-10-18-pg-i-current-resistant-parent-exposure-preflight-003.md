@@ -1,9 +1,9 @@
 # PG-I: prospective current-code resistant-parent exposure 003
 
-> **Status:** active
-> **Last evidence:** 2026-10-18 — current main 45efe88b86b9e5cbee60c9aebabbe946d7341a64, historical source blob `bd6dfaa1c3b585824036c2798fddf23502baef35`, independent source-selected 12-parent freeze `reports/stress/pg-i-resistant-parent-20261018-frozen-selection.json`.
-> **Decision:** run a bounded **current-code exposure pilot** on twelve independent previously untested Corpus-2 parents, using the same five isolated technique identities and 10M canonical work per method as PG-I's earlier six-family pilot. The historical 50M-node labels nominate parents but cannot be treated as comparable failures.
-> **Remaining gate:** retrieve the exact two branch-scoped source-qualified results, the 60-cell 10M isolated-method exposure and the separate strict-250k current production control on those same twelve frozen parents. Verify complete coverage, referee and work/censoring integrity, then join by current corpus SHA-256 and parent ID before nominating any actual near-typical-budget rescue.
+> **Status:** superseded
+> **Last evidence:** 2026-10-18 — complete source-paired experiment and three validated cold paths in [PG-I 004](2026-10-18-pg-i-current-isolated-250k-and-10m-early-result-004.md); later fixed strict-250k cohort in [#2203](stress/pg-i-strict-250k-fixed-control-20261018.json).
+> **Decision:** the prospective twelve-parent frozen 250k/10M exposure was executed and closed by PG-I 004; retain this as the historical preregistration, not an active campaign or a request to re-dispatch.
+> **Remaining gate:** none
 > **Research question:** `WS2-VARIANT-RESPONSE-HARDNESS`
 > **Premise refs:** `P113`, `P144`, `P145`, `P199`
 > **Evidence role:** discovery
@@ -69,3 +69,7 @@ A 250k isolated method solve is an actual **cold** method solve at a product-sca
 No shallow result, joined current-source rescue candidate or new solve is claimed in this preflight. A GHA result from a different branch commit must not be joined even if all IDs match. This requires both one-shots to run from one immutable commit; the branch trigger paths deliberately coordinate the final source-paired dispatch.
 
 The two one-shot workflows may finish in either order. Join them only after both have source-confirmed the **identical twelve IDs and raw corpus revision**, report current production solve/fail/censor counts separately from isolated method counts, and preserve real method work. There are **no current-control results yet** at the time this preflight is written; this addition does not claim a new solve.
+
+## Supersession (2026-10-18)
+
+This is the original prospectively frozen protocol. Its own future-tense execution steps are preserved to show what was committed **before** outcomes were inspected, not to request a rerun. [PG-I 004](2026-10-18-pg-i-current-isolated-250k-and-10m-early-result-004.md) owns the completed 0/60 shallow and 3/60 deep isolated cold results. Original production controls genuinely exceeded the strict 250k requested cap, a correctness issue subsequently resolved in [PR #2203](https://github.com/gamesbyian/Pathfinder-Game/pull/2203); the same twelve parents were replayed on corrected source with exactly 250k work and 0/12 cold solves. The later [PG-I early-repair allocation falsifier](2026-10-18-pg-i-strict-250k-early-repair-allocation-preflight-001.md) closed complete early-repair disable at that cap as 0/12 treatment solves despite 12/12 main-search exposure. Current execution priority is exclusively in the [solver queue](../docs/solver-optimization-workstreams.md).
