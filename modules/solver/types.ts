@@ -274,6 +274,8 @@ export interface PrepLevel {
     _workCap?: number;
     /** Experiment-only immutable whole-solve cap; per-attempt allocations may only reduce it. */
     _strictWorkCap?: number;
+    /** One atomic metered operation was refused at the strict cap (which may leave 1..11 units unused). */
+    _strictWorkChargeRefused?: boolean;
     /** Reusable DFS/beam/repair search-state backing buffers (see search-state.ts's `createState`),
      *  keyed by call-site slot (`STATE_BUF_DFS`/`STATE_BUF_BEAM`/`STATE_BUF_REPAIR`) and lazily
      *  allocated on first use. Scoped to THIS prep (i.e. this one `solveLevel()` call) rather than
