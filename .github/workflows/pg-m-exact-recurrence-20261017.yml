@@ -1,0 +1,40 @@
+# One-shot deterministic retained-evidence calculation and branch capture; retire before PR merge.
+name: PG-M exact query recurrence Phase-0 delta
+on:
+  push:
+    branches:
+      - chatgpt/pg-m-exact-query-recurrence-delta-20261017
+    paths:
+      - .github/workflows/pg-m-exact-recurrence-20261017.yml
+permissions:
+  contents: write
+jobs:
+  rejoin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+      - name: Exact query key and contradiction tests
+        run: node scripts/stress/pg-m-exact-query-recurrence-delta.mjs --self-test
+      - name: Frozen six-source whole-population rejoin
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/stress/pg-m-exact-query-recurrence-delta.mjs --out=reports/stress/pg-m-exact-query-recurrence-delta-20261017-001.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('reports/stress/pg-m-exact-query-recurrence-delta-20261017-001.json','utf8'));
+          if(r.summary.rows!==165||r.summary.uniqueExactPrefixQueries!==162||r.summary.uniqueParents!==32||r.summary.identicalQueriesAcrossSourceFamilies!==0||r.summary.parentsRepeatedAcrossFamilies!==13)throw Error('frozen result changed');
+          console.log('PG-M 165/162/32 source bounds verified');
+          NODE
+      - name: Preserve compact machine verdict directly on research branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add reports/stress/pg-m-exact-query-recurrence-delta-20261017-001.json
+          git -c user.name=github-actions -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+            commit -m "PG-M: persist all six exact reference source hashes and zero cross-source repeated-prefix result"
+          git push origin "HEAD:refs/heads/${GITHUB_REF_NAME}"
