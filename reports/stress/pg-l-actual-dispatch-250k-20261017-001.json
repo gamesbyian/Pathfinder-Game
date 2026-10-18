@@ -1,0 +1,155 @@
+{
+  "schema": "pathfinder.pg-l-bounded-actual-dispatch-summary/v1",
+  "sourceRunId": 39098565429,
+  "sourceArtifactId": 12126075511,
+  "sourceCommit": "c84cceee5303ae094aa63b9337d13b1098361630",
+  "artifactSha256": "d631cda715e6f85d35bc31a55e1f2ea581681bdb6f306d03156be5ef8981a777",
+  "classifier": "scoringProfileId + positive beamWidth + positive workSpent (NOT optional configKey)",
+  "sourceCorpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "protocol": {
+    "baseWorkBudget": 250000,
+    "nodeBudget": 250000,
+    "budgetMs": 600000,
+    "strictTotalWorkBudget": true
+  },
+  "summary": {
+    "parents": 8,
+    "bothTargetScorersWithPositiveBeamWork": 3,
+    "withoutEitherTargetScorerPositiveBeamWork": 5,
+    "totalAttemptRecordsIncludingZeroWork": 719,
+    "actualTargetBeams": 6,
+    "attemptErrors": 0
+  },
+  "parents": [
+    {
+      "id": "R02781",
+      "totalWork": 259163,
+      "attempts": 82,
+      "beams": [
+        [
+          "perimeterSweep",
+          2000,
+          458753,
+          27860
+        ],
+        [
+          "perimeterSweep",
+          2000,
+          458753,
+          32750
+        ],
+        [
+          "intersectionHarvest",
+          5000,
+          458753,
+          32750
+        ],
+        [
+          "objectiveFirst",
+          5000,
+          458753,
+          37362
+        ]
+      ]
+    },
+    {
+      "id": "R02676",
+      "totalWork": 263088,
+      "attempts": 92,
+      "beams": []
+    },
+    {
+      "id": "R02929",
+      "totalWork": 260971,
+      "attempts": 79,
+      "beams": []
+    },
+    {
+      "id": "R02579",
+      "totalWork": 287327,
+      "attempts": 129,
+      "beams": [
+        [
+          "objectiveFirst",
+          5000,
+          327682,
+          41156
+        ],
+        [
+          "intersectionHarvest",
+          5000,
+          327682,
+          41156
+        ],
+        [
+          "perimeterSweep",
+          2000,
+          327682,
+          42853
+        ],
+        [
+          "perimeterSweep",
+          2000,
+          327682,
+          49558
+        ]
+      ]
+    },
+    {
+      "id": "R02024",
+      "totalWork": 252890,
+      "attempts": 50,
+      "beams": []
+    },
+    {
+      "id": "R02857",
+      "totalWork": 263241,
+      "attempts": 90,
+      "beams": []
+    },
+    {
+      "id": "R02037",
+      "totalWork": 272040,
+      "attempts": 130,
+      "beams": [
+        [
+          "objectiveFirst",
+          5000,
+          655370,
+          23719
+        ],
+        [
+          "intersectionHarvest",
+          5000,
+          655370,
+          23719
+        ],
+        [
+          "perimeterSweep",
+          2000,
+          655370,
+          24161
+        ],
+        [
+          "perimeterSweep",
+          2000,
+          655370,
+          24104
+        ]
+      ]
+    },
+    {
+      "id": "R03004",
+      "totalWork": 253545,
+      "attempts": 67,
+      "beams": []
+    }
+  ],
+  "beamTuple": [
+    "scoringProfileId",
+    "beamWidth",
+    "gateKey",
+    "workSpent"
+  ],
+  "caveat": "Compact deterministic projection of original GitHub Action raw full-attempt ledger; source artifact is primary authority. No causal shared-work claim; node/work atomic overshoot means base budget is not exact observed work."
+}
