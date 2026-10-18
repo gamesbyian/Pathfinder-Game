@@ -27,7 +27,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Verify CLI field transport before production execution
-        run: node scripts/stress/pg-i-resistant-parent-production-control.mjs --self-test
+        run: node scripts/run-bundled.mjs scripts/stress/pg-i-resistant-parent-production-control.mjs -- --self-test
       - name: Measure exactly twelve current cold production controls, no hints
         shell: bash
         run: |
