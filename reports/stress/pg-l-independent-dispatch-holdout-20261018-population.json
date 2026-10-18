@@ -1,0 +1,124 @@
+{
+  "schema": "pathfinder.pg-l-independent-dispatch-population/v1",
+  "role": "source-only selection; no search outcomes or historical hints in selection",
+  "corpusFile": "data/stress/stress-levels-random.json",
+  "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "corpusRows": 1700,
+  "excludedOriginalEight": [
+    "R02781",
+    "R02676",
+    "R02929",
+    "R02579",
+    "R02024",
+    "R02857",
+    "R02037",
+    "R03004"
+  ],
+  "selectionRule": "zero-based source index (41 + 73*k) modulo 1700; skip excluded old-eight IDs and duplicate IDs; first 24 eligible",
+  "selected": [
+    {
+      "id": "R00323",
+      "index": 41
+    },
+    {
+      "id": "R00720",
+      "index": 114
+    },
+    {
+      "id": "R01151",
+      "index": 187
+    },
+    {
+      "id": "R01584",
+      "index": 260
+    },
+    {
+      "id": "R02003",
+      "index": 333
+    },
+    {
+      "id": "R02076",
+      "index": 406
+    },
+    {
+      "id": "R02149",
+      "index": 479
+    },
+    {
+      "id": "R02222",
+      "index": 552
+    },
+    {
+      "id": "R02295",
+      "index": 625
+    },
+    {
+      "id": "R02368",
+      "index": 698
+    },
+    {
+      "id": "R02441",
+      "index": 771
+    },
+    {
+      "id": "R02514",
+      "index": 844
+    },
+    {
+      "id": "R02587",
+      "index": 917
+    },
+    {
+      "id": "R02660",
+      "index": 990
+    },
+    {
+      "id": "R02733",
+      "index": 1063
+    },
+    {
+      "id": "R02806",
+      "index": 1136
+    },
+    {
+      "id": "R02879",
+      "index": 1209
+    },
+    {
+      "id": "R02952",
+      "index": 1282
+    },
+    {
+      "id": "R03025",
+      "index": 1355
+    },
+    {
+      "id": "R03098",
+      "index": 1428
+    },
+    {
+      "id": "R03171",
+      "index": 1501
+    },
+    {
+      "id": "R03244",
+      "index": 1574
+    },
+    {
+      "id": "R03317",
+      "index": 1647
+    },
+    {
+      "id": "R00156",
+      "index": 20
+    }
+  ],
+  "independentParentCount": 24,
+  "populationIdentity": "Frozen 24 out-of-original-eight Corpus-2 independent parent IDs, selected from physical source order before any new solve/execution result.",
+  "freezeProvenance": {
+    "runId": 39103005371,
+    "artifactId": 12126812881,
+    "artifactDigest": "sha256:12e98b18f94067348623043f4492ee69b61fbffa88bd2f2f72ea58010e7a74da",
+    "sourceCommit": "c39c00b5251fef7e8a43531c6fb598ac458a4385"
+  }
+}
