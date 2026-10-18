@@ -9,7 +9,6 @@ on:
     paths:
       - .github/workflows/pg-i-resistant-parent-exposure-20261018.yml
       - scripts/stress/pg-i-resistant-parent-exposure.mjs
-      - reports/stress/pg-i-resistant-parent-20261018-frozen-selection.json
 permissions:
   contents: read
 concurrency:
