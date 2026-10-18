@@ -163,13 +163,6 @@
       "retirementTrigger": "retire when equivalent persistence is absorbed into the targeted sweep or a shared evidence-harvest mechanism"
     },
     {
-      "workflow": "pg-i-strict-250k-qualification-20261018.yml",
-      "role": "evidence-producing",
-      "status": "maintained",
-      "currentConsumer": "issue #2202 exact-source frozen 12-parent 250k cold strict-total replay; PR #2203 only; upload evidence even on failure",
-      "retirementTrigger": "delete after immutable run SHA, twelve results and strict-cap interpretation are durably saved, regardless of positive or negative verdict"
-    },
-    {
       "workflow": "premise-map-hardening.yml",
       "role": "operational",
       "status": "maintained",
@@ -298,20 +291,24 @@
   ],
   "retiredWorkflows": [
     {
-      "workflow": "solver-early-repair-search-adaptive-sample-ab.yml",
-      "reason": "superseded by generalized routing-regime experiment"
-    },
-    {
-      "workflow": "mitm-frontier-sweep.yml",
-      "reason": "one-off MITM frontier question closed"
+      "workflow": "cpsat-hint-harvest-sweep-published.yml",
+      "reason": "published corpus mode consolidated into cpsat-hint-harvest-sweep.yml"
     },
     {
       "workflow": "firestore-level-fingerprint-boundary.yml",
       "reason": "emulator proof migrated to ordinary PR CI"
     },
     {
-      "workflow": "cpsat-hint-harvest-sweep-published.yml",
-      "reason": "published corpus mode consolidated into cpsat-hint-harvest-sweep.yml"
+      "workflow": "mitm-frontier-sweep.yml",
+      "reason": "one-off MITM frontier question closed"
+    },
+    {
+      "workflow": "pg-i-strict-250k-qualification-20261018.yml",
+      "reason": "one-time frozen 12-parent strict-250k qualification run 39171380197 completed; evidence artifact 12152751142, immutable source a2ca855dcc643f07c316261277368369939591ac; no ongoing consumer"
+    },
+    {
+      "workflow": "solver-early-repair-search-adaptive-sample-ab.yml",
+      "reason": "superseded by generalized routing-regime experiment"
     },
     {
       "workflow": "solver-typical-budget-baseline.yml",
