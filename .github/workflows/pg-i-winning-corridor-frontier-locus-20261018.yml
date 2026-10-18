@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/pg-i-winning-corridor-frontier-locus-20261018.yml'
+      - 'scripts/stress/pg-i-winning-corridor-frontier-locus.mjs'
   workflow_dispatch:
 
 concurrency:
