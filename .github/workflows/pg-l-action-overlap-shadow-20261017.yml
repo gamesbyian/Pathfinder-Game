@@ -1,0 +1,51 @@
+# One-shot, production-inert PG-L action-overlap observer. Delete before PR merge.
+name: PG-L frozen action overlap shadow
+on:
+  push:
+    branches:
+      - chatgpt/pg-l-bounded-action-overlap-shadow-20261017
+    paths:
+      - .github/workflows/pg-l-action-overlap-shadow-20261017.yml
+      - scripts/stress/pg-l-canonical-action-overlap-shadow.mjs
+permissions:
+  contents: write
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Exact vs coarse overlap measure self-check
+        run: node scripts/run-bundled.mjs scripts/stress/pg-l-canonical-action-overlap-shadow.mjs -- --self-test
+      - name: Execute bounded eight-parent source-identical action and observer-off parity study
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/run-bundled.mjs scripts/stress/pg-l-canonical-action-overlap-shadow.mjs -- --out=reports/stress/pg-l-canonical-action-overlap-20261017-001.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('reports/stress/pg-l-canonical-action-overlap-20261017-001.json','utf8'));
+          if(r.summary.parents!==8||r.summary.observerParityAlarms!==0||r.summary.exactActionComparisonPairs!==8||r.selection.perArmWorkBudget!==150000||r.parents.some(p=>p.armResults.length!==2))throw Error('PG-L cohort/work/paired arm invariant drift');
+          console.log('PG-L EXACT COHORT, ACTION IDs AND NO-PERTURBATION CONTRACT PASSED');
+          NODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-l-bounded-action-overlap-20261017
+          path: reports/stress/pg-l-canonical-action-overlap-20261017-001.json
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Persist evidence on same experimental branch if proven valid
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add reports/stress/pg-l-canonical-action-overlap-20261017-001.json
+          git -c user.name=github-actions -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+            commit -m "PG-L: preserve source-exact observer-off parity and independent action-overlap census"
+          git push origin "HEAD:refs/heads/${GITHUB_REF_NAME}"
