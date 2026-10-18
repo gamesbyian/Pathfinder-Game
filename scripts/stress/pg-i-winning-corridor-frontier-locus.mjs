@@ -144,7 +144,7 @@ const summary={
   winnerPrefixSeenAtLastCheckpoint:outputRows.filter(x=>x.checkpoints.at(-1)?.fullKnownWinnerPrefixRetained).length,
 };
 const result={schema:'pathfinder.pg-i-winning-corridor-frontier-locus/v1',
- sourceExecutionCommit:process.env.GITHUB_SHA??null,corpusFile:CORPUS,corpusSha256,
+ sourceExecutionCommit:process.env.GITHUB_SHA??null,corpusFile:CORPUS,corpusSha256:corpusSha,
  sourceWinnerEvidence:WITNESSES,sourceWinnerCommit:evidence.sourceCommit,
  selection:'retrospective winner-positive parent, method and gate chosen from stored 10M isolated successes',
  evidenceRole:'selected-development-only',
