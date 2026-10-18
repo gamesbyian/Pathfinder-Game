@@ -1,0 +1,758 @@
+{
+  "schema": "pathfinder.pg-l-independent-nine-wide-overlap-depth-ladder/v1",
+  "status": "complete",
+  "evidenceRole": "heldout-conditional-dispatch-confirmation",
+  "provenance": {
+    "runId": 39103473669,
+    "sourceSha": "5bb0b83e87ff817170f3fa2ba7b9bbe863be744e",
+    "artifactId": 12127567546,
+    "artifactDigest": "sha256:fac7728b4175a89948d44d2ee7c08bd29abf5d4848c193d45a2bd922fcbd1d2d",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "independentDenominator": "reports/stress/pg-l-independent-dispatch-24-20261018-001.json",
+    "frozenSourcePopulation": "reports/stress/pg-l-independent-dispatch-holdout-20261018-population.json"
+  },
+  "selection": "9 of the 24 source-frozen independent parents had both target profiles with positive work at SAME width5000; R03317 co-dispatched at DIFFERENT widths, excluded; conditional sample, not all-population prevalence",
+  "protocol": {
+    "scorers": [
+      "objectiveFirst",
+      "intersectionHarvest"
+    ],
+    "beamWidth": 5000,
+    "gate": "exact actual production gate from 24-parent source log",
+    "workDose": "per-profile observed work times 1 or 4; work-cap phase overshoot retained",
+    "plainResearchRetention": true,
+    "sourceActualRetentionIdentity": "not fully retained in compact GHA dispatch ledger",
+    "noHintAccess": true,
+    "pairedObserverControls": "18/18 per dose found/status/solutionHash/work/nodes identical",
+    "actualSingleInvocationSharingMeasured": false
+  },
+  "summary": {
+    "1x": {
+      "conditionalIndependentParents": 9,
+      "observerOnOffPairs": 18,
+      "meanExactJaccard": 0.9993409361061093,
+      "meanDeepJaccard": 0.9992752216398111,
+      "meanEightMovePrefixJaccard": 1,
+      "exactSetIdentityCount": 8,
+      "aggregateCanonicalWork": 698615,
+      "matchedMinimumParentExpansionWork": 233926,
+      "parentExpansionWorkBothScorers": 467950
+    },
+    "4x": {
+      "conditionalIndependentParents": 9,
+      "observerOnOffPairs": 18,
+      "meanExactJaccard": 0.8136443259305588,
+      "meanDeepJaccard": 0.810061584975876,
+      "meanEightMovePrefixJaccard": 1,
+      "exactSetIdentityCount": 0,
+      "aggregateCanonicalWork": 2637700,
+      "matchedMinimumParentExpansionWork": 735227,
+      "parentExpansionWorkBothScorers": 1673958
+    }
+  },
+  "rows": [
+    {
+      "parentId": "R00720",
+      "dose": 1,
+      "sourcePositiveWorkScorerReplays": [
+        37234,
+        37234
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 6416,
+        "b": 6416,
+        "shared": 6416,
+        "union": 6416,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "deep": {
+        "a": 5889,
+        "b": 5889,
+        "shared": 5889,
+        "union": 5889,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "prefix8": {
+        "a": 264,
+        "b": 264,
+        "shared": 264,
+        "union": 264,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 24123,
+      "totalParentWork": 48246,
+      "matchedWorkExposureRatio": 1
+    },
+    {
+      "parentId": "R01584",
+      "dose": 1,
+      "sourcePositiveWorkScorerReplays": [
+        47122,
+        47122
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 4918,
+        "b": 4918,
+        "shared": 4918,
+        "union": 4918,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "deep": {
+        "a": 3841,
+        "b": 3841,
+        "shared": 3841,
+        "union": 3841,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "prefix8": {
+        "a": 587,
+        "b": 587,
+        "shared": 587,
+        "union": 587,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 38089,
+      "totalParentWork": 76178,
+      "matchedWorkExposureRatio": 1
+    },
+    {
+      "parentId": "R02222",
+      "dose": 1,
+      "sourcePositiveWorkScorerReplays": [
+        40044,
+        40044
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 8179,
+        "b": 8179,
+        "shared": 8179,
+        "union": 8179,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "deep": {
+        "a": 7469,
+        "b": 7469,
+        "shared": 7469,
+        "union": 7469,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "prefix8": {
+        "a": 345,
+        "b": 345,
+        "shared": 345,
+        "union": 345,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 22668,
+      "totalParentWork": 45336,
+      "matchedWorkExposureRatio": 1
+    },
+    {
+      "parentId": "R02514",
+      "dose": 1,
+      "sourcePositiveWorkScorerReplays": [
+        35770,
+        35770
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 7753,
+        "b": 7753,
+        "shared": 7753,
+        "union": 7753,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "deep": {
+        "a": 7347,
+        "b": 7347,
+        "shared": 7347,
+        "union": 7347,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "prefix8": {
+        "a": 200,
+        "b": 200,
+        "shared": 200,
+        "union": 200,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 21493,
+      "totalParentWork": 42986,
+      "matchedWorkExposureRatio": 1
+    },
+    {
+      "parentId": "R02660",
+      "dose": 1,
+      "sourcePositiveWorkScorerReplays": [
+        25315,
+        25315
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 4841,
+        "b": 4841,
+        "shared": 4841,
+        "union": 4841,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "deep": {
+        "a": 4527,
+        "b": 4527,
+        "shared": 4527,
+        "union": 4527,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "prefix8": {
+        "a": 157,
+        "b": 157,
+        "shared": 157,
+        "union": 157,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 15863,
+      "totalParentWork": 31726,
+      "matchedWorkExposureRatio": 1
+    },
+    {
+      "parentId": "R02733",
+      "dose": 1,
+      "sourcePositiveWorkScorerReplays": [
+        30045,
+        30045
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 6211,
+        "b": 6211,
+        "shared": 6211,
+        "union": 6211,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "deep": {
+        "a": 6068,
+        "b": 6068,
+        "shared": 6068,
+        "union": 6068,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "prefix8": {
+        "a": 54,
+        "b": 54,
+        "shared": 54,
+        "union": 54,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 14222,
+      "totalParentWork": 28444,
+      "matchedWorkExposureRatio": 1
+    },
+    {
+      "parentId": "R02879",
+      "dose": 1,
+      "sourcePositiveWorkScorerReplays": [
+        55404,
+        55403
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 9413,
+        "b": 9413,
+        "shared": 9385,
+        "union": 9441,
+        "jaccard": 0.9940684249549836,
+        "sharedFractionSmaller": 0.9970253904175077
+      },
+      "deep": {
+        "a": 8557,
+        "b": 8557,
+        "shared": 8529,
+        "union": 8585,
+        "jaccard": 0.9934769947582993,
+        "sharedFractionSmaller": 0.9967278251723735
+      },
+      "prefix8": {
+        "a": 500,
+        "b": 500,
+        "shared": 500,
+        "union": 500,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 38492,
+      "totalParentWork": 77082,
+      "matchedWorkExposureRatio": 0.998728626657326
+    },
+    {
+      "parentId": "R03171",
+      "dose": 1,
+      "sourcePositiveWorkScorerReplays": [
+        26596,
+        26596
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 6264,
+        "b": 6264,
+        "shared": 6264,
+        "union": 6264,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "deep": {
+        "a": 6068,
+        "b": 6068,
+        "shared": 6068,
+        "union": 6068,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "prefix8": {
+        "a": 95,
+        "b": 95,
+        "shared": 95,
+        "union": 95,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 14533,
+      "totalParentWork": 29066,
+      "matchedWorkExposureRatio": 1
+    },
+    {
+      "parentId": "R00156",
+      "dose": 1,
+      "sourcePositiveWorkScorerReplays": [
+        51778,
+        51778
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 3394,
+        "b": 3394,
+        "shared": 3394,
+        "union": 3394,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "deep": {
+        "a": 3343,
+        "b": 3343,
+        "shared": 3343,
+        "union": 3343,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "prefix8": {
+        "a": 18,
+        "b": 18,
+        "shared": 18,
+        "union": 18,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 44443,
+      "totalParentWork": 88886,
+      "matchedWorkExposureRatio": 1
+    },
+    {
+      "parentId": "R00720",
+      "dose": 4,
+      "sourcePositiveWorkScorerReplays": [
+        151440,
+        157738
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 26416,
+        "b": 26416,
+        "shared": 24061,
+        "union": 28771,
+        "jaccard": 0.8362934899725418,
+        "sharedFractionSmaller": 0.9108494851605088
+      },
+      "deep": {
+        "a": 25889,
+        "b": 25889,
+        "shared": 23534,
+        "union": 28244,
+        "jaccard": 0.8332389180002833,
+        "sharedFractionSmaller": 0.9090347251728533
+      },
+      "prefix8": {
+        "a": 264,
+        "b": 264,
+        "shared": 264,
+        "union": 264,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 82131,
+      "totalParentWork": 183345,
+      "matchedWorkExposureRatio": 0.8959175325206578
+    },
+    {
+      "parentId": "R01584",
+      "dose": 4,
+      "sourcePositiveWorkScorerReplays": [
+        217922,
+        167512
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 34918,
+        "b": 29918,
+        "shared": 26714,
+        "union": 38122,
+        "jaccard": 0.7007502229683648,
+        "sharedFractionSmaller": 0.8929072798983889
+      },
+      "deep": {
+        "a": 33841,
+        "b": 28841,
+        "shared": 25637,
+        "union": 37045,
+        "jaccard": 0.6920502092050209,
+        "sharedFractionSmaller": 0.8889081515897507
+      },
+      "prefix8": {
+        "a": 587,
+        "b": 587,
+        "shared": 587,
+        "union": 587,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 84771,
+      "totalParentWork": 212237,
+      "matchedWorkExposureRatio": 0.7988333796651856
+    },
+    {
+      "parentId": "R02222",
+      "dose": 4,
+      "sourcePositiveWorkScorerReplays": [
+        123622,
+        125890
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 15374,
+        "b": 15521,
+        "shared": 14454,
+        "union": 16441,
+        "jaccard": 0.879143604403625,
+        "sharedFractionSmaller": 0.9401587095095616
+      },
+      "deep": {
+        "a": 14664,
+        "b": 14811,
+        "shared": 13744,
+        "union": 15731,
+        "jaccard": 0.8736888945394444,
+        "sharedFractionSmaller": 0.9372613202400436
+      },
+      "prefix8": {
+        "a": 345,
+        "b": 345,
+        "shared": 345,
+        "union": 345,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 76393,
+      "totalParentWork": 175439,
+      "matchedWorkExposureRatio": 0.8708781969801469
+    },
+    {
+      "parentId": "R02514",
+      "dose": 4,
+      "sourcePositiveWorkScorerReplays": [
+        132232,
+        142819
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 13108,
+        "b": 13697,
+        "shared": 12806,
+        "union": 13999,
+        "jaccard": 0.9147796271162226,
+        "sharedFractionSmaller": 0.9769606347268843
+      },
+      "deep": {
+        "a": 12702,
+        "b": 13291,
+        "shared": 12400,
+        "union": 13593,
+        "jaccard": 0.9122342382108438,
+        "sharedFractionSmaller": 0.9762242166587939
+      },
+      "prefix8": {
+        "a": 200,
+        "b": 200,
+        "shared": 200,
+        "union": 200,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 101172,
+      "totalParentWork": 220956,
+      "matchedWorkExposureRatio": 0.9157660348666703
+    },
+    {
+      "parentId": "R02660",
+      "dose": 4,
+      "sourcePositiveWorkScorerReplays": [
+        169052,
+        177016
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 24563,
+        "b": 24563,
+        "shared": 21044,
+        "union": 28082,
+        "jaccard": 0.7493768250124635,
+        "sharedFractionSmaller": 0.85673574074828
+      },
+      "deep": {
+        "a": 24249,
+        "b": 24249,
+        "shared": 20730,
+        "union": 27768,
+        "jaccard": 0.746542783059637,
+        "sharedFractionSmaller": 0.854880613633552
+      },
+      "prefix8": {
+        "a": 157,
+        "b": 157,
+        "shared": 157,
+        "union": 157,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 86771,
+      "totalParentWork": 225396,
+      "matchedWorkExposureRatio": 0.7699426786633303
+    },
+    {
+      "parentId": "R02733",
+      "dose": 4,
+      "sourcePositiveWorkScorerReplays": [
+        120128,
+        120313
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 14919,
+        "b": 14919,
+        "shared": 14812,
+        "union": 15026,
+        "jaccard": 0.9857580194329828,
+        "sharedFractionSmaller": 0.992827937529325
+      },
+      "deep": {
+        "a": 14776,
+        "b": 14776,
+        "shared": 14669,
+        "union": 14883,
+        "jaccard": 0.9856211785258349,
+        "sharedFractionSmaller": 0.992758527341635
+      },
+      "prefix8": {
+        "a": 54,
+        "b": 54,
+        "shared": 54,
+        "union": 54,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 80536,
+      "totalParentWork": 163241,
+      "matchedWorkExposureRatio": 0.9867128968825234
+    },
+    {
+      "parentId": "R02879",
+      "dose": 4,
+      "sourcePositiveWorkScorerReplays": [
+        160577,
+        160636
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 29413,
+        "b": 29413,
+        "shared": 26466,
+        "union": 32360,
+        "jaccard": 0.8178615574783683,
+        "sharedFractionSmaller": 0.8998062081392582
+      },
+      "deep": {
+        "a": 28557,
+        "b": 28557,
+        "shared": 25610,
+        "union": 31504,
+        "jaccard": 0.8129126460132047,
+        "sharedFractionSmaller": 0.8968028854571559
+      },
+      "prefix8": {
+        "a": 500,
+        "b": 500,
+        "shared": 500,
+        "union": 500,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 75843,
+      "totalParentWork": 165064,
+      "matchedWorkExposureRatio": 0.9189526486696069
+    },
+    {
+      "parentId": "R03171",
+      "dose": 4,
+      "sourcePositiveWorkScorerReplays": [
+        100648,
+        86842
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 14358,
+        "b": 10610,
+        "shared": 10208,
+        "union": 14760,
+        "jaccard": 0.6915989159891599,
+        "sharedFractionSmaller": 0.9621112158341187
+      },
+      "deep": {
+        "a": 14162,
+        "b": 10414,
+        "shared": 10012,
+        "union": 14564,
+        "jaccard": 0.687448503158473,
+        "sharedFractionSmaller": 0.9613981179181871
+      },
+      "prefix8": {
+        "a": 95,
+        "b": 95,
+        "shared": 95,
+        "union": 95,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 59869,
+      "totalParentWork": 135381,
+      "matchedWorkExposureRatio": 0.8844520279802927
+    },
+    {
+      "parentId": "R00156",
+      "dose": 4,
+      "sourcePositiveWorkScorerReplays": [
+        148503,
+        174810
+      ],
+      "sourceAttemptStatus": [
+        "work-budget-phase-boundary",
+        "work-budget-phase-boundary"
+      ],
+      "exact": {
+        "a": 24394,
+        "b": 29351,
+        "shared": 22985,
+        "union": 30760,
+        "jaccard": 0.7472366710013004,
+        "sharedFractionSmaller": 0.9422398950561613
+      },
+      "deep": {
+        "a": 24343,
+        "b": 29300,
+        "shared": 22934,
+        "union": 30709,
+        "jaccard": 0.7468168940701423,
+        "sharedFractionSmaller": 0.9421188842788482
+      },
+      "prefix8": {
+        "a": 18,
+        "b": 18,
+        "shared": 18,
+        "union": 18,
+        "jaccard": 1,
+        "sharedFractionSmaller": 1
+      },
+      "matchedMinParentWork": 87741,
+      "totalParentWork": 192899,
+      "matchedWorkExposureRatio": 0.9097092260716748
+    }
+  ],
+  "caveat": "Complete packed parent history hashed: observational identity only, not proof of a reusable fact or net work saved. The real scheduler's two scorer attempts were co-dispatched on nine independent parents (out of 24 total), but these full-history overlaps were measured in separate isolated replays using plain retention, not a live combined production invocation. No cold solve, pruning change or new budget allocation."
+}
