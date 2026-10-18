@@ -7,6 +7,7 @@ on:
       - chatgpt/pg-i-resistance-equal-work-exposure-20261018
     paths:
       - .github/workflows/pg-i-resistant-parent-production-control-20261018.yml
+      - .github/workflows/pg-i-resistant-parent-exposure-20261018.yml
 permissions:
   contents: read
 concurrency:
