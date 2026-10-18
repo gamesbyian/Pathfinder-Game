@@ -6,6 +6,7 @@ on:
       - chatgpt/pg-l-independent-dispatch-holdout-20261018
     paths:
       - .github/workflows/pg-l-independent-dispatch-holdout-20261018.yml
+      - scripts/stress/pg-l-independent-dispatch-run.mjs
 permissions:
   contents: read
 jobs:
