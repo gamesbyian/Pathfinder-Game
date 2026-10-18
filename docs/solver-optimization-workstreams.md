@@ -8,9 +8,9 @@ Method: [operating model](solver-research-operating-model.md) · [evidence](solv
 
 ## Current priority
 
-1. BC1-VX default-ON integration is complete in this change; keep rollback control and verify ongoing production correctness. Next address 2Y's **distinct** DFS/admissible participation/economics without rerunning closed beam gate.
-2. In parallel, run retained/shadow lanes PG-C/H/I/L/M/N and PG-G independent-parent causality (tested cold D4 rule separately negative).
-3. Continue bounded semantic microscopes PG-D/J/K.
+1. Keep **BC1-VX default-ON** with explicit rollback and continued referee/cold correctness checks. The *distinct* 2Y unconditional DFS/admissible transfer is now **closed negative on its tested form** (4,463 prune events but just 698/3,548,882 canonical work units saved at the 250k dose, no extra solves). Reopen transfer only for a cheap current-state selective trigger or amortized cut computation with real headroom. Do not repeat the closed beam promotion tests.
+2. Concentrate independent-premise work on **PG-L** co-dispatch/actual overlap (active separate PR), **PG-C/H/I/N** under their current bounded opportunity tests, and **PG-G** independent-parent ordering causality (the tested cold D4 tie rule lost a control solve). **PG-M and PG-P are on-demand/reopen-only** after their completed negative diagnostics, not currently authorized generic observer reruns.
+3. Continue narrow **PG-D** current-input flipper/trail-switch consequences and **PG-J** topology completion-regime microscopes. **PG-K** may reopen only a different current-state dependency/length-changing revision premise after its 12-parent exact-DEAD negative; no further historic-hint splice campaign.
 4. PG-O remains conditional on a genuinely new hint-free candidate after its tested negative; PG-P's actual descent pilot has concluded without earning repair code. Treat both as scoped premise gates, not architecture/operator promotions.
 5. PG-B remains an optional frozen pricing re-dispatch only if that compute becomes decision-relevant.
 
