@@ -93,24 +93,24 @@ export async function runAttempt(
         if (err instanceof StrictWorkBudgetExhausted) {
             searchOut.timedOut = true;
         } else {
-        const thrown = err as { name?: unknown; message?: unknown } | null;
-        const bounded = (value: unknown, fallback: string, max: number) => {
-            let text: string;
-            try { text = typeof value === 'string' ? value : value == null ? fallback : String(value); }
-            catch { text = fallback; }
-            return text.slice(0, max);
-        };
-        const safeField = (key: 'name' | 'message') => {
-            try { return thrown?.[key]; } catch { return undefined; }
-        };
-        attemptError = {
-            name: bounded(safeField('name'), 'Error', 120),
-            message: bounded(safeField('message') ?? err, 'Unknown attempt error', 500),
-            gateKey,
-            configKey: bounded(attemptConfigKey(attemptConfig), 'unknown', 240),
-            scoringProfileId: bounded(scoringProfileId, 'unknown', 120),
-            orderingBiasId: orderingBias?.id == null ? null : bounded(orderingBias.id, 'unknown', 120),
-        };
+            const thrown = err as { name?: unknown; message?: unknown } | null;
+            const bounded = (value: unknown, fallback: string, max: number) => {
+                let text: string;
+                try { text = typeof value === 'string' ? value : value == null ? fallback : String(value); }
+                catch { text = fallback; }
+                return text.slice(0, max);
+            };
+            const safeField = (key: 'name' | 'message') => {
+                try { return thrown?.[key]; } catch { return undefined; }
+            };
+            attemptError = {
+                name: bounded(safeField('name'), 'Error', 120),
+                message: bounded(safeField('message') ?? err, 'Unknown attempt error', 500),
+                gateKey,
+                configKey: bounded(attemptConfigKey(attemptConfig), 'unknown', 240),
+                scoringProfileId: bounded(scoringProfileId, 'unknown', 120),
+                orderingBiasId: orderingBias?.id == null ? null : bounded(orderingBias.id, 'unknown', 120),
+            };
         }
     } finally {
         prep._beamResearchAttemptContext = previousBeamResearchAttemptContext;
