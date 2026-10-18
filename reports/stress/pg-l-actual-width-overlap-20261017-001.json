@@ -1,0 +1,253 @@
+{
+  "schema": "pathfinder.pg-l-source-scoped-production-width-depth-ladder/v1",
+  "evidenceRole": "development",
+  "status": "completed",
+  "provenance": {
+    "runId": 39102328661,
+    "sourceSha": "a975bc5c06c08de0395ca6ccaa88a2dfbf3e18e7",
+    "artifactId": 12127645084,
+    "zipDigest": "sha256:3c3b9604a913c3e6abc7673ea227b4953422f1620cf004e620f32af4c8997ed3",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "sourceDispatchReport": "reports/stress/pg-l-actual-dispatch-250k-20261017-001.json",
+    "sourceDispatchRunId": 39098565429
+  },
+  "protocol": {
+    "selection": "exactly the 3 of 8 pre-existing frozen PG-L production positive-co-dispatch parents; historical outcome labels not accessed in search",
+    "gate": "source-verified actual production gate",
+    "scorers": [
+      "objectiveFirst",
+      "intersectionHarvest"
+    ],
+    "width": 5000,
+    "nominalPerArmBudget": "source observed scorer work times 1 or 4",
+    "freshPrepEachArm": true,
+    "collectorOffOnPair": true,
+    "parity": "6 of 6 scorer pairs per dose matched found/status/solutionHash/workSpent/nodesExpanded",
+    "retention": "plain; R02781 intersectionHarvest actual production retention mode ambiguous; research profile uses plain",
+    "observer": "generated parent-expansion complete path history; exact same-prefix equality only, not cross-path future-equivalence; no cache",
+    "strictTotalWorkBudget": false,
+    "wallSafetyMs": 600000,
+    "overBudget": "beam work cap checks occur at phase boundaries; observed work can exceed nominal budget (not an exact work match)"
+  },
+  "summary": {
+    "1x": {
+      "independentParents": 3,
+      "observerOnOffPairs": 6,
+      "meanExactHistoryJaccard": 1,
+      "meanDeepHistoryJaccard": 1,
+      "aggregateCanonicalWork": 242778,
+      "matchedMinimumParentExpansionWork": 92877,
+      "acrossBothObservedParentExpansionWork": 185754
+    },
+    "4x": {
+      "independentParents": 3,
+      "observerOnOffPairs": 6,
+      "meanExactHistoryJaccard": 0.8376576644407857,
+      "meanDeepHistoryJaccard": 0.8350900842840643,
+      "aggregateCanonicalWork": 911333,
+      "matchedMinimumParentExpansionWork": 261563,
+      "acrossBothObservedParentExpansionWork": 553685
+    }
+  },
+  "parents": [
+    {
+      "id": "R02781",
+      "gateKey": 458753,
+      "budgets": {
+        "objectiveFirst": 37362,
+        "intersectionHarvest": 32750
+      },
+      "rows": [
+        {
+          "mul": 1,
+          "work": [
+            38403,
+            38403
+          ],
+          "parents": [
+            3275,
+            3275
+          ],
+          "generated": [
+            18,
+            18
+          ],
+          "expansionWork": [
+            30850,
+            30850
+          ],
+          "shared": 3275,
+          "union": 3275,
+          "deepShared": 3265,
+          "deepUnion": 3265,
+          "matchingWork": 30850,
+          "totalMeasuredParentWork": 61700,
+          "exactJaccard": 1,
+          "deepJaccard": 1,
+          "matchingParentWorkRatio": 1
+        },
+        {
+          "mul": 4,
+          "work": [
+            150074,
+            147991
+          ],
+          "parents": [
+            24372,
+            24372
+          ],
+          "generated": [
+            23,
+            23
+          ],
+          "expansionWork": [
+            90027,
+            90157
+          ],
+          "shared": 20376,
+          "union": 28368,
+          "deepShared": 20366,
+          "deepUnion": 28358,
+          "matchingWork": 82104,
+          "totalMeasuredParentWork": 180184,
+          "exactJaccard": 0.7182741116751269,
+          "deepJaccard": 0.7181747654982721,
+          "matchingParentWorkRatio": 0.9113350796963104
+        }
+      ]
+    },
+    {
+      "id": "R02579",
+      "gateKey": 327682,
+      "budgets": {
+        "objectiveFirst": 41156,
+        "intersectionHarvest": 41156
+      },
+      "rows": [
+        {
+          "mul": 1,
+          "work": [
+            42853,
+            42853
+          ],
+          "parents": [
+            2771,
+            2771
+          ],
+          "generated": [
+            9,
+            9
+          ],
+          "expansionWork": [
+            38167,
+            38167
+          ],
+          "shared": 2771,
+          "union": 2771,
+          "deepShared": 1643,
+          "deepUnion": 1643,
+          "matchingWork": 38167,
+          "totalMeasuredParentWork": 76334,
+          "exactJaccard": 1,
+          "deepJaccard": 1,
+          "matchingParentWorkRatio": 1
+        },
+        {
+          "mul": 4,
+          "work": [
+            172531,
+            171183
+          ],
+          "parents": [
+            26626,
+            26626
+          ],
+          "generated": [
+            14,
+            14
+          ],
+          "expansionWork": [
+            107088,
+            106709
+          ],
+          "shared": 23881,
+          "union": 29371,
+          "deepShared": 22753,
+          "deepUnion": 28243,
+          "matchingWork": 100301,
+          "totalMeasuredParentWork": 213797,
+          "exactJaccard": 0.8130809301692146,
+          "deepJaccard": 0.8056155507559395,
+          "matchingParentWorkRatio": 0.9382825764627193
+        }
+      ]
+    },
+    {
+      "id": "R02037",
+      "gateKey": 655370,
+      "budgets": {
+        "objectiveFirst": 23719,
+        "intersectionHarvest": 23719
+      },
+      "rows": [
+        {
+          "mul": 1,
+          "work": [
+            40133,
+            40133
+          ],
+          "parents": [
+            8932,
+            8932
+          ],
+          "generated": [
+            13,
+            13
+          ],
+          "expansionWork": [
+            23860,
+            23860
+          ],
+          "shared": 8932,
+          "union": 8932,
+          "deepShared": 8752,
+          "deepUnion": 8752,
+          "matchingWork": 23860,
+          "totalMeasuredParentWork": 47720,
+          "exactJaccard": 1,
+          "deepJaccard": 1,
+          "matchingParentWorkRatio": 1
+        },
+        {
+          "mul": 4,
+          "work": [
+            134964,
+            134590
+          ],
+          "parents": [
+            23932,
+            23932
+          ],
+          "generated": [
+            16,
+            16
+          ],
+          "expansionWork": [
+            80033,
+            79671
+          ],
+          "shared": 23710,
+          "union": 24154,
+          "deepShared": 23530,
+          "deepUnion": 23974,
+          "matchingWork": 79158,
+          "totalMeasuredParentWork": 159704,
+          "exactJaccard": 0.9816179514780161,
+          "deepJaccard": 0.9814799365979812,
+          "matchingParentWorkRatio": 0.9913089215047839
+        }
+      ]
+    }
+  ],
+  "interpretation": "All three 1x isolated scorer pairs have identical expanded parent-path sets; 4x mean exact Jaccard 0.83766 and matching-parent-work ratios per level 0.911/0.938/0.991. These are descriptive exploration overlap, not sound memoization identity or avoided work. Actual full same-invocation production overlap is not directly observed. Five of original eight source parents did not dispatch either target beam at the original bounded dose. No new cold solves, causal benefit, or population-generalization claim."
+}
