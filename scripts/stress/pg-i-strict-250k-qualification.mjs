@@ -60,7 +60,7 @@ for(let i=0;i<levels.length;i++){
 }
 for(const id of parentIds)assert(byId.has(id),'frozen parent missing: '+id);
 installBrowserStubs();
-const {createSolver}=await import('../../modules/solver.js');
+const {createSolver}=await import('../../modules/solver.ts');
 const solver=createSolver();
 const rows=[];
 for(const [rank,parentId] of parentIds.entries()){
