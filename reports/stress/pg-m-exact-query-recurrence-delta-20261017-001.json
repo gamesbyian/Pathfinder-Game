@@ -1,0 +1,216 @@
+{
+  "schema": "pathfinder.pg-m-exact-query-identity-delta/v1",
+  "evidenceRole": "retrospective-opportunity-audit",
+  "selection": "six full retained CP-SAT exact-prefix result sources: new 75/50/12 development campaigns and three existing topology-fork contrast controls",
+  "interpretation": "same (corpus,levelId,full raw XY prefix) is a conservative identical exact-fate query key, not a transferable blocker dependency key; same-level overlap is NOT same-fact recurrence",
+  "source": [
+    {
+      "source": "fresh75",
+      "path": "reports/stress/class5-fresh-sibling-harvest-exact-labels-2026-09-17.json",
+      "sha256": "9dc0b14489445cd99afe716cb34c6de5e8285e433f16151691b8f34ca2a78195",
+      "rows": 75,
+      "independentParents": 25,
+      "exactFates": {
+        "live": 0,
+        "dead": 75
+      }
+    },
+    {
+      "source": "multi50",
+      "path": "reports/stress/class5-production-search-frontier-multi-pick-exact-labels-2026-09-17.json",
+      "sha256": "4c996300577594962c2e39e3eb5ae5068cea550dffd16b72d8c653aa3565e137",
+      "rows": 50,
+      "independentParents": 2,
+      "exactFates": {
+        "live": 2,
+        "dead": 48
+      }
+    },
+    {
+      "source": "revised12",
+      "path": "reports/stress/pg-k-exact-12-parent-dead-revisions-20261017-001.json",
+      "sha256": "371f7c1cd2d6d69a7d435236212c4a39bfd30cef768f757e6beca5736bfa029a",
+      "rows": 12,
+      "independentParents": 12,
+      "exactFates": {
+        "live": 0,
+        "dead": 12
+      }
+    },
+    {
+      "source": "topo12",
+      "path": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+      "sha256": "6e044d1ae62cad6e4f678c9b13aabd67b805fab2898ad539ab42b0f5e62209e2",
+      "rows": 12,
+      "independentParents": 3,
+      "exactFates": {
+        "live": 10,
+        "dead": 2
+      }
+    },
+    {
+      "source": "topo8ext",
+      "path": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+      "sha256": "3024ce09aa7693ba1c6d852def97192715a87ca725c7052332fe6984455e6589",
+      "rows": 8,
+      "independentParents": 2,
+      "exactFates": {
+        "live": 4,
+        "dead": 4
+      }
+    },
+    {
+      "source": "topo8rep",
+      "path": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json",
+      "sha256": "13671b809d8e0a6f36d86859f5165bceb82c986d8a011bd9a279fd4d47ebd13e",
+      "rows": 8,
+      "independentParents": 2,
+      "exactFates": {
+        "live": 6,
+        "dead": 2
+      }
+    }
+  ],
+  "summary": {
+    "rows": 165,
+    "uniqueExactPrefixQueries": 162,
+    "uniqueParents": 32,
+    "identicalQueriesAcrossSourceFamilies": 0,
+    "duplicateExactPrefixAliasesWithinSources": 3,
+    "parentsRepeatedAcrossFamilies": 13
+  },
+  "allAliasDetails": [
+    [
+      {
+        "source": "topo12",
+        "caseId": "P00075-w2-A0-B5-original",
+        "fate": "live"
+      },
+      {
+        "source": "topo12",
+        "caseId": "P00075-w5-A0-B5-alternate",
+        "fate": "live"
+      }
+    ],
+    [
+      {
+        "source": "topo12",
+        "caseId": "P00075-w2-A0-B5-alternate",
+        "fate": "live"
+      },
+      {
+        "source": "topo12",
+        "caseId": "P00075-w5-A0-B5-original",
+        "fate": "live"
+      }
+    ],
+    [
+      {
+        "source": "topo8ext",
+        "caseId": "P00148-w0-A6-B10-original",
+        "fate": "live"
+      },
+      {
+        "source": "topo8ext",
+        "caseId": "P00148-w0-A5-B10-original",
+        "fate": "live"
+      }
+    ]
+  ],
+  "parentSourceOverlaps": [
+    {
+      "levelId": "R00555",
+      "sourceFamilies": [
+        "fresh75",
+        "revised12"
+      ]
+    },
+    {
+      "levelId": "R01142",
+      "sourceFamilies": [
+        "fresh75",
+        "revised12"
+      ]
+    },
+    {
+      "levelId": "R01600",
+      "sourceFamilies": [
+        "fresh75",
+        "multi50"
+      ]
+    },
+    {
+      "levelId": "R02300",
+      "sourceFamilies": [
+        "fresh75",
+        "revised12"
+      ]
+    },
+    {
+      "levelId": "R02359",
+      "sourceFamilies": [
+        "fresh75",
+        "revised12"
+      ]
+    },
+    {
+      "levelId": "R02471",
+      "sourceFamilies": [
+        "fresh75",
+        "revised12"
+      ]
+    },
+    {
+      "levelId": "R02996",
+      "sourceFamilies": [
+        "fresh75",
+        "revised12"
+      ]
+    },
+    {
+      "levelId": "R03005",
+      "sourceFamilies": [
+        "fresh75",
+        "revised12"
+      ]
+    },
+    {
+      "levelId": "R03053",
+      "sourceFamilies": [
+        "fresh75",
+        "revised12"
+      ]
+    },
+    {
+      "levelId": "R03147",
+      "sourceFamilies": [
+        "fresh75",
+        "multi50",
+        "revised12"
+      ]
+    },
+    {
+      "levelId": "R03157",
+      "sourceFamilies": [
+        "fresh75",
+        "revised12"
+      ]
+    },
+    {
+      "levelId": "R03290",
+      "sourceFamilies": [
+        "fresh75",
+        "revised12"
+      ]
+    },
+    {
+      "levelId": "R03328",
+      "sourceFamilies": [
+        "fresh75",
+        "revised12"
+      ]
+    }
+  ],
+  "limit": "No source records one production invocation, attempt/stage sequence, derivation cost, or a sound dependency/certificate key. This result does NOT measure within-solve duplicate work and does not close possible per-instance certificate reuse.",
+  "decision": "Do not commission a generic new Phase-1 rediscovery observer from these offline exact-reference rows alone. Await typed current-invocation fact keys/consumer opportunity or an independent current telemetry nomination."
+}
