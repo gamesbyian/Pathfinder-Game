@@ -3,7 +3,7 @@
 > **Status:** concluded-negative
 > **Last evidence:** 2026-10-18 — complete paired run 39172410280, immutable execution SHA f3e333dc15f7a4ccbf7030bc0fd49843f486edb5
 > **Decision:** The complete early-repair-OFF strict-250k form is concluded negative on the frozen 12 development parents: 24/24 valid cells, 12/12 treatment main-search exposure, 0/12 solves in either arm, and no losses. Do not expand this unchanged treatment.
-> **Remaining gate:** none; different selective allocation premise requires a new cheap participation/causal gate
+> **Remaining gate:** none
 > **Research question:** `WS2-VARIANT-RESPONSE-HARDNESS`
 > **Evidence role:** discovery
 > **Selection:** fixed original PG-I 12-member hash-ranked cohort, reused after observing original 250k no-solve and original repaired 250k stage work
