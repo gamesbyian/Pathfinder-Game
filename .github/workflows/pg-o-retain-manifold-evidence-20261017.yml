@@ -1,0 +1,48 @@
+# One-shot preservation of successful PG-O artifact; remove before merge.
+name: PG-O retain source-exact machine evidence
+on:
+  push:
+    branches:
+      - chatgpt/pg-o-real-frontier-manifold-proxy-20261017
+    paths:
+      - .github/workflows/pg-o-retain-manifold-evidence-20261017.yml
+permissions:
+  contents: write
+  actions: read
+jobs:
+  preserve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download completed exact-source result rather than rerun a research experiment
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/pg-o
+          gh run download 39089743702 --repo "$GITHUB_REPOSITORY" \
+            --name pg-o-real-frontier-manifold-proxy-20261017 --dir tmp/pg-o
+          test -s tmp/pg-o/real-frontier-manifold-001.json
+          echo "657ee2ab2ce4ae07ddb7a5a98e7be6c82e8776861d72faeb0928088ac59b0113  tmp/pg-o/real-frontier-manifold-001.json" | sha256sum -c -
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const d=JSON.parse(readFileSync('tmp/pg-o/real-frontier-manifold-001.json','utf8'));
+          if(d.source.headSha!=='2c77722da3462c88ca0c38f455df2dbfa8ec9d41'
+             ||d.summary.parents!==2||d.summary.cases!==50||d.summary.live!==2
+             ||d.summary.dead!==48||d.summary.allFeatureCases!==50
+             ||d.perLevel.find(x=>x.levelId==='R03147')?.observedPairwise?.jaccard?.comparablePairs!==46)
+            throw Error('unexpected experiment identity, source, or population');
+          console.log('Source-exact PG-O 50-row result integrity passed');
+          NODE
+      - name: Commit only unchanged machine evidence onto this research branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/stress
+          cp tmp/pg-o/real-frontier-manifold-001.json reports/stress/pg-o-real-frontier-manifold-proxy-20261017-001.json
+          git add reports/stress/pg-o-real-frontier-manifold-proxy-20261017-001.json
+          git -c user.name=github-actions -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+            commit -m "PG-O: persist 50-row referee-checked real-frontier manifold proxy evidence"
+          git push origin "HEAD:refs/heads/${GITHUB_REF_NAME}"
