@@ -2,10 +2,6 @@
 
 These are the preferred GitHub Actions entrypoints for solver capability, research, and reference-model batch work. Prefer them over ad-hoc long local runs when work is naturally independent across levels or cases.
 
-## Temporary strict-250k correction replay
-
-`pg-i-strict-250k-qualification-20261018.yml` is a one-time, source-pinned qualification of issue #2202 / PR #2203. Its immutable frozen PG-I twelve-parent roster and corpus SHA are asserted by `scripts/stress/pg-i-strict-250k-qualification.mjs`. It makes exactly one hint-free real production `solveLevel` call per parent, 250k canonical work and 250k nodes, with `strictTotalWorkBudget=true`, recording attempt charges/referee validity. It uploads the full result even if the gate fails. The workflow uses a PR event with a path filter restricted to changes to that workflow file, plus manual dispatch. Its PR run checks out the exact synthetic merge commit named by `github.sha` and records that immutable source SHA in the evidence. It never consumes stored winners or writes production hints. Retire this one-off workflow after the exact execution source/result is committed and interpreted. A 250k cost confirmation is a correctness observation, not a new solve claim.
-
 ## Scheduling defaults
 
 For node/work-bounded native-solver sweeps on standard public `ubuntu-latest` runners:
