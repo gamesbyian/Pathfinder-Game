@@ -607,15 +607,18 @@
       ],
       "answeredBy": [
         "reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md",
-        "reports/2026-09-17-production-search-sibling-construction-result-001.md"
+        "reports/2026-09-17-production-search-sibling-construction-result-001.md",
+        "reports/2026-10-17-pg-o-real-frontier-manifold-proxy-result-002.md"
       ],
-      "result": "Stage 1 is positive: accepted solutions cluster. Stage 2 was method-limited because three naive complete-path constructors failed. The later production-search multi-pick work established that real beam frontiers can yield rare exact-LIVE states and that one-pick sampling was the deeper statistical failure. The old generic 'production-quality constructor missing' blocker is therefore too broad; the remaining gap is converting frozen real-search partials into a fair complete relaxed candidate and measuring local repairability. BLOCKER AUDIT 2026-10-16: this remaining construction gap is now an executable bounded development question, not a deferred prerequisite. Reuse frozen production-search partials/multi-pick frontier material and test the cheapest fair partial-to-relaxed-candidate completion or a partial-to-solution-manifold proxy. Full LNS remains unearned until candidate closeness/local repairability is positive.",
+      "result": "Stage 1 is positive: accepted solutions cluster. Stage 2 was method-limited because three naive complete-path constructors failed. The later production-search multi-pick work established that real beam frontiers can yield rare exact-LIVE states and that one-pick sampling was the deeper statistical failure. The old generic 'production-quality constructor missing' blocker is therefore too broad; the remaining gap is converting frozen real-search partials into a fair complete relaxed candidate and measuring local repairability. BLOCKER AUDIT 2026-10-16: this remaining construction gap is now an executable bounded development question, not a deferred prerequisite. Reuse frozen production-search partials/multi-pick frontier material and test the cheapest fair partial-to-relaxed-candidate completion or a partial-to-solution-manifold proxy. Full LNS remains unearned until candidate closeness/local repairability is positive. PG-O 002 (2026-10-17, run 39089743702) finally consumed frozen real-search Stage-2 partials: 50 exact-labelled depth-11 beam prefixes from two parent levels, 2 exact LIVE on R03147. Same-gate/same-depth prefix overlap with 15/9 independently referee-accepted historical hints remained poor; the two LIVE nearest Jaccard distances were 0.800 and 0.957, and 46 within-R03147 LIVE/DEAD comparisons ranked by Jaccard/position only 0.620 (common prefix 0.641). This rules out the tested historical-hint same-depth proximity screen, not all hint-free local revision or LNS. No new cold solve or runtime consumer.",
       "constrains": [
         "Reuse production-search-derived frontier states rather than inventing another heuristic pseudo-state generator.",
         "Do not build full LNS until the repaired Stage-2 falsifier is positive under a frozen candidate-construction method.",
         "Failure/search-loss evidence may supply additional real production partials or basin context, but it does not replace Lane G's specialist frontier sampler or frozen candidate-construction gate.",
         "Do not treat answer-bearing accepted solutions as candidate construction input; they are evaluation references only.",
-        "A disposable candidate-shaping prototype is allowed as the falsifier; a general LNS engine is not earned by its existence."
+        "A disposable candidate-shaping prototype is allowed as the falsifier; a general LNS engine is not earned by its existence.",
+        "The PG-O 002 stored-hint same-depth prefix similarity proxy is retrospectively negative (2 parent levels, 2 LIVE from one parent); historical solutions must never be a cold feature or construction input, and the 46 sibling comparisons are not independent parents.",
+        "Complete-solution clustering (Stage 1) does not imply that legitimate early beam-produced LIVE prefixes resemble the accepted-path manifold; next LNS candidate must establish a different current-state, hint-free partial-to-candidate and repairability mechanism."
       ],
       "reopensOn": null,
       "premiseRefs": [
