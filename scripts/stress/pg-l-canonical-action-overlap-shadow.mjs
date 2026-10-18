@@ -59,7 +59,11 @@ const outArg=process.argv.find(x=>x.startsWith('--out='));
 assert(outArg,'--out=<file> required');
 installBrowserStubs();
 const Solver=createSolver();
-const corpusBuffer=readFileSync(corpusFile),doc=JSON.parse(corpusBuffer);
+const corpusBuffer=readFileSync(corpusFile);
+const corpusSha256=createHash('sha256').update(corpusBuffer).digest('hex');
+assert(corpusSha256==='d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb',
+ 'frozen Corpus-2 input changed: do not silently select another parent population');
+const doc=JSON.parse(corpusBuffer);
 const levels=Array.isArray(doc)?doc:doc.levels;
 assert(Array.isArray(levels)&&levels.length>=100,'corpus missing or too small');
 const levelIds=levels.map(r=>String(r.id));
@@ -158,7 +162,7 @@ const summary={parents:parents.length,informativeParents:informative.length,
  meanEightMovePrefixJaccard:mean(informative.map(p=>p.contrasts.overlaps.prefixEight.jaccard).filter(Number.isFinite))};
 const report={schema:'pathfinder.pg-l-action-overlap-shadow/v1',kind:'read-only canonical beam action overlap',
  evidenceRole:'development',source:{code:process.env.GITHUB_SHA||null,corpusFile,
-  corpusSha256:createHash('sha256').update(corpusBuffer).digest('hex')},
+  corpusSha256},
  selection:{seed,selection:'outcome-blind SHA256 of seed + canonical levelId, first 8 independent corpus rows',
   selected:cohort,gateSelection:'first canonical prepared gate',profiles,
   perArmWorkBudget,width,budgetMs,control:'isolated identical beam attempt without observer for every observed arm'},
