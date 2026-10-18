@@ -40,8 +40,8 @@ for(const src of source.rows){
  assert(Array.isArray(result.attempts),'missing execution attempt records');
  const attempts=result.attempts.map(stage);
  const beam=attempts.filter(a=>Number(a.width)>0 && Number(a.work)>0);
- const objective=beam.filter(a=>a.configKey.includes('objectiveFirst'));
- const harvest=beam.filter(a=>a.configKey.includes('intersectionHarvest'));
+ const objective=beam.filter(a=>a.profile==='objectiveFirst');
+ const harvest=beam.filter(a=>a.profile==='intersectionHarvest');
  rows.push({levelId:src.levelId,status:result.status,ok:result.ok,workSpent:result.workSpent,
    attempts,attemptCount:attempts.length,objectiveAttemptCount:objective.length,
    intersectionAttemptCount:harvest.length,bothExecuted:!!(objective.length&&harvest.length)});
