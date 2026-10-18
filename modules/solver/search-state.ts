@@ -119,8 +119,8 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // cross-solveLevel()-call cumulative tracking, still read directly by offline hint-discovery
     // tooling) AND this solve's own isolated prep._workMeter (what every budget check inside the
     // search techniques and the attempt ladder actually reads — see PrepLevel._workMeter's comment).
-    if (prep._strictWorkCap !== undefined) {
-        assertStrictWorkChargeAllowed(prep._workMeter.units, prep._strictWorkCap, 1, 'applyMove');
+    if (prep._atomicStrictWorkCap !== undefined) {
+        assertStrictWorkChargeAllowed(prep._workMeter.units, prep._atomicStrictWorkCap, 1, 'applyMove');
     }
     workMeter.units++;
     prep._workMeter.units++;
