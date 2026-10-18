@@ -83,10 +83,18 @@ function join(shallow,control,freeze){
       'unknown current production disposition on '+parent.id);
     if(c.classification==='SOLVED')assert(c.refereeValid===true&&Array.isArray(c.solution),
       'production claimed success without referee path');
-    const currentGap=c.classification==='NON-SUCCESS-AT-CAP';
+    // A complete unsolved trajectory that spent *more* than 250k still did not
+    // discover a solution in its first 250k work units. That is valid cold negative
+    // opportunity evidence, but the excess work disqualifies an EXACT-budget A/B
+    // comparator. Never call a successful or censored overrun a 250k success/failure.
+    const overBudgetNoSolve=c.classification==='OVER-BUDGET'&&c.ok===false
+      && Number.isFinite(c.workSpent)&&c.workSpent>250000
+      && Number.isInteger(c.attemptCount)&&c.attemptCount>0
+      && ['node-budget-reached','work-budget-reached','failed'].includes(c.status);
+    const currentGap=c.classification==='NON-SUCCESS-AT-CAP'||overBudgetNoSolve;
     const category=c.classification==='SOLVED'?'ALREADY-CURRENT-SOLVED'
-      :c.classification==='OVER-BUDGET'?'CURRENT-CONTROL-OVER-BUDGET'
       :c.classification==='CENSORED'?'CURRENT-CONTROL-CENSORED'
+      :c.classification==='OVER-BUDGET'&&!overBudgetNoSolve?'CURRENT-CONTROL-OVER-BUDGET-UNKNOWN'
       :successes.length>0?'250K-ISOLATED-RECOVERY-CANDIDATE'
       :missing.length>0?'CURRENT-GAP-METHOD-OBSERVABILITY-INCOMPLETE'
       :'NO-ISOLATED-250K-SUCCESS';
@@ -94,6 +102,7 @@ function join(shallow,control,freeze){
       parentId:parent.id,rank:parent.rank,levelPos:p.levelPos,
       category,production:{status:c.status,classification:c.classification,
         workSpent:c.workSpent,workOvershoot:c.workOvershoot??Math.max(0,c.workSpent-250000),
+        measuredNoSolveBy250k:currentGap,exactCapRespected:c.workSpent<=250000,
         attemptCount:c.attemptCount},
       isolated:{methodsObserved:p.methodRows.length,successCount:successes.length,
         censoredCount:missing.length,winners:successes.map(m=>({
@@ -106,7 +115,8 @@ function join(shallow,control,freeze){
     currentProductionSolves:parents.filter(x=>x.category==='ALREADY-CURRENT-SOLVED').length,
     currentProductionMeasuredGaps:parents.filter(x=>x.currentGap).length,
     currentProductionCensored:parents.filter(x=>x.category==='CURRENT-CONTROL-CENSORED').length,
-    currentProductionOverBudget:parents.filter(x=>x.category==='CURRENT-CONTROL-OVER-BUDGET').length,
+    currentProductionOverBudget:parents.filter(x=>x.production.classification==='OVER-BUDGET').length,
+    overBudgetControlsProvingNoSolveBy250k:parents.filter(x=>x.production.classification==='OVER-BUDGET'&&x.currentGap).length,
     currentGapWithIsolated250kCandidate:parents.filter(x=>x.category==='250K-ISOLATED-RECOVERY-CANDIDATE').length,
     currentGapWithNoIsolated250kSuccess:parents.filter(x=>x.category==='NO-ISOLATED-250K-SUCCESS').length,
     currentGapWithMethodObservabilityIncomplete:parents.filter(x=>x.category==='CURRENT-GAP-METHOD-OBSERVABILITY-INCOMPLETE').length,
@@ -118,7 +128,7 @@ function join(shallow,control,freeze){
     interpretation:{
       independenceUnit:'parentId',
       eligibleConclusion:'Cold current-production failure with at least one distinct referee-valid isolated 250k-work method success is a candidate for a shared-budget, current-input-only scheduler retest.',
-      prohibitedConclusion:'No production A/B rescue established by separate isolated 250k experiments. A strict-budget-overrun result is excluded from 250k current control success/failure denominators; its actual cost remains visible. No prevalence or independent-confirmation claim on historically outcome-selected parents.',
+      prohibitedConclusion:'No production A/B rescue established by separate isolated 250k experiments. An over-budget completed failure can prove no solve by 250k along its executed trajectory, but is NOT an exactly matched 250k work-cost comparator. Never include over-budget work for free in a treatment/control economics claim. No prevalence or independent-confirmation claim.',
     },
   };
 }
