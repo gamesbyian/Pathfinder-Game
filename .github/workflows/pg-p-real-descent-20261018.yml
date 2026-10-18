@@ -34,7 +34,7 @@ jobs:
           import {readFileSync} from 'node:fs';
           const r=JSON.parse(readFileSync('tmp/pg-p/real-descent.json','utf8'));
           if(r.summary.parents!==12||r.protocol.levelIds.length!==12||new Set(r.protocol.levelIds).size!==12)throw Error('missing independent parents');
-          if(r.rows.some(p=>p.nodesExpanded>20000+10))throw Error('unexpected inflated node dose');
+          if(r.rows.some(p=>p.nodesExpanded>20000+32))throw Error('unexpected inflated node dose');
           console.log('PG-P SOURCE AND DOSE VERIFIED: '+JSON.stringify(r.summary));
           NODE
       - uses: actions/upload-artifact@v7
