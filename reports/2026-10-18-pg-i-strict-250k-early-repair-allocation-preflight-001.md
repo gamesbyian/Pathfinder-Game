@@ -1,9 +1,9 @@
 # PG-I strict-250k early-repair allocation falsifier (2026-10-18)
 
-> **Status:** active
-> **Last evidence:** 2026-10-18 — source-accurate fixed-control run 39171380197 and retained stage accounting
-> **Decision:** execute one bounded, paired, source-identical, cold 250k-work falsifier of early-repair opportunity cost on the existing 12 historically resistant PG-I parents; no production policy is authorized
-> **Remaining gate:** one 12-parent default-vs-early-repair-off strict-total 250k run, confirm execution/work/referee and any new cold solve; if no new solve, close this treatment form without wider dispatch
+> **Status:** concluded-negative
+> **Last evidence:** 2026-10-18 — complete paired run 39172410280, immutable execution SHA f3e333dc15f7a4ccbf7030bc0fd49843f486edb5
+> **Decision:** The complete early-repair-OFF strict-250k form is concluded negative on the frozen 12 development parents: 24/24 valid cells, 12/12 treatment main-search exposure, 0/12 solves in either arm, and no losses. Do not expand this unchanged treatment.
+> **Remaining gate:** none; different selective allocation premise requires a new cheap participation/causal gate
 > **Research question:** `WS2-VARIANT-RESPONSE-HARDNESS`
 > **Evidence role:** discovery
 > **Selection:** fixed original PG-I 12-member hash-ranked cohort, reused after observing original 250k no-solve and original repaired 250k stage work
@@ -12,7 +12,7 @@
 > **Inference scope:** development evidence on twelve selected parent puzzles and a specific strict-total 250k regime, not representative population prevalence or a production-default improvement
 > **Proposal provenance:** forensics of issue #2202 exact work-meter fix and the post-fix twelve-parent attempt-level source artifact
 
-<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"active","lastEvidenceDate":"2026-10-18","decision":"Execute an equal-work, hint-free twelve-parent early-repair-off development falsifier; no production action authorized.","remainingGate":"One source-identical 250k strict-total paired cold-control run on the twelve frozen PG-I parents","joins":{"researchQuestion":"WS2-VARIANT-RESPONSE-HARDNESS","premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"discovery","scope":{"populationIdentity":"sha256:d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb","selection":"historically resistant PG-I original twelve, retrospectively selected for this question after 250k stage starvation observation","inferenceScope":"twelve development parents only, source-identical strict-total 250k protocol"},"claimRefs":[],"sourceArtifacts":["reports/stress/pg-i-strict-250k-fixed-control-20261018.json"],"successors":{"questions":[],"artifacts":[]},"prospective":{"expectation":"early-repair-off will expose beam/main-work on parents previously fully consumed by repair; solve gain unknown","surprise":null,"anomaly":"nine of twelve frozen cold controls never reach main-search under strict 250k"}} -->
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-negative","lastEvidenceDate":"2026-10-18","decision":"The complete early-repair-OFF strict-250k form is concluded negative on the frozen 12 development parents: 24/24 valid cells, 12/12 treatment main-search exposure, 0/12 solves in either arm, and no losses. Do not expand this unchanged treatment.","remainingGate":"none","joins":{"researchQuestion":"WS2-VARIANT-RESPONSE-HARDNESS","premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"discovery","scope":{"populationIdentity":"sha256:d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb","selection":"historically resistant PG-I original twelve, retrospectively selected for this question after 250k stage starvation observation","inferenceScope":"twelve development parents only, source-identical strict-total 250k protocol"},"claimRefs":[],"sourceArtifacts":["reports/stress/pg-i-strict-250k-fixed-control-20261018.json","reports/stress/pg-i-early-repair-strict-250k-ab-20261018.json"],"successors":{"questions":[],"artifacts":[]},"prospective":{"expectation":"early-repair-off will expose beam/main-work on parents previously fully consumed by repair; solve gain unknown","surprise":"Disabling early repair freed 2.73M main-search work but recovered zero extra cold solves","anomaly":"nine of twelve frozen cold controls never reach main-search under strict 250k"}} -->
 
 ## Why now
 
@@ -34,3 +34,21 @@ The early-repair policy has previously shown legitimate benefit under other budg
 **Stop negative:** treatment demonstrably reaches previously starved main-search on >=one parent but yields zero additional solves. Close this complete-off form for the frozen strict-250k cohort without another larger matrix. If the treatment cannot expose main due another budget/eligibility gate, stop as implementation/participation inconclusive, investigate only a cheap specific gate.
 
 No hints, historical win labels or parent ID route the cold solver. The historical cohort identity is only offline experiment selection. Production code remains unchanged.
+
+## Complete paired result and disposition
+
+The source-accurate, read-only [one-shot run 39172410280](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39172410280), execution SHA `f3e333dc15f7a4ccbf7030bc0fd49843f486edb5`, finished 24/24 valid cold arms on the twelve frozen independently identified parents. Full `verdict.json` had no invalid parent, referee error, timeout or attempt-work mismatch. The immutable artifact is `12153361018` (ZIP SHA256 `fc88b38d31ba4b5e7357e60c60e8cb97c5cd61faf878743286ccc6abba9ca8d1`, member SHA256 `b61df5110607f5bec0683aeec9cf08dc907cbf0ec7e606f1869de33ecaf64ca1`). [Durable 12-parent evidence summary](stress/pg-i-early-repair-strict-250k-ab-20261018.json) retains per-parent work, stage exposure, stops and provenance after workflow retirement.
+
+| Measure | Default | Early repair disabled |
+| --- | ---: | ---: |
+| Valid parent cells | 12/12 | 12/12 |
+| Cold referee-valid solves | **0/12** | **0/12** |
+| Canonical whole-solve work | 3,000,000 | 3,000,000 |
+| Parent puzzles with positive main-search work | 3/12 | **12/12** |
+| Aggregate early-repair work | 2,250,000 | **0** |
+| Aggregate main-search work | 597,789 | **2,733,498** |
+| Strict work ceiling breaches | 0 | 0 |
+
+The control/treatment disjoint stage profiles demonstrate genuine treatment participation. The three control puzzles that never used early repair ran exactly the same measured main-search work and node counts in the corresponding treatment; the other nine spent their entire control work cap in early repair. Both arms remained unsolved. More work in existing main search was **not** sufficient at 250k.
+
+**Decision:** stop the tested complete-disable early repair form, do not promote a default disable, and do not commission a bigger repetition of this same comparison merely because participation was high. The prior promotion of early repair on other populations remains intact. Reopening requires a *materially different* conditional allocation signal with cheap, source-native predictive opportunity that competes economically at a fixed total-work envelope. The stronger PG-I isolated 10M beam successes at ~2.2M–3.1M canonical work remain genuine, but this 250k comparison did not shorten those trajectories. No new cold solve is claimed.
