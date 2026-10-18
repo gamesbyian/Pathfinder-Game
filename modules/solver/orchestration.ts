@@ -92,6 +92,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // Opt-in only. Existing production behavior deliberately remains untouched until a matched
     // confirmation can measure the solve-set effect of converting additive passes to one cap.
     prep._strictWorkCap = opts.strictTotalWorkBudget ? workStart + workBudget : undefined;
+    // The older _strictWorkCap is also used by equal-work census/static-portfolio
+    // per-attempt and resumable tranche budgets, which must keep their existing
+    // phase-capture semantics. Atomic charge refusal belongs ONLY to this whole-solve option.
+    prep._atomicStrictWorkCap = prep._strictWorkCap;
     if (prep._strictWorkCap !== undefined) prep._workCap = prep._strictWorkCap;
     prep._attemptBudgetTelemetry = opts.attemptBudgetTelemetry === true || opts.lifecycleTelemetry === true
         || opts.strictTotalWorkBudget === true;
