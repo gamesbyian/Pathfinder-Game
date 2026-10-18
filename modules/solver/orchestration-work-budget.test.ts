@@ -5,7 +5,7 @@ import { solveLevel, runAttempt } from './orchestration.js';
 import type { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { assertStrictWorkChargeAllowed, StrictWorkBudgetExhausted, workMeter } from './work-meter.js';
-import { createState, applyMove, undoMove } from './search-state.js';
+import { createState, applyMove, undoMove, getNeighbors } from './search-state.js';
 import { isConnected } from './topology.js';
 import { prepLevel } from './prep.js';
 import { makeLineLevel, makeRepairGatedInfeasibleLevel, exhaustingDispatch, makeGoalAttractionDisabledRetryGatedInfeasibleLevel } from './orchestration-test-support.js';
@@ -254,8 +254,10 @@ test('strict whole-solve cap censors a batched attempt without overcharging or l
     const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
         const [, gateKey, level, prep, , , , , , out] = args;
         const state = createState(gateKey, level, prep);
+        const next = getNeighbors(gateKey, state, level, prep)[0];
+        assert.ok(next !== undefined, 'fixture must expose a legal move');
         for (let i = 0; i < 32; i++) {
-            const undo = applyMove(gateKey, state, level, prep, false);
+            const undo = applyMove(next, state, level, prep, false);
             undoMove(undo, state);
         }
         if (out) out.timedOut = true;
