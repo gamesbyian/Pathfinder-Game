@@ -274,6 +274,10 @@ export interface PrepLevel {
     _workCap?: number;
     /** Experiment-only immutable whole-solve cap; per-attempt allocations may only reduce it. */
     _strictWorkCap?: number;
+    /** Dedicated opt-in whole-solve cap: unlike _strictWorkCap, this never represents a
+     * per-technique research slice or a resumable portfolio tranche. Only this cap can
+     * interrupt an atomic operation before its canonical charge. */
+    _atomicStrictWorkCap?: number;
     /** One atomic metered operation was refused at the strict cap (which may leave 1..11 units unused). */
     _strictWorkChargeRefused?: boolean;
     /** Reusable DFS/beam/repair search-state backing buffers (see search-state.ts's `createState`),
