@@ -3,9 +3,9 @@
 # Remove after exact-source evidence is preserved and the gate is adjudicated.
 name: PG-I strict 250k qualification
 on:
-  push:
+  pull_request:
     branches:
-      - chatgpt/strict-total-work-meter-boundary-20261018
+      - main
     paths:
       - '.github/workflows/pg-i-strict-250k-qualification-20261018.yml'
   workflow_dispatch:
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Check out exact source commit
+      - name: Check out exact PR merge source commit
         uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
