@@ -1,7 +1,7 @@
 # PG-D ordinary flipper-route necessary-condition screen 003
 
 > **Status:** concluded-negative
-> **Last evidence:** 2026-10-18, green read-only [run 39108935695](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39108935695) at source `dd13ba054264af55182aa513108efbb748dfa539`, artifact `12129448017`, exact source hashes and full 13-case ledger preserved in [machine verdict](stress/pg-d-flipper-automaton-relaxation-20261018-001.json).
+> **Last evidence:** 2026-10-18 — green read-only [run 39108935695](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39108935695) at source `dd13ba054264af55182aa513108efbb748dfa539`, artifact `12129448017`, exact source hashes and full 13-case ledger preserved in [machine verdict](stress/pg-d-flipper-automaton-relaxation-20261018-001.json).
 > **Decision:** Neither the history-free flipper automaton nor its frozen-used-axis refinement rejects any of four reference-DEAD portal-free prefixes; both preserve all nine LIVE controls. The tested P00009 mixed-fate contrasts remain indistinguishable to these abstract route-existence screens, so stop this exact formulation.
 > **Remaining gate:** Do not repeat a memoryless flipper-route or frozen-history route-existence test unchanged. A new PG-D premise needs a cheap sound inference involving dynamic future edge-axis use, required intersections and/or combined flipper obligations, plus measured post-prefix work and independent-parent opportunity before any production consumer.
 > **Research question:** `WS2-TRAIL-SWITCH-FEASIBILITY`
