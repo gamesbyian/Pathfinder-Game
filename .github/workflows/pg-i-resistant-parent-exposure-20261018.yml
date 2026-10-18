@@ -18,7 +18,7 @@ jobs:
   plan:
     name: Source-verify, seal 60-cell plan, and canary
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v7
         with:
@@ -59,6 +59,37 @@ jobs:
             throw Error('source-pinned five-technique canary failed');
           console.log('PG-I five-method canary: '+r.results.map(x=>x.status).join(', '));
           NODE
+      - name: Budget-matched shallow isolated screen, 250k work per method
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const plan=JSON.parse(readFileSync('tmp/pg-i/plan.json','utf8'));
+          if(plan.expectedCells!==60||plan.independentParentCount!==12||plan.expectedShards!==3)
+            throw Error('unexpected source plan for shallow 250k experiment');
+          const cells=plan.cells.map(c=>({...c,cellId:'PGI250::'+c.cellId,
+            tier:'PGI250',workBudget:250000}));
+          if(new Set(cells.map(c=>c.cellId)).size!==60)throw Error('shallow cell identity collision');
+          writeFileSync('tmp/pg-i/shallow-plan.json',
+            JSON.stringify({...plan,cells,expectedShards:1,expectedCells:60,
+              equalWorkBudgetPerTechnique:250000,
+              inference:'250k isolated method per cell on the exact frozen parents; not the shared production ladder'},null,2));
+          NODE
+          mkdir -p tmp/pg-i/shallow-shards
+          node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+            --plan=tmp/pg-i/shallow-plan.json --shard=1 --shards=1 --workers=3 \
+            --out=tmp/pg-i/shallow-shards/shard-1.json
+          node scripts/stress/pg-i-resistant-parent-exposure.mjs --mode=combine \
+            --plan=tmp/pg-i/shallow-plan.json --input-dir=tmp/pg-i/shallow-shards \
+            --out=tmp/pg-i/shallow-verdict.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('tmp/pg-i/shallow-verdict.json','utf8'));
+          if(r.summary.expectedCells!==60||r.summary.observedCells!==60||r.summary.censoredCells>0)
+            throw Error('250k screen had missing/censored results '+JSON.stringify(r.summary));
+          console.log('PG-I 250k ISOLATED VERDICT '+JSON.stringify(r.summary));
+          NODE
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -67,6 +98,9 @@ jobs:
             tmp/pg-i/plan.json
             tmp/pg-i/canary-plan.json
             tmp/pg-i/canary.json
+            tmp/pg-i/shallow-plan.json
+            tmp/pg-i/shallow-shards/shard-1.json
+            tmp/pg-i/shallow-verdict.json
           if-no-files-found: warn
           retention-days: 90
 
