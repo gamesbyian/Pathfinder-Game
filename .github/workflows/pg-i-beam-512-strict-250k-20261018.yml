@@ -1,0 +1,71 @@
+# Temporary, development-only, one configuration/breadth-depth falsifier.
+# The 3 selected parent-gate-method pairs derive from frozen deep-source evidence,
+# and are NOT independent product-cold route selection. No hint input to search.
+name: PG-I exact 250k narrow width falsifier
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/pg-i-beam-512-strict-250k-20261018.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: pg-i-beam-512-strict-250k-20261018
+  cancel-in-progress: false
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: Three paired 512 vs 5000 isolated beam cells
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout immutable source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - name: Exact Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Source contract self-test
+        run: node scripts/run-bundled.mjs scripts/stress/pg-i-beam-512-strict-250k.mjs -- --self-test
+      - name: Exact-work three-pair result
+        id: compare
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs/pg-i-512-width
+          timeout -k 30s --preserve-status 40m \
+            node scripts/run-bundled.mjs scripts/stress/pg-i-beam-512-strict-250k.mjs -- \
+              --out=logs/pg-i-512-width/paired-result.json
+      - name: Retain evidence even when gate fails
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-i-beam-512-250k-paired-result
+          path: logs/pg-i-512-width/paired-result.json
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Enforce source-matched exact budget and complete cohort
+        if: always()
+        shell: bash
+        env:
+          RESULT: ${{ steps.compare.outcome }}
+        run: |
+          set -euo pipefail
+          test "$RESULT" = success
+          node --input-type=module - <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const p=JSON.parse(readFileSync('logs/pg-i-512-width/paired-result.json','utf8'));
+          if(p.sourceExecutionCommit!==process.env.GITHUB_SHA
+            ||p.summary.pairs!==3||p.summary.cells!==6||p.summary.validCells!==6
+            ||p.summary.errors||p.summary.maxWorkSpent>250000)
+            throw Error('invalid paired source/work/referee data');
+          console.log(JSON.stringify(p.summary));
+          NODE
