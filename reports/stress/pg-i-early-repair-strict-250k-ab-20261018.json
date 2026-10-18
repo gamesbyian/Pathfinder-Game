@@ -1,0 +1,325 @@
+{
+  "schema": "pathfinder.pg-i-early-repair-strict-250k-ab-retained-summary/v1",
+  "sourceRun": 39172410280,
+  "sourceArtifactId": 12153361018,
+  "sourceHead": "f3e333dc15f7a4ccbf7030bc0fd49843f486edb5",
+  "artifactZipSha256": "fc88b38d31ba4b5e7357e60c60e8cb97c5cd61faf878743286ccc6abba9ca8d1",
+  "verdictMemberSha256": "b61df5110607f5bec0683aeec9cf08dc907cbf0ec7e606f1869de33ecaf64ca1",
+  "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "populationSource": "reports/stress/pg-i-strict-250k-fixed-control-20261018.json",
+  "evidenceRole": "selected-on-development",
+  "contract": {
+    "baseWorkBudget": 250000,
+    "nodeBudget": 250000,
+    "timeBudgetMs": 600000,
+    "strictTotalWorkBudget": true,
+    "oneColdInvocationPerArmParent": true,
+    "noStoredHints": true
+  },
+  "arms": [
+    {
+      "id": "production-strict-250k",
+      "ablation": null
+    },
+    {
+      "id": "early-repair-disabled-strict-250k",
+      "ablation": {
+        "STRATEGY_EARLY_REPAIR_SEARCH": false
+      }
+    }
+  ],
+  "summary": {
+    "independentParents": 12,
+    "cells": 24,
+    "validCells": 24,
+    "controlsSolved": 0,
+    "treatmentsSolved": 0,
+    "gains": 0,
+    "losses": 0,
+    "invalidParents": [],
+    "controlRepairMonopoly": 9,
+    "treatmentParentsMainPositive": 12,
+    "controlEarlyRepairAggregateWork": 2250000,
+    "treatmentMainAggregateWork": 2733498
+  },
+  "rows": [
+    {
+      "parentId": "R03031",
+      "rank": 1,
+      "levelPos": 1362,
+      "control": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 72887,
+        "earlyRepairWork": 250000,
+        "mainSearchWork": 0
+      },
+      "treatment": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 120908,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 249989
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R00044",
+      "rank": 2,
+      "levelPos": 3,
+      "control": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 74214,
+        "earlyRepairWork": 250000,
+        "mainSearchWork": 0
+      },
+      "treatment": {
+        "status": "node-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 187624,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 216240
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R02166",
+      "rank": 3,
+      "levelPos": 497,
+      "control": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 64955,
+        "earlyRepairWork": 250000,
+        "mainSearchWork": 0
+      },
+      "treatment": {
+        "status": "node-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 251779,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 169483
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R03287",
+      "rank": 4,
+      "levelPos": 1618,
+      "control": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 61798,
+        "earlyRepairWork": 250000,
+        "mainSearchWork": 0
+      },
+      "treatment": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 142053,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 250000
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R00449",
+      "rank": 5,
+      "levelPos": 61,
+      "control": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 66075,
+        "earlyRepairWork": 250000,
+        "mainSearchWork": 0
+      },
+      "treatment": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 143825,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 250000
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R02160",
+      "rank": 6,
+      "levelPos": 491,
+      "control": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 70741,
+        "earlyRepairWork": 250000,
+        "mainSearchWork": 0
+      },
+      "treatment": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 145520,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 249997
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R02550",
+      "rank": 7,
+      "levelPos": 881,
+      "control": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 183344,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 234686
+      },
+      "treatment": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 183344,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 234686
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R01351",
+      "rank": 8,
+      "levelPos": 220,
+      "control": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 67758,
+        "earlyRepairWork": 250000,
+        "mainSearchWork": 0
+      },
+      "treatment": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 135823,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 250000
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R02839",
+      "rank": 9,
+      "levelPos": 1170,
+      "control": {
+        "status": "node-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 253696,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 166579
+      },
+      "treatment": {
+        "status": "node-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 253696,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 166579
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R03092",
+      "rank": 10,
+      "levelPos": 1423,
+      "control": {
+        "status": "node-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 187545,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 196524
+      },
+      "treatment": {
+        "status": "node-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 187545,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 196524
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R02701",
+      "rank": 11,
+      "levelPos": 1032,
+      "control": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 65078,
+        "earlyRepairWork": 250000,
+        "mainSearchWork": 0
+      },
+      "treatment": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 122719,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 250000
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R02108",
+      "rank": 12,
+      "levelPos": 439,
+      "control": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 65363,
+        "earlyRepairWork": 250000,
+        "mainSearchWork": 0
+      },
+      "treatment": {
+        "status": "work-budget-reached",
+        "ok": false,
+        "workSpent": 250000,
+        "nodesExpanded": 163174,
+        "earlyRepairWork": 0,
+        "mainSearchWork": 250000
+      },
+      "gain": false,
+      "loss": false
+    }
+  ],
+  "qualification": "No attempted control/treatment returned errors, referee-invalid solution, wall truncation, or incorrect attempt work accounting. Full per-attempt data retained in GH Actions artifact.",
+  "result": "Concluded negative: complete early repair disabled improves exposure but not solves at 250k on these twelve selected parents; no product policy change."
+}
