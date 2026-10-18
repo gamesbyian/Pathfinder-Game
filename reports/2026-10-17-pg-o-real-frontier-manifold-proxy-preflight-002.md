@@ -1,6 +1,9 @@
 # PG-O Stage-2 real-beam partial-to-solution-manifold proxy preflight 002
 
-> **Status:** concluded-negative on this historical-hint geometry proxy; [completed result 002](2026-10-17-pg-o-real-frontier-manifold-proxy-result-002.md) preserves exact 50-case evidence
+> **Status:** concluded-negative
+> **Last evidence:** 2026-10-17 — [source-exact completed run 39089743702](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39089743702), all 50 cases with valid hints and exact outcomes.
+> **Decision:** the tested historical-hint same-depth geometric proximity is not informative enough among the two independent real-beam parents to justify a runtime LNS discriminator; full machine evidence and outcome are preserved in [PG-O 002](2026-10-17-pg-o-real-frontier-manifold-proxy-result-002.md).
+> **Remaining gate:** a different **hint-free current-state partial-to-relaxed-candidate and local-repairability** mechanism, with independent-parent opportunity; no LNS implementation authorized.
 > **Question:** do genuinely beam-produced unfinished Pathfinder routes lie geometrically near the *same-depth prefix manifold* of accepted solutions, and is that resemblance informative about exact future completion?
 > **Research question:** `WS2-G1-COMPLETE-PATH-LNS`
 > **Evidence role:** development/cheapest falsifier; **zero production solver changes**.
