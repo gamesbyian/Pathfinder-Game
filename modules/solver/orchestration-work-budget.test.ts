@@ -252,7 +252,7 @@ test('strict whole-solve cap censors a batched attempt without overcharging or l
     // without consulting the stage cap. Ordinary production paths do this naturally
     // between their work checks; this pin isolates the shared meter/dispatcher seam.
     const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
-        const [, gateKey, level, prep, , , , , out] = args;
+        const [, gateKey, level, prep, , , , , , out] = args;
         const state = createState(gateKey, level, prep);
         for (let i = 0; i < 32; i++) {
             const undo = applyMove(gateKey, state, level, prep, false);
