@@ -142,6 +142,14 @@ const summary={sourceRows:sourceObjects.reduce((sum,s)=>sum+s.rows.length,0),
 fail(summary.sourceRows===28&&summary.distinctPrefixes===25&&summary.duplicateAliases===3,
   'frozen exact source coverage unexpectedly changed');
 fail(summary.independentParents===7,'independent parent coverage changed');
+// Frozen code/data reproducibility acceptance: these are measurements, not
+// production acceptance thresholds. Any drift must be investigated rather than
+// silently interpreting an unmatched retrospective population.
+fail(base.signatureKeys===12&&base.repeatedRows===25&&base.mixedKeys===7,
+  'retained endpoint/depth baseline drifted');
+fail(count.signatureKeys===21&&count.repeatedRows===8&&count.mixedKeys===2
+  &&summary.baseMixedGroupsSeparated===5,
+  'retained articulation-count collision/compression verdict drifted');
 const verdict={
  schema:'pathfinder.pg-j-retained-articulation-count/v1',
  evidenceRole:'retrospective-development',
