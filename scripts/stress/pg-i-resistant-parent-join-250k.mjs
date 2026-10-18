@@ -79,12 +79,13 @@ function join(shallow,control,freeze){
       && Array.isArray(m.path)&&Number.isFinite(m.workSpent)
       && m.workSpent>=0&&m.workSpent<=250000,
       'unsupported/out-of-budget isolated solution on '+parent.id);
-    assert(['SOLVED','NON-SUCCESS-AT-CAP','CENSORED'].includes(c.classification),
+    assert(['SOLVED','NON-SUCCESS-AT-CAP','CENSORED','OVER-BUDGET'].includes(c.classification),
       'unknown current production disposition on '+parent.id);
     if(c.classification==='SOLVED')assert(c.refereeValid===true&&Array.isArray(c.solution),
       'production claimed success without referee path');
     const currentGap=c.classification==='NON-SUCCESS-AT-CAP';
     const category=c.classification==='SOLVED'?'ALREADY-CURRENT-SOLVED'
+      :c.classification==='OVER-BUDGET'?'CURRENT-CONTROL-OVER-BUDGET'
       :c.classification==='CENSORED'?'CURRENT-CONTROL-CENSORED'
       :successes.length>0?'250K-ISOLATED-RECOVERY-CANDIDATE'
       :missing.length>0?'CURRENT-GAP-METHOD-OBSERVABILITY-INCOMPLETE'
@@ -92,7 +93,8 @@ function join(shallow,control,freeze){
     parents.push({
       parentId:parent.id,rank:parent.rank,levelPos:p.levelPos,
       category,production:{status:c.status,classification:c.classification,
-        workSpent:c.workSpent,attemptCount:c.attemptCount},
+        workSpent:c.workSpent,workOvershoot:c.workOvershoot??Math.max(0,c.workSpent-250000),
+        attemptCount:c.attemptCount},
       isolated:{methodsObserved:p.methodRows.length,successCount:successes.length,
         censoredCount:missing.length,winners:successes.map(m=>({
           configKey:m.configKey,workSpent:m.workSpent,cellId:m.cellId,
@@ -104,6 +106,7 @@ function join(shallow,control,freeze){
     currentProductionSolves:parents.filter(x=>x.category==='ALREADY-CURRENT-SOLVED').length,
     currentProductionMeasuredGaps:parents.filter(x=>x.currentGap).length,
     currentProductionCensored:parents.filter(x=>x.category==='CURRENT-CONTROL-CENSORED').length,
+    currentProductionOverBudget:parents.filter(x=>x.category==='CURRENT-CONTROL-OVER-BUDGET').length,
     currentGapWithIsolated250kCandidate:parents.filter(x=>x.category==='250K-ISOLATED-RECOVERY-CANDIDATE').length,
     currentGapWithNoIsolated250kSuccess:parents.filter(x=>x.category==='NO-ISOLATED-250K-SUCCESS').length,
     currentGapWithMethodObservabilityIncomplete:parents.filter(x=>x.category==='CURRENT-GAP-METHOD-OBSERVABILITY-INCOMPLETE').length,
@@ -115,7 +118,7 @@ function join(shallow,control,freeze){
     interpretation:{
       independenceUnit:'parentId',
       eligibleConclusion:'Cold current-production failure with at least one distinct referee-valid isolated 250k-work method success is a candidate for a shared-budget, current-input-only scheduler retest.',
-      prohibitedConclusion:'No production A/B rescue established by separate isolated 250k experiments. No prevalence or independent-confirmation claim on historically outcome-selected parents.',
+      prohibitedConclusion:'No production A/B rescue established by separate isolated 250k experiments. A strict-budget-overrun result is excluded from 250k current control success/failure denominators; its actual cost remains visible. No prevalence or independent-confirmation claim on historically outcome-selected parents.',
     },
   };
 }
