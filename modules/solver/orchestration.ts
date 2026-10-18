@@ -476,7 +476,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // budget-limited, not searched out. Bit-identical to the plain `workSpent >= workBudget` check
     // whenever the reserve never triggered (every caller before this fix, and any run with an
     // infinite workBudget).
-    const workBudgetReached = workBudget !== Infinity && (workSpent >= workBudget || mainSearchEarlyTiersHitWorkCeiling);
+    const workBudgetReached = workBudget !== Infinity && (workSpent >= workBudget || mainSearchEarlyTiersHitWorkCeiling
+        || prep._strictWorkChargeRefused === true);
     const deadlineTruncated = totalMs >= timeBudgetMs && !nodeBudgetReached && !workBudgetReached;
     // A technique exception is not evidence that the level exhausted, timed out, or consumed its
     // node allowance. Attempts after it still run, but an unsuccessful aggregate remains visibly
