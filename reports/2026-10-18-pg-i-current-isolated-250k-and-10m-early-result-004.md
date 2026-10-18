@@ -8,7 +8,7 @@
 > **Premise refs:** `P113`, `P144`, `P145`, `P199`
 > **Evidence role:** discovery
 > **Selection:** 12 independent source-pinned Corpus-2 parents, selected from an old 50M-node no-recorded-T1-success frame using outcome-blind salted hash before current measurements.
-> **Population identity:** current Corpus-2 SHA-256 `d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb`; selection in `reports/stress/pg-i-resistant-parent-20261018-frozen-selection.json`; source run `39127477775` and SHA above.
+> **Population identity:** Frozen 12 independent Corpus-2 parents SHA256 d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb; current source SHA 68cb6c11198585bbcacd10ccc39cd1d45b93bc22
 > **Selection history:** historical production-unsolved/T1-zero-success nomination, then fixed ID-hash rank; not population-random or independent confirmation.
 > **Inference scope:** twelve selected independent parents, five current isolated methods under exactly recorded 250k and 10M *per-method* canonical-work ceilings; no generic proof of infeasibility, current production routing gain, or unseen generator transfer.
 > **Production effect:** none.
