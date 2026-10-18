@@ -115,12 +115,12 @@ for(const source of selected){
    const c=choices.get(JSON.stringify(prefix));
    return {depth:j+1,mode:c?.mode??'unobserved',branching:c?.branching??null};
   });
-  return {rank:i,badness:e.badness,rawDepth:e.path.length-1,arrivalNodes:e.arrivalNodes,
+  return {rank:i,path:e.path,matchedHistoricHintSha256:sha(JSON.stringify(hint.path)),badness:e.badness,rawDepth:e.path.length-1,arrivalNodes:e.arrivalNodes,
    restart:e.restart,choiceOrdinal:e.choiceOrdinal,
    moveHistory:getHistory(e.path,level),
    predecessorBranching:trajectory.filter(x=>(x.branching??0)>1).length,
    unseenDescentChoices:trajectory.filter(x=>x.mode==='unobserved').length,
-   descentChoiceTail:trajectory.slice(-32),
+   descentChoices:trajectory,
    comparison:compareElite(e,hint.path,level)};
  });
  const sameBadnessDistinct=top.filter((x,i)=>i>0&&x.badness===top[0]?.badness&&commonPrefix(x.path,top[0].path)<Math.min(x.path.length,top[0].path.length)-2);
@@ -135,7 +135,7 @@ for(const source of selected){
 const valid=report.filter(x=>x.observedEliteEvents>0);
 const output={schema:'pathfinder.pg-p-real-repair-descent-shadow/v1',
  source:{corpusPath,corpusSha256:sha(readFileSync(corpusPath)),solverHead:process.env.GITHUB_SHA??null},
- protocol:{selectedBy:'SHA256(pathfinder pg-p real descent seed + level id) over hint-bearing Corpus-2 parents; hint availability offline selection criterion only',levelIds:selected.map(x=>x.id),maxParents,nodeBudget,maxElites,attemptProfile:'repair',researchHooks:['repairChoice','repairElite'],backend:'actual current repairSearchFromGate unchanged',mechanicTags:'history-derived events are descriptive, not proof of causality or exact completion fate',noReferenceQueries:true},
+ protocol:{selectedBy:'SHA256(pathfinder pg-p real descent seed + level id) over hint-bearing Corpus-2 parents; hint availability offline selection criterion only',levelIds:selected.map(x=>x.id),maxParents,nodeBudget,maxElites,attemptProfile:'repair',researchHooks:['repairChoice','repairElite'],backend:'actual current repairSearchFromGate unchanged',mechanicTags:'history-derived events are descriptive, not proof of causality or exact completion fate'; retained exact elite path and choice chronology,noReferenceQueries:true},
  summary:{parents:report.length,parentsWithElite:valid.length,parentsWithMultipleElites:report.filter(r=>r.distinctElitePaths>=2).length,parentsWithSameBadnessEarlyDivergentElites:report.filter(r=>r.sameBadnessEarlyDistinctEliteCount>0).length,totalObservedChoices:report.reduce((n,x)=>n+x.observedChoices,0),totalCanonicalWork:report.reduce((n,x)=>n+x.measuredCanonicalWork,0),parentsSolvedByProbe:report.filter(x=>x.normalRepairOutcome==='solved').length},
  rows:report,
  caveat:'Historical accepted paths are used ONLY in the offline elite comparison, never to direct repair; deficits/commitments compared descriptively. If no independent parent has an early shared commitment signature and a marked real-solve economic gap, a repair operator is not earned.'};
