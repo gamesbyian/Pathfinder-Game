@@ -91,6 +91,7 @@ export async function runAttempt(
         // a certificate of infeasibility. Atomic charge rejection happens before the
         // operation can mutate state or increment either work meter.
         if (err instanceof StrictWorkBudgetExhausted) {
+            prep._strictWorkChargeRefused = true;
             searchOut.timedOut = true;
         } else {
             const thrown = err as { name?: unknown; message?: unknown } | null;
