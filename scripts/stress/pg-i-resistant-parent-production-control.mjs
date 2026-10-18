@@ -57,12 +57,15 @@ for(const parent of frozen.selected){
  const refereeValid=solution?solver.validateCandidatePath(level,solution).ok:null;
  assert(!outcome.ok||(Array.isArray(solution)&&refereeValid===true),
    'successful production control lacks valid path');
- const timedOut=outcome.status==='timed-out'||outcome.status==='timeout'
-   ||outcome.attempts?.some(a=>a.outcome==='timed-out');
- // A timed-out attempt may occur even if the overall solver finishes from another method.
- // Keep the deadline evidence, and classify only genuine completed success as SOLVED.
+ const timedOut=outcome.deadlineTruncated===true
+   ||outcome.status==='deadline-truncated';
+ // Attempt errors, zero participation and premature deadline termination are never measured misses.
+ // A timed-out early attempt can be followed by a valid later solve; the full solver status owns
+ // whether its final unsolved outcome is censored.
+ const measurable=['node-budget-reached','work-budget-reached','failed'].includes(outcome.status)
+   && outcome.workSpent>0 && Array.isArray(outcome.attempts) && outcome.attempts.length>0;
  const classification=outcome.ok&&refereeValid===true?'SOLVED'
-   :timedOut?'CENSORED':'NON-SUCCESS-AT-CAP';
+   :timedOut||!measurable?'CENSORED':'NON-SUCCESS-AT-CAP';
  const row={parentId:parent.id,rank:parent.rank,levelPos:source.levelPos,
   status:outcome.status,ok:!!outcome.ok,classification,refereeValid,
   workSpent:outcome.workSpent,nodesExpanded:outcome.nodesExpanded??null,
