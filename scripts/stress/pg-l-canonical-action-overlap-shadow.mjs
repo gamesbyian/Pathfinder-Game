@@ -14,7 +14,7 @@
 import {createHash} from 'node:crypto';
 import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
-import {createSolver,SOLVER_TESTING_API:api} from '../../modules/solver.js';
+import {createSolver,SOLVER_TESTING_API as api} from '../../modules/solver.js';
 import {installBrowserStubs} from '../test-lib/browser-stubs.mjs';
 const corpusFile='data/stress/stress-levels-random.json';
 const seed='pathfinder-pg-l-action-overlap-cold-8-20261017-001';
