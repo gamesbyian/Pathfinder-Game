@@ -36,7 +36,7 @@ assert(new Set(source.selected.map(x=>x.id)).size===24,'duplicate heldout parent
 const byId=new Map(all.map(x=>[x.id,x]));
 const rows=[];
 for(const src of source.selected){
- const row=byId.get(src.levelId);assert(row,'missing source row');
+ const row=byId.get(src.id);assert(row,'missing source row');
  const {id:_id,stressMeta:_sm,...wire}=row;
  const level=solver.prepareLevelForSolver(wire,{source:'raw'});
  assert(Array.isArray(level.gateKeys)&&level.gateKeys.length>0,'missing gate');
@@ -46,10 +46,10 @@ for(const src of source.selected){
  const beam=attempts.filter(a=>Number(a.width)>0 && Number(a.work)>0);
  const objective=beam.filter(a=>a.profile==='objectiveFirst');
  const harvest=beam.filter(a=>a.profile==='intersectionHarvest');
- rows.push({levelId:src.levelId,status:result.status,ok:result.ok,workSpent:result.workSpent,
+ rows.push({levelId:src.id,status:result.status,ok:result.ok,workSpent:result.workSpent,
    gateKey:level.gateKeys[0],attempts,attemptCount:attempts.length,objectiveAttemptCount:objective.length,
    intersectionAttemptCount:harvest.length,bothExecuted:!!(objective.length&&harvest.length)});
- console.log('PG-L DISPATCH '+JSON.stringify({levelId:src.levelId,status:result.status,workSpent:result.workSpent,
+ console.log('PG-L DISPATCH '+JSON.stringify({levelId:src.id,status:result.status,workSpent:result.workSpent,
   attempts:attempts.length,bothExecuted:!!(objective.length&&harvest.length),objective:objective.length,harvest:harvest.length}));
 }
 const report={schema:'pathfinder.pg-l-independent-24-actual-dispatch-250k-canary/v1',
