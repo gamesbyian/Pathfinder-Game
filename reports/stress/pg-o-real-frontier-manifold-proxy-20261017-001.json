@@ -1,0 +1,1001 @@
+{
+  "schema": "pathfinder.pg-o-real-frontier-manifold-proxy/v1",
+  "source": {
+    "labels": "reports/stress/class5-production-search-frontier-multi-pick-exact-labels-2026-09-17.json",
+    "labelsSha256": "4c996300577594962c2e39e3eb5ae5068cea550dffd16b72d8c653aa3565e137",
+    "population": "reports/stress/class5-production-search-frontier-multi-pick-population-2026-09-17.json",
+    "populationSha256": "0d9961430286ee835c547968ed51dc1ef4ef6ec8cff35c71b452f108cec224f8",
+    "corpus": "data/stress/stress-levels-random.json",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "headSha": "2c77722da3462c88ca0c38f455df2dbfa8ec9d41"
+  },
+  "design": {
+    "role": "development-precondition-only",
+    "parents": [
+      "R01600",
+      "R03147"
+    ],
+    "depthFraction": 0.1,
+    "technique": "intersectionHarvest",
+    "width": 5000,
+    "independentUnits": 2,
+    "exactLabelBlindFeatures": true,
+    "maxAcceptedHints": 20,
+    "chosenHintMethod": "sha256-sorted distinct native-refereed stored accepted paths",
+    "features": "Jaccard of equal-depth PREFIX cell supports, aligned per-position mismatch, and common-prefix length; all conditioned on same original gate",
+    "caveat": "Historical accepted solutions are forbidden in cold policy. Scores cannot be interpreted as learned predictors from a selected two-parent/2-LIVE pilot."
+  },
+  "summary": {
+    "parents": 2,
+    "cases": 50,
+    "live": 2,
+    "dead": 48,
+    "allFeatureCases": 50,
+    "hintCounts": {
+      "R01600": 15,
+      "R03147": 9
+    }
+  },
+  "perLevel": [
+    {
+      "levelId": "R01600",
+      "independentUnit": "parent",
+      "frontierSamples": 25,
+      "live": 0,
+      "dead": 25,
+      "metricSummaries": {
+        "minPrefixJaccard": {
+          "live": {
+            "count": 0,
+            "median": null,
+            "min": null,
+            "max": null,
+            "mean": null
+          },
+          "dead": {
+            "count": 25,
+            "median": 0.8,
+            "min": 0.5,
+            "max": 0.8571428571428572,
+            "mean": 0.7568922305764413
+          }
+        },
+        "minPosMismatch": {
+          "live": {
+            "count": 0,
+            "median": null,
+            "min": null,
+            "max": null,
+            "mean": null
+          },
+          "dead": {
+            "count": 25,
+            "median": 0.9166666666666666,
+            "min": 0.33333333333333337,
+            "max": 0.9166666666666666,
+            "mean": 0.8133333333333332
+          }
+        },
+        "maxLcp": {
+          "live": {
+            "count": 0,
+            "median": null,
+            "min": null,
+            "max": null,
+            "mean": null
+          },
+          "dead": {
+            "count": 25,
+            "median": 1,
+            "min": 1,
+            "max": 8,
+            "mean": 2.08
+          }
+        }
+      },
+      "liveCaseMetrics": [],
+      "observedPairwise": {
+        "jaccard": null,
+        "position": null,
+        "commonPrefix": null
+      }
+    },
+    {
+      "levelId": "R03147",
+      "independentUnit": "parent",
+      "frontierSamples": 25,
+      "live": 2,
+      "dead": 23,
+      "metricSummaries": {
+        "minPrefixJaccard": {
+          "live": {
+            "count": 2,
+            "median": 0.9565217391304348,
+            "min": 0.8,
+            "max": 0.9565217391304348,
+            "mean": 0.8782608695652174
+          },
+          "dead": {
+            "count": 23,
+            "median": 0.9545454545454546,
+            "min": 0.85,
+            "max": 0.9565217391304348,
+            "mean": 0.9235312891267522
+          }
+        },
+        "minPosMismatch": {
+          "live": {
+            "count": 2,
+            "median": 0.9166666666666666,
+            "min": 0.75,
+            "max": 0.9166666666666666,
+            "mean": 0.8333333333333333
+          },
+          "dead": {
+            "count": 23,
+            "median": 0.9166666666666666,
+            "min": 0.75,
+            "max": 0.9166666666666666,
+            "mean": 0.8731884057971014
+          }
+        },
+        "maxLcp": {
+          "live": {
+            "count": 2,
+            "median": 3,
+            "min": 1,
+            "max": 3,
+            "mean": 2
+          },
+          "dead": {
+            "count": 23,
+            "median": 1,
+            "min": 1,
+            "max": 3,
+            "mean": 1.434782608695652
+          }
+        }
+      },
+      "liveCaseMetrics": [
+        {
+          "caseId": "R03147:multi-pick-262",
+          "features": {
+            "eligibleHints": 9,
+            "minPrefixJaccard": 0.9565217391304348,
+            "minPosMismatch": 0.9166666666666666,
+            "maxLcp": 1,
+            "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+            "maxMatchedCells": 1
+          }
+        },
+        {
+          "caseId": "R03147:multi-pick-112",
+          "features": {
+            "eligibleHints": 9,
+            "minPrefixJaccard": 0.8,
+            "minPosMismatch": 0.75,
+            "maxLcp": 3,
+            "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+            "maxMatchedCells": 4
+          }
+        }
+      ],
+      "observedPairwise": {
+        "jaccard": {
+          "comparablePairs": 46,
+          "observedPairwiseOrdering": 0.6195652173913043
+        },
+        "position": {
+          "comparablePairs": 46,
+          "observedPairwiseOrdering": 0.6195652173913043
+        },
+        "commonPrefix": {
+          "comparablePairs": 46,
+          "observedPairwiseOrdering": 0.6413043478260869
+        }
+      }
+    }
+  ],
+  "cases": [
+    {
+      "caseId": "R01600:multi-pick-269",
+      "levelId": "R01600",
+      "frontierIndex": 269,
+      "depth": 11,
+      "score": 478.63580246913585,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8571428571428572,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 3
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-160",
+      "levelId": "R01600",
+      "frontierIndex": 160,
+      "depth": 11,
+      "score": 275.8412698412699,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 4
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-58",
+      "levelId": "R01600",
+      "frontierIndex": 58,
+      "depth": 11,
+      "score": 476.08621399176957,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.736842105263158,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 5
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-54",
+      "levelId": "R01600",
+      "frontierIndex": 54,
+      "depth": 11,
+      "score": 439.3024838330395,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.5,
+        "minPosMismatch": 0.33333333333333337,
+        "maxLcp": 8,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 8
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-193",
+      "levelId": "R01600",
+      "frontierIndex": 193,
+      "depth": 11,
+      "score": 358.4656378600823,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 4
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-118",
+      "levelId": "R01600",
+      "frontierIndex": 118,
+      "depth": 11,
+      "score": 484.2183127572017,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.736842105263158,
+        "minPosMismatch": 0.8333333333333334,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 5
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-141",
+      "levelId": "R01600",
+      "frontierIndex": 141,
+      "depth": 11,
+      "score": 265.3912698412699,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 4
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-181",
+      "levelId": "R01600",
+      "frontierIndex": 181,
+      "depth": 11,
+      "score": 318.4656378600823,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 4
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-225",
+      "levelId": "R01600",
+      "frontierIndex": 225,
+      "depth": 11,
+      "score": 493.1399176954733,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8,
+        "minPosMismatch": 0.8333333333333334,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 4
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-61",
+      "levelId": "R01600",
+      "frontierIndex": 61,
+      "depth": 11,
+      "score": 372.11604938271614,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 4
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-101",
+      "levelId": "R01600",
+      "frontierIndex": 101,
+      "depth": 11,
+      "score": 491.4683127572017,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.736842105263158,
+        "minPosMismatch": 0.8333333333333334,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 5
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-29",
+      "levelId": "R01600",
+      "frontierIndex": 29,
+      "depth": 11,
+      "score": 573.695076425632,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.736842105263158,
+        "minPosMismatch": 0.5833333333333333,
+        "maxLcp": 5,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 5
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-124",
+      "levelId": "R01600",
+      "frontierIndex": 124,
+      "depth": 11,
+      "score": 316.27563198118753,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 4
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-255",
+      "levelId": "R01600",
+      "frontierIndex": 255,
+      "depth": 11,
+      "score": 143.08580246913584,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8571428571428572,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 3
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-18",
+      "levelId": "R01600",
+      "frontierIndex": 18,
+      "depth": 11,
+      "score": 620.4831422692534,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.736842105263158,
+        "minPosMismatch": 0.5833333333333333,
+        "maxLcp": 5,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 5
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-127",
+      "levelId": "R01600",
+      "frontierIndex": 127,
+      "depth": 11,
+      "score": 436.76646090534973,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.5,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 8
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-246",
+      "levelId": "R01600",
+      "frontierIndex": 246,
+      "depth": 11,
+      "score": 306.393621399177,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 4
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-282",
+      "levelId": "R01600",
+      "frontierIndex": 282,
+      "depth": 11,
+      "score": 484.1399176954733,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8,
+        "minPosMismatch": 0.8333333333333334,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 4
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-4",
+      "levelId": "R01600",
+      "frontierIndex": 4,
+      "depth": 11,
+      "score": 602.004747207525,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.6666666666666667,
+        "minPosMismatch": 0.5833333333333333,
+        "maxLcp": 5,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 6
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-44",
+      "levelId": "R01600",
+      "frontierIndex": 44,
+      "depth": 11,
+      "score": 570.0170928865374,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.736842105263158,
+        "minPosMismatch": 0.5833333333333333,
+        "maxLcp": 5,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 5
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-60",
+      "levelId": "R01600",
+      "frontierIndex": 60,
+      "depth": 11,
+      "score": 316.1238683127573,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 4
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-163",
+      "levelId": "R01600",
+      "frontierIndex": 163,
+      "depth": 11,
+      "score": 563.7962962962963,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.736842105263158,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 5
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-64",
+      "levelId": "R01600",
+      "frontierIndex": 64,
+      "depth": 11,
+      "score": 215.91143445032333,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.7894736842105263,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 4
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-40",
+      "levelId": "R01600",
+      "frontierIndex": 40,
+      "depth": 11,
+      "score": 422.25474720752504,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.736842105263158,
+        "minPosMismatch": 0.5833333333333333,
+        "maxLcp": 5,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 5
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R01600:multi-pick-212",
+      "levelId": "R01600",
+      "frontierIndex": 212,
+      "depth": 11,
+      "score": 389.13847736625513,
+      "features": {
+        "eligibleHints": 15,
+        "minPrefixJaccard": 0.8571428571428572,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "3aa81ff6eee977f1f9e2d622b61276ac53cc7919899fdfd89750e1b92751a2a1",
+        "maxMatchedCells": 3
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-407",
+      "levelId": "R03147",
+      "frontierIndex": 407,
+      "depth": 11,
+      "score": 604.9314814814815,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9565217391304348,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-877",
+      "levelId": "R03147",
+      "frontierIndex": 877,
+      "depth": 11,
+      "score": 479.1851851851852,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9565217391304348,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-262",
+      "levelId": "R03147",
+      "frontierIndex": 262,
+      "depth": 11,
+      "score": 639.124074074074,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9565217391304348,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "live"
+    },
+    {
+      "caseId": "R03147:multi-pick-437",
+      "levelId": "R03147",
+      "frontierIndex": 437,
+      "depth": 11,
+      "score": 600.0277777777777,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.8571428571428572,
+        "minPosMismatch": 0.75,
+        "maxLcp": 3,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 3
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-1388",
+      "levelId": "R03147",
+      "frontierIndex": 1388,
+      "depth": 11,
+      "score": 315.47037037037046,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9565217391304348,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-156",
+      "levelId": "R03147",
+      "frontierIndex": 156,
+      "depth": 11,
+      "score": 655.7814814814815,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9090909090909091,
+        "minPosMismatch": 0.8333333333333334,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 2
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-245",
+      "levelId": "R03147",
+      "frontierIndex": 245,
+      "depth": 11,
+      "score": 642.8111111111111,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9565217391304348,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-112",
+      "levelId": "R03147",
+      "frontierIndex": 112,
+      "depth": 11,
+      "score": 662.8092592592593,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.8,
+        "minPosMismatch": 0.75,
+        "maxLcp": 3,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 4
+      },
+      "exactLabel": "live"
+    },
+    {
+      "caseId": "R03147:multi-pick-1013",
+      "levelId": "R03147",
+      "frontierIndex": 1013,
+      "depth": 11,
+      "score": 435.4092592592593,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.85,
+        "minPosMismatch": 0.75,
+        "maxLcp": 3,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 3
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-272",
+      "levelId": "R03147",
+      "frontierIndex": 272,
+      "depth": 11,
+      "score": 637.9407407407409,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9565217391304348,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-415",
+      "levelId": "R03147",
+      "frontierIndex": 415,
+      "depth": 11,
+      "score": 604.6203703703703,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9565217391304348,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-66",
+      "levelId": "R03147",
+      "frontierIndex": 66,
+      "depth": 11,
+      "score": 671.7425925925926,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9565217391304348,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-235",
+      "levelId": "R03147",
+      "frontierIndex": 235,
+      "depth": 11,
+      "score": 644.5351851851851,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9565217391304348,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-1367",
+      "levelId": "R03147",
+      "frontierIndex": 1367,
+      "depth": 11,
+      "score": 318.9203703703704,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9545454545454546,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-218",
+      "levelId": "R03147",
+      "frontierIndex": 218,
+      "depth": 11,
+      "score": 646.8314814814815,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9090909090909091,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 2
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-969",
+      "levelId": "R03147",
+      "frontierIndex": 969,
+      "depth": 11,
+      "score": 442.5148148148148,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.8571428571428572,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 3
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-975",
+      "levelId": "R03147",
+      "frontierIndex": 975,
+      "depth": 11,
+      "score": 441.1833333333334,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.8571428571428572,
+        "minPosMismatch": 0.75,
+        "maxLcp": 3,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 3
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-1263",
+      "levelId": "R03147",
+      "frontierIndex": 1263,
+      "depth": 11,
+      "score": 356.7388888888889,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9565217391304348,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-1397",
+      "levelId": "R03147",
+      "frontierIndex": 1397,
+      "depth": 11,
+      "score": 312.77407407407406,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9545454545454546,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-189",
+      "levelId": "R03147",
+      "frontierIndex": 189,
+      "depth": 11,
+      "score": 651.9481481481481,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9090909090909091,
+        "minPosMismatch": 0.8333333333333334,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 2
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-888",
+      "levelId": "R03147",
+      "frontierIndex": 888,
+      "depth": 11,
+      "score": 475.39814814814815,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.85,
+        "minPosMismatch": 0.75,
+        "maxLcp": 3,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 3
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-1161",
+      "levelId": "R03147",
+      "frontierIndex": 1161,
+      "depth": 11,
+      "score": 395.13518518518515,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9545454545454546,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-892",
+      "levelId": "R03147",
+      "frontierIndex": 892,
+      "depth": 11,
+      "score": 473.8166666666667,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.8571428571428572,
+        "minPosMismatch": 0.75,
+        "maxLcp": 3,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 3
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-946",
+      "levelId": "R03147",
+      "frontierIndex": 946,
+      "depth": 11,
+      "score": 452.8259259259259,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9565217391304348,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    },
+    {
+      "caseId": "R03147:multi-pick-123",
+      "levelId": "R03147",
+      "frontierIndex": 123,
+      "depth": 11,
+      "score": 660.8555555555555,
+      "features": {
+        "eligibleHints": 9,
+        "minPrefixJaccard": 0.9565217391304348,
+        "minPosMismatch": 0.9166666666666666,
+        "maxLcp": 1,
+        "nearestHash": "13a632d88855be08f45a2c321a4195bb37b8e64bd21640cb5c7967e6606e01eb",
+        "maxMatchedCells": 1
+      },
+      "exactLabel": "dead"
+    }
+  ]
+}
