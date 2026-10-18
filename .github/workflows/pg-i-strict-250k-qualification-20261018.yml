@@ -1,0 +1,73 @@
+# Temporary, evidence-only strict-total 250k qualification for issue #2202.
+# One frozen 12-parent cold-control replay; run is artifact-only, never auto-harvests/merges.
+# Remove after exact-source evidence is preserved and the gate is adjudicated.
+name: PG-I strict 250k qualification
+on:
+  push:
+    branches:
+      - chatgpt/strict-total-work-meter-boundary-20261018
+    paths:
+      - '.github/workflows/pg-i-strict-250k-qualification-20261018.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: pg-i-strict-250k-qualification-20261018
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    name: Frozen twelve-parent control
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out exact source commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - name: Install exact Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Source contract self-test
+        run: node scripts/stress/pg-i-strict-250k-qualification.mjs --self-test
+      - name: Replay 12 frozen cold controls at 250k
+        id: replay
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs/pg-i-strict-250k
+          timeout -k 20s --preserve-status 40m \
+            node scripts/run-bundled.mjs scripts/stress/pg-i-strict-250k-qualification.mjs -- \
+            --out=logs/pg-i-strict-250k/control.json
+      - name: Upload source-authentic evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-i-strict-250k-exact-head
+          path: logs/pg-i-strict-250k/control.json
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Enforce strict qualification and artifact completeness
+        if: always()
+        shell: bash
+        env:
+          REPLAY_RESULT: ${{ steps.replay.outcome }}
+        run: |
+          set -euo pipefail
+          test "$REPLAY_RESULT" = success
+          node --input-type=module - <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const p=JSON.parse(readFileSync('logs/pg-i-strict-250k/control.json','utf8'));
+          if(p.sourceHead!==process.env.GITHUB_SHA)throw Error('source SHA changed');
+          if(p.summary.parents!==12||p.summary.overBudget||p.summary.errorsOrUnusable||p.summary.accountingMismatches)
+            throw Error('strict budget/referee/accounting gate failed');
+          if(p.rows.some(r=>r.workSpent>250000||r.attemptWorkSum!==r.workSpent))throw Error('per-parent strict cap failed');
+          console.log(JSON.stringify(p.summary));
+          NODE
