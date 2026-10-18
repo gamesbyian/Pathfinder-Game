@@ -1,0 +1,53 @@
+# Independent *cheap* current-policy control, not another 10M five-method matrix.
+# Same frozen twelve-parent cohort as pg-i-resistant-parent-exposure-20261018.yml.
+name: PG-I resistant-parent current-production 250k cold control
+on:
+  push:
+    branches:
+      - chatgpt/pg-i-resistance-equal-work-exposure-20261018
+    paths:
+      - .github/workflows/pg-i-resistant-parent-production-control-20261018.yml
+permissions:
+  contents: read
+concurrency:
+  group: pg-i-resistant-parent-250k-production-20261018
+  cancel-in-progress: false
+jobs:
+  control:
+    name: Frozen 12-parent 250k strict-work control
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Verify CLI field transport before production execution
+        run: node scripts/stress/pg-i-resistant-parent-production-control.mjs --self-test
+      - name: Measure exactly twelve current cold production controls, no hints
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/run-bundled.mjs scripts/stress/pg-i-resistant-parent-production-control.mjs -- \
+            --out=tmp/pg-i/production-control-250k.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('tmp/pg-i/production-control-250k.json','utf8'));
+          if(r.summary.independentParents!==12
+            ||r.rows.length!==12
+            ||r.summary.refereeInvalid!==0
+            ||r.summary.censored>0)
+             throw Error('PG-I production control source/inference incomplete: '+JSON.stringify(r.summary));
+          console.log('PG-I 250K CONTROL COMPLETE '+JSON.stringify(r.summary));
+          NODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-i-resistant-parent-cold-production-250k-20261018
+          path: tmp/pg-i/production-control-250k.json
+          if-no-files-found: warn
+          retention-days: 90
