@@ -1,9 +1,9 @@
 # PG-L canonical isolated-beam action-overlap shadow preflight 001
 
-> **Status:** concluded-positive; opportunity-sizing gate answered by [PG-L result 001](2026-10-17-pg-l-canonical-action-overlap-result-001.md); production-consumer gate remains active in canonical workstreams.
-> **Last evidence:** 2026-10-17 — prior cross-attempt overlap telemetry invalidated by missing canonical profile/root identity; no clean current paired action population survey. See [overlap archaeology](2026-09-13-solver-archaeology-overlap-restart-retention-006.md).
-> **Decision:** authorize only an eight-parent read-only isolated-beam action-overlap canary using an existing audited `_beamResearchObserver` seam, strict observer-off parity and identical work envelopes. No new scheduler, cache or restart policy.
-> **Remaining gate:** inspect observable overlap/exposure/economics and observer correctness before any larger independent-parent/matched-work consumer experiment.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-10-17 — source-pinned [PG-L experiment run 39091213935](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39091213935) completed with 16/16 exact observer parity and [result 001](2026-10-17-pg-l-canonical-action-overlap-result-001.md).
+> **Decision:** the eight-parent source-frozen read-only opportunity test is complete and genuine exact full-path action overlap was observed (mean Jaccard 0.2914); no scheduler, cache or restart policy was authorized.
+> **Remaining gate:** establish actual production co-dispatch and a cheap sound shared-fact recognition seam with measurable avoided work before any independent-parent matched-work consumer experiment.
 > **Research question:** `WS2-CROSS-ATTEMPT-BASIN-OVERLAP`
 > **Evidence role:** development opportunity sizing
 > **Selection:** eight Corpus-2 parents selected without hints/outcomes by deterministic SHA-256 of literal seed plus current level ID, from corpus SHA-256 `d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb`; selection is resolved once before any action, and literal IDs plus selection hashes are emitted in the verdict. The first normalized gate is chosen only from the current level.
