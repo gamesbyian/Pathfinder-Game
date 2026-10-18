@@ -1,0 +1,105 @@
+{
+  "schema": "pathfinder.pg-i-resistance-parent-exposure-freeze/v1",
+  "questionId": "WS2-VARIANT-RESPONSE-HARDNESS",
+  "evidenceRole": "discovery",
+  "selectionSeed": "PG-I-20261018-parent-exposure-v1",
+  "selectionAlgorithm": "FNV-1a unsigned 32-bit over seed + ':' + levelId, then 32-bit avalanche (0x7feb352d,0x846ca68b); rank ascending, ID lexical tiebreak",
+  "sourceCoverageFile": "reports/stress/technique-census/32240161854/level-technique-coverage.json",
+  "sourceCoverageGitBlobSha1": "bd6dfaa1c3b585824036c2798fddf23502baef35",
+  "corpusFile": "data/stress/stress-levels-random.json",
+  "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "candidateRule": "corpus2, historically baseline-production-unsolved, no recorded successful T1 isolated technique; exclude explicitly reused microscope/co-dispatch parents; nomination only, absent cells unknown",
+  "eligibleAfterExclusion": 625,
+  "exclusions": [
+    "R00631",
+    "R00792",
+    "R02976",
+    "R02781",
+    "R02676",
+    "R02929",
+    "R02579",
+    "R02024",
+    "R02857",
+    "R02037",
+    "R03004",
+    "R02389"
+  ],
+  "selected": [
+    {
+      "rank": 1,
+      "id": "R03031",
+      "hash": 9406317
+    },
+    {
+      "rank": 2,
+      "id": "R00044",
+      "hash": 13069356
+    },
+    {
+      "rank": 3,
+      "id": "R02166",
+      "hash": 21660961
+    },
+    {
+      "rank": 4,
+      "id": "R03287",
+      "hash": 24997518
+    },
+    {
+      "rank": 5,
+      "id": "R00449",
+      "hash": 26175433
+    },
+    {
+      "rank": 6,
+      "id": "R02160",
+      "hash": 30607432
+    },
+    {
+      "rank": 7,
+      "id": "R02550",
+      "hash": 31867218
+    },
+    {
+      "rank": 8,
+      "id": "R01351",
+      "hash": 34822310
+    },
+    {
+      "rank": 9,
+      "id": "R02839",
+      "hash": 40843864
+    },
+    {
+      "rank": 10,
+      "id": "R03092",
+      "hash": 48809656
+    },
+    {
+      "rank": 11,
+      "id": "R02701",
+      "hash": 68443073
+    },
+    {
+      "rank": 12,
+      "id": "R02108",
+      "hash": 73193031
+    }
+  ],
+  "protocol": {
+    "methodKeys": [
+      "repair|score=repair|guidance=standard",
+      "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+      "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "dfs|score=default|bias=none",
+      "admissible-order|tieBreak=none|lds=off"
+    ],
+    "workBudgetPerIsolatedTechnique": 10000000,
+    "budgetMs": 600000,
+    "parentUnit": "levelId",
+    "noProductionSteering": true,
+    "workBudgetType": "canonical workSpent, strict attempt cap",
+    "statusRule": "success vs complete measured non-success vs deadline/unsupported/error abstention; never equate missing to failure"
+  },
+  "scientificLimit": "historical old 50M-node T1 candidates, not proven resistant current-code five-method 10M-work cases; 33717910218 coverage file is empty in retained main; old per-technique attempted-cell denominators not verified"
+}
