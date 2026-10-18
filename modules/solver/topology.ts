@@ -719,8 +719,8 @@ function _reportParityCapacityShadow(
 // Permitted error: reachable-set over-approximation only; see property: topology connectivity over-approximates every truly reachable required cell.
 export function isConnected(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     // Dual increment — see applyMove's identical comment in search-state.ts.
-    if (prep._strictWorkCap !== undefined) {
-        assertStrictWorkChargeAllowed(prep._workMeter.units, prep._strictWorkCap, CONNECTIVITY_WORK_UNITS, 'isConnected');
+    if (prep._atomicStrictWorkCap !== undefined) {
+        assertStrictWorkChargeAllowed(prep._workMeter.units, prep._atomicStrictWorkCap, CONNECTIVITY_WORK_UNITS, 'isConnected');
     }
     workMeter.units += CONNECTIVITY_WORK_UNITS;
     prep._workMeter.units += CONNECTIVITY_WORK_UNITS;
