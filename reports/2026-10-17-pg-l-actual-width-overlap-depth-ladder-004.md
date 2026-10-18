@@ -1,7 +1,7 @@
 # PG-L actual-width beam overlap depth ladder 004
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-10-17 (America/Edmonton; 2026-10-18 UTC) — [green source-verified read-only Actions run 39102328661](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39102328661), source `a975bc5c06c08de0395ca6ccaa88a2dfbf3e18e7`, artifact `12127645084`, 12/12 observer-OFF/ON identical arm-result comparisons.
+> **Last evidence:** 2026-10-17 — local Alberta date (2026-10-18 UTC), [green source-verified read-only Actions run 39102328661](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39102328661), source `a975bc5c06c08de0395ca6ccaa88a2dfbf3e18e7`, artifact `12127645084`, 12/12 observer-OFF/ON identical arm-result comparisons.
 > **Decision:** Exact full-history parent-expansion sets match 100% at 1x source-observed work on all three source-positive co-dispatch parents; at 4x, mean Jaccard 0.83766 (0.7183, 0.8131, 0.9816). This is substantial actual-width early redundancy exposure, not a demonstrated safe or economical shared fact or a portfolio improvement.
 > **Remaining gate:** Read-only actual same-invocation same-gate scorer/retention/phase work overlap on independent co-dispatch parents, including an unambiguous R02781 retention identifier. Identify a cheap pre-derivation key for one expensive sound fact and downstream saved-work economics before any cache, scorer skip, scheduling treatment, or broad cold A/B.
 > **Research question:** `WS2-CROSS-ATTEMPT-BASIN-OVERLAP`
