@@ -1,9 +1,9 @@
 # PG-P: actual repair-descent choice/elite shadow pilot 001
 
-> **Status:** active
-> **Last evidence:** 2026-10-18 — existing production-inert choice and elite observers in `modules/solver/repair-search.ts`; one-shot 12-parent pilot on `chatgpt/pg-p-dependency-divergence-readonly-20261018`.
-> **Decision:** run the **unfinished July real-descent question**, not the already-completed September WS6 exact divergent-prefix snapshot. No repair behavior change, current-state classifier, backjump, CP-SAT query or new operator is authorized.
-> **Remaining gate:** observe current actual repair choices leading into improving elite prefixes on 12 independent retrospective hint-bearing Corpus-2 parents, measuring whether reproducible **earlier** path-history/resource commitments distinguish same-badness elites or accepted-solution comparators before terminal near-miss. Close if merely heterogeneous or identical to ordinary path divergence.
+> **Status:** superseded
+> **Last evidence:** 2026-10-18 — completed [PG-P 001](2026-10-18-pg-p-actual-repair-descent-shadow-result-001.md): 12/12 parity control, 166,375 native choices, 666 elites, three equal-badness but path-distinct parents, no proof-bearing new dependency.
+> **Decision:** the unfinished July descent observer was executed and closed on its tested form in [the result](2026-10-18-pg-p-actual-repair-descent-shadow-result-001.md). No causal earlier commitment or repair operator was earned.
+> **Remaining gate:** reopen only from a different current repair failure stratum with prospective preterminal commitment evidence and a cheap causal intervention, not another same-badness/known-hint retrospective comparison.
 > **Research question:** `WS6-DEPENDENCY-CONDITIONED-REPAIR`
 > **Evidence role:** discovery
 > **Population identity:** SHA-256 deterministic first twelve unique Corpus-2 level IDs with at least one historical accepted hint, salt `pg-p-real-descent-20261018`; 20,000 native repair node expansions per level, first accepted-hint gate (retrospectively chosen, not a cold experimental treatment).
@@ -24,3 +24,7 @@ It reports chosen modes and branching exposure, elite acquisition node ordinal, 
 A retrospective shared-prefix contrast is at best descriptive. To merit further work, evidence must identify a repeatable **pre-terminal** commitment-family pattern under the actual research hooks on multiple independent parents, beyond simple different coordinates and visited geometry, with a plausible inexpensive *current-state* consumer to test. Same-badness elites with unrelated early paths may show basin heterogeneity; they are not inherently causal or repairable. If all differences reduce to first raw move mismatch, no correlated stage identity, or no before-terminal observation, conclude negatively for this observer form.
 
 Do not buy CP-SAT merely because a local event tag differs. Do not promote any repair parameter. One-shot workflow is disposable; preserve source SHAs, full machine result, source identities and experiment limitations, then integrate the live queue and question as warranted.
+
+## Closed successor (2026-10-18)
+
+[PG-P 001](2026-10-18-pg-p-actual-repair-descent-shadow-result-001.md) is the executed, independently checked descendant. It archives the actual repair paths and choice histories, 12/12 observer OFF/ON exact parity, complete 12-parent counts, narrowly interpreted equal-badness early-history variants, and the negative policy/causality disposition. The earlier September one-parent exact-divergence microscope was deliberately not replayed as a new finding. The one-shot workflow is removed before PR integration.
