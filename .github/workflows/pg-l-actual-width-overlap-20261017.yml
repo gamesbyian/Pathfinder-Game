@@ -26,18 +26,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/run-bundled.mjs scripts/stress/pg-l-actual-width-overlap-shadow.mjs -- --out=tmp/pg-l-actual-width-overlap/verdict.json
+          node scripts/run-bundled.mjs scripts/stress/pg-l-actual-width-overlap-shadow.mjs -- --budget-multiplier=1 --out=tmp/pg-l-actual-width-overlap/verdict-1x.json
+          node scripts/run-bundled.mjs scripts/stress/pg-l-actual-width-overlap-shadow.mjs -- --budget-multiplier=4 --out=tmp/pg-l-actual-width-overlap/verdict-4x.json
           node --input-type=module <<'NODE'
           import {readFileSync} from 'node:fs';
-          const r=JSON.parse(readFileSync('tmp/pg-l-actual-width-overlap/verdict.json','utf8'));
-          if(r.summary.parents!==3||r.summary.exactActionComparisonPairs!==3||r.summary.observerParityAlarms!==0)throw Error('PG-L source/control coverage');
-          if(r.selection.width!==5000||r.selection.selected.length!==3)throw Error('PG-L actual width cohort mismatch');
-          console.log('PG-L SOURCE-MATCHED ACTUAL-WIDTH VERDICT '+JSON.stringify(r.summary));
+          for(const mul of [1,4]){
+            const r=JSON.parse(readFileSync(`tmp/pg-l-actual-width-overlap/verdict-${mul}x.json`,'utf8'));
+            if(r.summary.parents!==3||r.summary.exactActionComparisonPairs!==3||r.summary.observerParityAlarms!==0)throw Error('PG-L source/control coverage');
+            if(r.selection.width!==5000||r.selection.multiplier!==mul||r.selection.selected.length!==3)throw Error('PG-L actual width cohort mismatch');
+            console.log(`PG-L ACTUAL-WIDTH ${mul}x VERDICT `+JSON.stringify(r.summary));
+          }
           NODE
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: pg-l-actual-width-overlap-20261017
-          path: tmp/pg-l-actual-width-overlap/verdict.json
+          path: tmp/pg-l-actual-width-overlap/verdict-*.json
           if-no-files-found: warn
           retention-days: 90
