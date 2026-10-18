@@ -52,7 +52,11 @@ for(const parent of frozen.selected){
  const outcome=await solver.solveLevel(level,{baseWorkBudget:250000,nodeBudget:250000,
    timeBudgetMs:600000,strictTotalWorkBudget:true});
  assert(Number.isFinite(outcome.workSpent)&&outcome.workSpent>=0,'invalid control work');
- assert(outcome.workSpent<=250000+512,'material control work overrun');
+ // The strict-total option is supposed to bound the whole invocation, but some atomic
+ // search/repair steps can advance the work meter past its last pre-step check.
+ // Persist each actual overrun, including any valid solution found beyond the target,
+ // rather than aborting the source-pinned twelve-parent experiment or calling it 250k.
+ const workOvershoot=Math.max(0,outcome.workSpent-250000);
  const solution=outcome.solution??null;
  const refereeValid=solution?solver.validateCandidatePath(level,solution).ok:null;
  assert(!outcome.ok||(Array.isArray(solution)&&refereeValid===true),
@@ -64,11 +68,13 @@ for(const parent of frozen.selected){
  // whether its final unsolved outcome is censored.
  const measurable=['node-budget-reached','work-budget-reached','failed'].includes(outcome.status)
    && outcome.workSpent>0 && Array.isArray(outcome.attempts) && outcome.attempts.length>0;
- const classification=outcome.ok&&refereeValid===true?'SOLVED'
+ const classification=workOvershoot>0?'OVER-BUDGET'
+   :outcome.ok&&refereeValid===true?'SOLVED'
    :timedOut||!measurable?'CENSORED':'NON-SUCCESS-AT-CAP';
  const row={parentId:parent.id,rank:parent.rank,levelPos:source.levelPos,
   status:outcome.status,ok:!!outcome.ok,classification,refereeValid,
-  workSpent:outcome.workSpent,nodesExpanded:outcome.nodesExpanded??null,
+  workSpent:outcome.workSpent,workOvershoot,
+  nodesExpanded:outcome.nodesExpanded??null,
   totalMs:outcome.totalMs??null,attemptCount:outcome.attempts?.length??null,
   attemptStatuses:(outcome.attempts??[]).map(a=>({configKey:a.configKey??null,
     outcome:a.outcome??a.status??null,workSpent:a.workSpent??null,
@@ -78,13 +84,15 @@ for(const parent of frozen.selected){
  rows.push(row);
  console.log('PG-I 250K COLD '+JSON.stringify({parentId:row.parentId,
   classification:row.classification,workSpent:row.workSpent,
-  attemptCount:row.attemptCount}));
+  workOvershoot:row.workOvershoot,attemptCount:row.attemptCount}));
 }
 const verdict={schema:'pathfinder.pg-i-resistance-production-250k-current-control/v1',
  sourceFreeze:freezePath,corpusSha256:digest,contract,sourceHead:process.env.GITHUB_SHA??null,
  summary:{independentParents:rows.length,solved:rows.filter(r=>r.classification==='SOLVED').length,
   measuredNonSuccess:rows.filter(r=>r.classification==='NON-SUCCESS-AT-CAP').length,
   censored:rows.filter(r=>r.classification==='CENSORED').length,
+  overBudget:rows.filter(r=>r.classification==='OVER-BUDGET').length,
+  maxWorkOvershoot:Math.max(0,...rows.map(r=>r.workOvershoot)),
   refereeInvalid:rows.filter(r=>r.ok&&r.refereeValid!==true).length},rows};
 assert(rows.length===12&&verdict.summary.refereeInvalid===0,'incomplete control result');
 mkdirSync(path.dirname(path.resolve(out)),{recursive:true});
