@@ -219,7 +219,7 @@ test('strict work-meter preflights are atomic and distinguish move from connecti
     const state = createState(start, level, prep);
     const globalBefore = workMeter.units;
 
-    prep._strictWorkCap = 0;
+    prep._atomicStrictWorkCap = 0;
     const pathBefore = state.path.slice();
     assert.throws(
         () => applyMove(start, state, level, prep, false),
@@ -232,7 +232,7 @@ test('strict work-meter preflights are atomic and distinguish move from connecti
 
     // One connectivity evaluation costs 12 canonical units. Eleven units remaining
     // cannot legally buy it, and no partial charge may be recorded.
-    prep._strictWorkCap = 11;
+    prep._atomicStrictWorkCap = 11;
     assert.throws(
         () => isConnected(start, state, level, prep),
         (error: unknown) => error instanceof StrictWorkBudgetExhausted
@@ -245,6 +245,22 @@ test('strict work-meter preflights are atomic and distinguish move from connecti
     // The guard accepts an exact fit and has no hidden off-by-one ceiling.
     assert.doesNotThrow(() => assertStrictWorkChargeAllowed(9, 21, 12, 'isConnected'));
     assert.throws(() => assertStrictWorkChargeAllowed(10, 21, 12, 'isConnected'), StrictWorkBudgetExhausted);
+});
+
+test('per-technique research strict caps remain independent of the atomic whole-solve opt-in', () => {
+    const level = makeLineLevel();
+    const prep = prepLevel(level);
+    const start = level.gateKeys[0];
+    const state = createState(start, level, prep);
+    const next = getNeighbors(start, state, level, prep)[0];
+    assert.ok(next !== undefined);
+    prep._strictWorkCap = 0;
+    assert.equal(prep._atomicStrictWorkCap, undefined, 'per-technique cap alone must not enable atomic refusal');
+    const globalBefore = workMeter.units;
+    const undo = applyMove(next, state, level, prep, false);
+    undoMove(undo, state);
+    assert.equal(prep._workMeter.units, 1);
+    assert.equal(workMeter.units, globalBefore + 1);
 });
 
 test('strict whole-solve cap censors a batched attempt without overcharging or labelling it as a search error', async () => {
