@@ -1,0 +1,35 @@
+# One-shot retrospective PG-J exact-fate interface falsifier.
+# Remove after source-identified evidence is retained in branch.
+name: PG-J residual leaf goal exact-fate canary
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/pg-j-residual-leaf-goal-20261018.yml']
+permissions:
+  contents: read
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+      - name: Validate local observer graph contracts
+        run: node scripts/stress/pg-j-retained-articulation-count.mjs --self-test
+      - name: Classify all frozen exact prefixes
+        run: |
+          mkdir -p logs/pg-j-residual-leaf-goal
+          node scripts/stress/pg-j-retained-articulation-count.mjs \
+            --out=logs/pg-j-residual-leaf-goal/verdict.json
+      - name: Upload original source-authentic verdict even if canary fails
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-j-residual-leaf-goal-exact-fate
+          path: logs/pg-j-residual-leaf-goal/verdict.json
+          if-no-files-found: warn
+          retention-days: 30
