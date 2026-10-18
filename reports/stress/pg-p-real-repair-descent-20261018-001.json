@@ -4,13 +4,13 @@
   "kind": "actual-unmodified-repair-choice-elite-observer",
   "experiment": {
     "date": "2026-10-18",
-    "head": "a4199d731412aab14cbbac6b029bb2bb594e56bd",
-    "runId": 39106445562,
-    "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39106445562",
-    "artifactId": 12128722424,
+    "head": "d9dceaeb0b44c7f41e8bf96424513c9ca1a7afe5",
+    "runId": 39106880924,
+    "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39106880924",
+    "artifactId": 12128916392,
     "artifactName": "pg-p-real-repair-descent-shadow-20261018",
-    "artifactZipSha256": "cad6fb11eae8e613375d37dbfcf415454dcd89368b9f0fd9a9152f1fcbc4a991",
-    "uncompressedResultJsonSha256": "794d4dec90ccd7a0cd27689f8ab860108717f863da46bb4cdbb933fc58ffe435",
+    "artifactZipSha256": "e2a134e4e88bb5ed1e0cf54c475080e1b1fe731388e9acec6d6e060736be31ec",
+    "uncompressedResultJsonSha256": "72466b999cbdea182a63cf509b4f59db2612c0ddf4119a2122ca4544b2f48b37",
     "sourceScript": "scripts/stress/pg-p-real-repair-descent-shadow.mjs",
     "sourceCorpus": "data/stress/stress-levels-random.json",
     "sourceCorpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
@@ -30,7 +30,8 @@
     "allowedAtomicNodeOvershoot": 32,
     "hardPruneChanges": false,
     "repairPolicyChanges": false,
-    "newExactOracleCalls": 0
+    "newExactOracleCalls": 0,
+    "offOnParity": "12/12 exactly matched work, expanded nodes, stopping status/reason and full solution path; two independent preps, same gate/seed/node dose"
   },
   "totals": {
     "parents": 12,
@@ -42,7 +43,8 @@
     "sameBadnessAlternativeElites": 4,
     "probeSolved": 1,
     "maxNodeOvershoot": 11,
-    "fullyRecordedTopElites": 48
+    "fullyRecordedTopElites": 48,
+    "exactObserverOffOnParityParents": 12
   },
   "choiceModes": {
     "only": 67469,
@@ -221,5 +223,5 @@
     }
   ],
   "inference": "Measured observation only: equally scored elites with different earlier path histories do not imply exact equivalent residuals, named causal DEAD commitments, safe pruning, or a cold repair consumer; one gate was selected using a known hint and one attempt solved, not a cold claim",
-  "fullArtifact": "The 1,031,243-byte raw result archived in run artifact preserves exact packed elite paths, complete sampled decision histories, and each elite comparison. This compact checked ledger preserves all parent-level counts, exact SHA identities and reproducible source. Re-run deterministic source if the time-limited Action artifact expires."
+  "fullArtifact": "The 1,033,983-byte raw result archived in run artifact preserves exact packed elite paths, complete sampled decision histories, and each elite comparison. This compact checked ledger preserves all parent-level counts, exact SHA identities and reproducible source. Re-run deterministic source if the time-limited Action artifact expires."
 }
