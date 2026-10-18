@@ -148,6 +148,8 @@ Use the narrowest workflow whose evidence semantics match the question. Capabili
 
 ## One-shot diagnostics (delete after use)
 
+PG-I's temporary `pg-i-resistant-parent-exposure-20261018.yml` and `pg-i-resistant-parent-production-control-20261018.yml` ran successfully in October 2026 and were retired. Three referee-valid isolated 10M-work solutions, the 60-cell 250k null, the 12 current no-solve-by-250k production controls and their strict-work overruns are durably summarized in [PG-I 004](../../reports/2026-10-18-pg-i-current-isolated-250k-and-10m-early-result-004.md). No permanent or scheduled workflow remains.
+
 
 Delete a bespoke one-shot workflow once its execution surface is no longer needed, but treat workflow retirement and evidence reconstructability as separate decisions. Before deletion, apply the ordinary investigation closeout rule: if artifact-bound or branch-bound primary rows are materially required to support or later audit a durable decision, capability/future-work premise, reusable exact/reference resource, or row-sensitive mechanism claim, preserve the smallest existing-compatible evidence bundle or explicitly record what will expire and which later re-analysis will no longer be possible. Merely recording the aggregate answer is sufficient when row-level reconstruction is not material; this rule does not require archiving every one-shot artifact.
 

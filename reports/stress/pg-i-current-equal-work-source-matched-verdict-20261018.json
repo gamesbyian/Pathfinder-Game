@@ -1,0 +1,198 @@
+{
+  "schema": "pathfinder.pg-i-independent-parent-frozen-exact-source-paired-outcome/v1",
+  "decision": "Current cold solver did not find a solution on any of 12 historically unsolved, source-selected parents by 250k work. All 60 isolated 250k-work methods also failed. Three referee-validated isolated 10M-work solves occur on two independent parents. All 12 current production controls overshot the strict requested work ceiling by 3997..21255, so they cannot be a cost-matched strict 250k A/B comparator; complete unsolved trajectories do establish literal no-solve-by-250k negative observations.",
+  "evidenceRole": "discovery",
+  "populationSelection": "12 independent parents selected by historical old 50M-node non-success record and fixed hash before current observations",
+  "sourceCommit": "68cb6c11198585bbcacd10ccc39cd1d45b93bc22",
+  "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "sourceRuns": {
+    "isolated": {
+      "id": 39128573725,
+      "planArtifactId": 12137212152,
+      "planArtifactZipSha256": "75530144c337f18d65d6ac1c996f3770c4b8ebaf78fbabe6e93949ca4d99f5a8",
+      "verdictArtifactId": 12136902266,
+      "verdictArtifactZipSha256": "db1ee52d4e6b9831ce65b842396b900676661fc8e8c23ce295fb4eca4530545d"
+    },
+    "production": {
+      "id": 39128573753,
+      "artifactId": 12136733835,
+      "artifactZipSha256": "5fbe1fbeebebd6da9d81ce1cd214fc4a0813379ede046b1a9256b987bc21863e"
+    }
+  },
+  "protocols": {
+    "isolatedShallowWorkPerMethod": 250000,
+    "isolatedDeepWorkPerMethod": 10000000,
+    "productionRequestedBaseWork": 250000,
+    "productionRequestedNodeBudget": 250000,
+    "productionStrictTotalWorkFlag": true,
+    "methodIdentityIndex": [
+      "repair|score=repair|guidance=standard",
+      "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+      "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "dfs|score=default|bias=none",
+      "admissible-order|tieBreak=none|lds=off"
+    ],
+    "independentUnit": "levelId"
+  },
+  "summary": {
+    "parentCount": 12,
+    "isolatedShallowAttemptCells": 60,
+    "isolatedShallowValidSolves": 0,
+    "isolatedDeepAttemptCells": 60,
+    "isolatedDeepValidSolves": 3,
+    "isolatedDeepParentsWithSolve": 2,
+    "isolatedDeepAllFiveNonSuccessParents": 10,
+    "isolatedDeadlineTruncations": 0,
+    "isolatedMethodErrors": 0,
+    "production250kTargetNoSolveParents": 12,
+    "productionWithinStrictWorkCeiling": 0,
+    "productionOverBudgetNoSolveParents": 12,
+    "productionMaxWorkOvershoot": 21255
+  },
+  "parents": [
+    {
+      "id": "R03031",
+      "shallow250kMethodWins": 0,
+      "deep10mSolvedMethodIndices": [
+        1,
+        2
+      ],
+      "currentProductionOk": false,
+      "currentProductionStatus": "unsolved",
+      "actualProductionWorkSpent": 254913,
+      "productionWorkOvershoot": 4913,
+      "noSolveBy250kObserved": true,
+      "strict250kCostComparable": false
+    },
+    {
+      "id": "R00044",
+      "shallow250kMethodWins": 0,
+      "deep10mSolvedMethodIndices": [],
+      "currentProductionOk": false,
+      "currentProductionStatus": "unsolved",
+      "actualProductionWorkSpent": 262712,
+      "productionWorkOvershoot": 12712,
+      "noSolveBy250kObserved": true,
+      "strict250kCostComparable": false
+    },
+    {
+      "id": "R02166",
+      "shallow250kMethodWins": 0,
+      "deep10mSolvedMethodIndices": [],
+      "currentProductionOk": false,
+      "currentProductionStatus": "unsolved",
+      "actualProductionWorkSpent": 265104,
+      "productionWorkOvershoot": 15104,
+      "noSolveBy250kObserved": true,
+      "strict250kCostComparable": false
+    },
+    {
+      "id": "R03287",
+      "shallow250kMethodWins": 0,
+      "deep10mSolvedMethodIndices": [],
+      "currentProductionOk": false,
+      "currentProductionStatus": "unsolved",
+      "actualProductionWorkSpent": 254860,
+      "productionWorkOvershoot": 4860,
+      "noSolveBy250kObserved": true,
+      "strict250kCostComparable": false
+    },
+    {
+      "id": "R00449",
+      "shallow250kMethodWins": 0,
+      "deep10mSolvedMethodIndices": [],
+      "currentProductionOk": false,
+      "currentProductionStatus": "unsolved",
+      "actualProductionWorkSpent": 263414,
+      "productionWorkOvershoot": 13414,
+      "noSolveBy250kObserved": true,
+      "strict250kCostComparable": false
+    },
+    {
+      "id": "R02160",
+      "shallow250kMethodWins": 0,
+      "deep10mSolvedMethodIndices": [],
+      "currentProductionOk": false,
+      "currentProductionStatus": "unsolved",
+      "actualProductionWorkSpent": 254218,
+      "productionWorkOvershoot": 4218,
+      "noSolveBy250kObserved": true,
+      "strict250kCostComparable": false
+    },
+    {
+      "id": "R02550",
+      "shallow250kMethodWins": 0,
+      "deep10mSolvedMethodIndices": [],
+      "currentProductionOk": false,
+      "currentProductionStatus": "unsolved",
+      "actualProductionWorkSpent": 260936,
+      "productionWorkOvershoot": 10936,
+      "noSolveBy250kObserved": true,
+      "strict250kCostComparable": false
+    },
+    {
+      "id": "R01351",
+      "shallow250kMethodWins": 0,
+      "deep10mSolvedMethodIndices": [],
+      "currentProductionOk": false,
+      "currentProductionStatus": "unsolved",
+      "actualProductionWorkSpent": 255383,
+      "productionWorkOvershoot": 5383,
+      "noSolveBy250kObserved": true,
+      "strict250kCostComparable": false
+    },
+    {
+      "id": "R02839",
+      "shallow250kMethodWins": 0,
+      "deep10mSolvedMethodIndices": [],
+      "currentProductionOk": false,
+      "currentProductionStatus": "unsolved",
+      "actualProductionWorkSpent": 258229,
+      "productionWorkOvershoot": 8229,
+      "noSolveBy250kObserved": true,
+      "strict250kCostComparable": false
+    },
+    {
+      "id": "R03092",
+      "shallow250kMethodWins": 0,
+      "deep10mSolvedMethodIndices": [],
+      "currentProductionOk": false,
+      "currentProductionStatus": "unsolved",
+      "actualProductionWorkSpent": 271255,
+      "productionWorkOvershoot": 21255,
+      "noSolveBy250kObserved": true,
+      "strict250kCostComparable": false
+    },
+    {
+      "id": "R02701",
+      "shallow250kMethodWins": 0,
+      "deep10mSolvedMethodIndices": [],
+      "currentProductionOk": false,
+      "currentProductionStatus": "unsolved",
+      "actualProductionWorkSpent": 260537,
+      "productionWorkOvershoot": 10537,
+      "noSolveBy250kObserved": true,
+      "strict250kCostComparable": false
+    },
+    {
+      "id": "R02108",
+      "shallow250kMethodWins": 0,
+      "deep10mSolvedMethodIndices": [
+        2
+      ],
+      "currentProductionOk": false,
+      "currentProductionStatus": "unsolved",
+      "actualProductionWorkSpent": 253997,
+      "productionWorkOvershoot": 3997,
+      "noSolveBy250kObserved": true,
+      "strict250kCostComparable": false
+    }
+  ],
+  "solutionsRef": "reports/stress/pg-i-early-equal-work-cold-solves-20261018.json",
+  "limitations": [
+    "Historical old 50M-node no-success projection is not a complete same-cost T1 attempt denominator.",
+    "Each isolated method had its own 250k or 10M work; methods did not share one ladder budget.",
+    "Strict-total production controls overshot work; their literal non-success through 250k is observable but treatment/control cost-matched economics is not established.",
+    "Two solved parents are development cases, not an independent-confirmation sample or population solve-rate estimator."
+  ]
+}

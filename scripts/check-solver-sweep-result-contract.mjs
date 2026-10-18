@@ -5,18 +5,30 @@ import path from 'node:path';
 const workflowDir = '.github/workflows';
 const lifecycle = JSON.parse(fs.readFileSync('docs/solver-workflow-lifecycle.json', 'utf8'));
 const maintainedEvidenceWorkflows = lifecycle.workflows
-  .filter(row => row.role === 'evidence-producing' && row.status === 'maintained')
-  .map(row => row.workflow);
+  .filter(row => row.role === 'evidence-producing' && row.status === 'maintained');
 const failures = [];
-for (const name of maintainedEvidenceWorkflows) {
+for (const row of maintainedEvidenceWorkflows) {
+  const name = row.workflow;
   const file = path.join(workflowDir, name);
   if (!fs.existsSync(file)) {
     failures.push(`${name}: lifecycle ledger points at missing workflow`);
     continue;
   }
   const source = fs.readFileSync(file, 'utf8');
-  if (!['publish-solver-sweep-result.mjs', 'sweep-publish.mjs'].some(marker => source.includes(marker))) failures.push(`${name}: missing standard solver-sweep-result publisher`);
-  if (!source.includes('name: solver-sweep-result')) failures.push(`${name}: missing standard solver-sweep-result artifact upload`);
+  if (row.evidenceTransport === 'specialized-artifact-only') {
+    // A source-verified one-shot may deliberately retain a specialist schema rather than
+    // pretending its rows satisfy the standard solver-sweep publisher. Require the explicit
+    // lifecycle justification plus a real always-uploaded, named artifact with retention.
+    if (!row.evidenceTransportReason) failures.push(`${name}: specialized transport missing justification`);
+    if (!source.includes('actions/upload-artifact@') || !source.includes('retention-days:')
+        || !source.includes('if: always()') && !source.includes('if: ${{ always()')) {
+      failures.push(`${name}: specialized research workflow must upload partial-failure evidence`);
+    }
+  } else {
+    if (row.evidenceTransport) failures.push(`${name}: unrecognized transport ${row.evidenceTransport}`);
+    if (!['publish-solver-sweep-result.mjs', 'sweep-publish.mjs'].some(marker => source.includes(marker))) failures.push(`${name}: missing standard solver-sweep-result publisher`);
+    if (!source.includes('name: solver-sweep-result')) failures.push(`${name}: missing standard solver-sweep-result artifact upload`);
+  }
 }
 
 const helper = fs.readFileSync('scripts/publish-solver-sweep-result.mjs', 'utf8');
