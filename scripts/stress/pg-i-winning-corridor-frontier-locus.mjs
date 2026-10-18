@@ -127,7 +127,9 @@ for(const [ordinal,record] of evidence.solutions.entries()){
    sourceWinnerWork:record.workSpent,sourceWinnerPathLength:record.path.length,
    sourceWinnerPathSha256:createHash('sha256').update(JSON.stringify(record.path)).digest('hex'),
    hindsightChosenGate:gate,profileName,beamWidth:width,mechanicBucketRetention:mechanicRetention,
-   status,actualTotalWork:prep._workMeter.units,actualTotalNodes:prep._metrics.nodesExpanded,
+   status,actualTotalWork:prep._workMeter.units,
+   // Phase-continuation returns deliberately defer the ordinary metric flush.
+   actualTotalNodes:prep._metrics.nodesExpanded || checkpoints.at(-1)?.actualCumulativeNodes || 0,
    sourceValidSolve:!!maybePath,
    solution:maybePath??null,checkpoints,
   };
