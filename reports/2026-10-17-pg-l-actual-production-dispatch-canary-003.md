@@ -1,7 +1,7 @@
 # PG-L real same-invocation beam co-dispatch canary 003
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-10-17 — read-only bounded [run 39098565429](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39098565429), artifact 12126075511; a corrected classifier also runs as 39098677780.
+> **Last evidence:** 2026-10-17 — correctly classified [run 39098769642](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39098769642), source `7a50f1beaec6df7ba7868890a792b1b8550136b7`, artifact 12125203170. Original 39098565429 kept as unmodified raw attempt ledger for independent verification.
 > **Decision:** Static offering did not imply dispatch. Three of eight frozen independent parents actually execute both objectiveFirst and intersectionHarvest beam scorers with **positive measured work** under a single 250,000-unit base-work canary. The other five have zero positive-work beam attempts. This is real action co-participation on the three, not measured prefix-history overlap at production width, nor proof that any cross-attempt reuse would pay.
 > **Remaining gate:** align the exact executed width, gate, stage, retention and work for those three active parents; reuse the read-only full-prefix overlap collector at actual configured widths only if work economics indicate a cheaper sound shared fact. Preserve five nonparticipating parents as negative controls, do not enlarge the campaign or claim 29% width-500 overlap transfers.
 > **Research question:** `WS2-CROSS-ATTEMPT-BASIN-OVERLAP`
@@ -15,7 +15,7 @@
 
 ## Actual telemetry, not static menu
 
-The current attempt orchestration returns `SolveResult.attempts` with authoritative `scoringProfileId`, `beamWidth`, `workSpent` and `gateKey`. A source-real first pass emitted the full per-attempt records (artifact `12126075511`, 719 total attempt records); its summary incorrectly classified all target beams as absent because it required optional `configKey` to contain `beam`. This was a **readout/classification bug**, not a change in the solver: raw attempt records preserve independent scorer, positive beam width and positive work. The corrected evidence script keys beam execution on precisely those three runtime fields. It does not alter the search.
+The current attempt orchestration returns `SolveResult.attempts` with authoritative `scoringProfileId`, `beamWidth`, `workSpent` and `gateKey`. A source-real first pass emitted the full per-attempt records (artifact `12126075511`, 719 total attempt records); its summary incorrectly classified all target beams as absent because it required optional `configKey` to contain `beam`. This was a **readout/classification bug**, not a change in the solver: raw attempt records preserve independent scorer, positive beam width and positive work. The corrected evidence script keys beam execution on precisely those three runtime fields and was independently rerun green as [39098769642](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39098769642). It does not alter the search. Machine source-bound result: [PG-L actual dispatch](stress/pg-l-actual-dispatch-250k-20261017-001.json).
 
 | Parent | Actual positive-work beams, any scorer | ObjectiveFirst | IntersectionHarvest | Both co-executed |
 |---|---:|---:|---:|---|
