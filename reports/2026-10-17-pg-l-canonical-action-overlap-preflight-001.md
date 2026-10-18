@@ -1,6 +1,6 @@
 # PG-L canonical isolated-beam action-overlap shadow preflight 001
 
-> **Status:** active
+> **Status:** concluded-positive; opportunity-sizing gate answered by [PG-L result 001](2026-10-17-pg-l-canonical-action-overlap-result-001.md); production-consumer gate remains active in canonical workstreams.
 > **Last evidence:** 2026-10-17 — prior cross-attempt overlap telemetry invalidated by missing canonical profile/root identity; no clean current paired action population survey. See [overlap archaeology](2026-09-13-solver-archaeology-overlap-restart-retention-006.md).
 > **Decision:** authorize only an eight-parent read-only isolated-beam action-overlap canary using an existing audited `_beamResearchObserver` seam, strict observer-off parity and identical work envelopes. No new scheduler, cache or restart policy.
 > **Remaining gate:** inspect observable overlap/exposure/economics and observer correctness before any larger independent-parent/matched-work consumer experiment.
