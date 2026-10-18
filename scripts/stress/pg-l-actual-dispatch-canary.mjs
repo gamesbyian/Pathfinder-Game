@@ -9,14 +9,14 @@ const assert=(x,s)=>{if(!x)throw Error(s)};
 function stage(a){
  const key=String(a.configKey||a.technique||a.strategy||'');
  const profile=String(a.scoringProfileId||a.profile||'');
- return {stage:a.solverStage??a.stage??null,configKey:key,profile,
+ return {stage:a.stageId??a.solverStage??a.stage??null,configKey:key,profile,
   width:a.beamWidth??a.width??null,gate:a.gateKey??a.gate??null,
   nodes:a.nodesExpanded??null,work:a.workSpent??null,
   status:a.status??null,knownKeys:Object.keys(a)};
 }
 if(process.argv.includes('--self-test')){
- const v=stage({configKey:'beam|score=objectiveFirst|width=5000',gateKey:4,workSpent:100,nodesExpanded:2});
- assert(v.work===100&&v.gate===4&&v.configKey.includes('objectiveFirst'),'attempt transport');
+ const v=stage({scoringProfileId:'objectiveFirst',beamWidth:5000,gateKey:4,workSpent:100,nodesExpanded:2});
+ assert(v.work===100&&v.gate===4&&v.profile==='objectiveFirst'&&v.width===5000,'attempt transport');
  console.log('PG-L dispatch telemetry parser self-test passes');process.exit(0);
 }
 const out=process.argv.find(x=>x.startsWith('--out='))?.slice(6);
@@ -39,14 +39,14 @@ for(const src of source.rows){
  const result=await solver.solveLevel(level,{baseWorkBudget:250000,nodeBudget:250000,budgetMs:600000,strictTotalWorkBudget:true});
  assert(Array.isArray(result.attempts),'missing execution attempt records');
  const attempts=result.attempts.map(stage);
- const beam=attempts.filter(a=>a.configKey.includes('beam'));
+ const beam=attempts.filter(a=>Number(a.width)>0 && Number(a.work)>0);
  const objective=beam.filter(a=>a.configKey.includes('objectiveFirst'));
  const harvest=beam.filter(a=>a.configKey.includes('intersectionHarvest'));
  rows.push({levelId:src.levelId,status:result.status,ok:result.ok,workSpent:result.workSpent,
    attempts,attemptCount:attempts.length,objectiveAttemptCount:objective.length,
    intersectionAttemptCount:harvest.length,bothExecuted:!!(objective.length&&harvest.length)});
  console.log('PG-L DISPATCH '+JSON.stringify({levelId:src.levelId,status:result.status,workSpent:result.workSpent,
-  attempts:attempts.length,bothExecuted:!!(objective.length&&harvest.length)}));
+  attempts:attempts.length,bothExecuted:!!(objective.length&&harvest.length),objective:objective.length,harvest:harvest.length}));
 }
 const report={schema:'pathfinder.pg-l-actual-dispatch-250k-canary/v1',
  source:'frozen PG-L-002 static menu population',
