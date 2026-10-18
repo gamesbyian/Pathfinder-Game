@@ -1,6 +1,6 @@
 import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, popcount } from './encoding.js';
 import { denseIndex } from './distance.js';
-import { workMeter } from './work-meter.js';
+import { assertStrictWorkChargeAllowed, workMeter } from './work-meter.js';
 import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState, PrepLevel, UndoToken } from './types.js';
@@ -119,6 +119,9 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // cross-solveLevel()-call cumulative tracking, still read directly by offline hint-discovery
     // tooling) AND this solve's own isolated prep._workMeter (what every budget check inside the
     // search techniques and the attempt ladder actually reads — see PrepLevel._workMeter's comment).
+    if (prep._strictWorkCap !== undefined) {
+        assertStrictWorkChargeAllowed(prep._workMeter.units, prep._strictWorkCap, 1, 'applyMove');
+    }
     workMeter.units++;
     prep._workMeter.units++;
     const from = state.path[state.path.length - 1];
