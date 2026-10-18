@@ -1,7 +1,7 @@
 import { KEY_SPACE, popcount } from './encoding.js';
 import { keyParity } from '../domain/cell-key.js';
 import { getRealLengthFromState } from './solution.js';
-import { CONNECTIVITY_WORK_UNITS, workMeter } from './work-meter.js';
+import { CONNECTIVITY_WORK_UNITS, assertStrictWorkChargeAllowed, workMeter } from './work-meter.js';
 import { stateSignature } from './nogood-cache.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState, PrepLevel, ConnectivityRejectionSubtype, ConnectivityRejectionObserver, ConnectivityBoundarySketch, ConnectivityBoundaryBlockerReason, ParityCapacityObserver } from './types.js';
@@ -719,6 +719,9 @@ function _reportParityCapacityShadow(
 // Permitted error: reachable-set over-approximation only; see property: topology connectivity over-approximates every truly reachable required cell.
 export function isConnected(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     // Dual increment — see applyMove's identical comment in search-state.ts.
+    if (prep._atomicStrictWorkCap !== undefined) {
+        assertStrictWorkChargeAllowed(prep._workMeter.units, prep._atomicStrictWorkCap, CONNECTIVITY_WORK_UNITS, 'isConnected');
+    }
     workMeter.units += CONNECTIVITY_WORK_UNITS;
     prep._workMeter.units += CONNECTIVITY_WORK_UNITS;
     const intNeeded = level.requiredIntersections - state.ints;

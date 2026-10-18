@@ -6,6 +6,7 @@
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig } from './types.js';
 import { SCORING_PROFILES } from './policy.js';
+import { StrictWorkBudgetExhausted } from './work-meter.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import type { BeamContinuation } from './search.js';
 import { repairPrimarySeed } from './repair-search.js';
@@ -86,24 +87,32 @@ export async function runAttempt(
         path = await dispatch(attemptConfig, gateKey, level, prep, profile, attBudget, attStart, yieldFn, nodeBudget, searchOut, seedSalt, enforceAdmissibleOrderWorkCap, beamResumeFrom, captureBeamContinuationOnBudgetExit);
     } catch (err) {
         if (isSolverCancellation(err)) throw err;
-        const thrown = err as { name?: unknown; message?: unknown } | null;
-        const bounded = (value: unknown, fallback: string, max: number) => {
-            let text: string;
-            try { text = typeof value === 'string' ? value : value == null ? fallback : String(value); }
-            catch { text = fallback; }
-            return text.slice(0, max);
-        };
-        const safeField = (key: 'name' | 'message') => {
-            try { return thrown?.[key]; } catch { return undefined; }
-        };
-        attemptError = {
-            name: bounded(safeField('name'), 'Error', 120),
-            message: bounded(safeField('message') ?? err, 'Unknown attempt error', 500),
-            gateKey,
-            configKey: bounded(attemptConfigKey(attemptConfig), 'unknown', 240),
-            scoringProfileId: bounded(scoringProfileId, 'unknown', 120),
-            orderingBiasId: orderingBias?.id == null ? null : bounded(orderingBias.id, 'unknown', 120),
-        };
+        // A strict opt-in cap is a deterministic search censor, never a solver error or
+        // a certificate of infeasibility. Atomic charge rejection happens before the
+        // operation can mutate state or increment either work meter.
+        if (err instanceof StrictWorkBudgetExhausted) {
+            prep._strictWorkChargeRefused = true;
+            searchOut.timedOut = true;
+        } else {
+            const thrown = err as { name?: unknown; message?: unknown } | null;
+            const bounded = (value: unknown, fallback: string, max: number) => {
+                let text: string;
+                try { text = typeof value === 'string' ? value : value == null ? fallback : String(value); }
+                catch { text = fallback; }
+                return text.slice(0, max);
+            };
+            const safeField = (key: 'name' | 'message') => {
+                try { return thrown?.[key]; } catch { return undefined; }
+            };
+            attemptError = {
+                name: bounded(safeField('name'), 'Error', 120),
+                message: bounded(safeField('message') ?? err, 'Unknown attempt error', 500),
+                gateKey,
+                configKey: bounded(attemptConfigKey(attemptConfig), 'unknown', 240),
+                scoringProfileId: bounded(scoringProfileId, 'unknown', 120),
+                orderingBiasId: orderingBias?.id == null ? null : bounded(orderingBias.id, 'unknown', 120),
+            };
+        }
     } finally {
         prep._beamResearchAttemptContext = previousBeamResearchAttemptContext;
     }

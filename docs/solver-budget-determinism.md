@@ -32,7 +32,7 @@ Concurrent solves cannot consume one another's `prep._workMeter`. Multi-solve to
 |---|---|
 | `baseWorkBudget` | Preferred name for the deterministic base allocation |
 | `workBudget` | Compatibility alias for `baseWorkBudget`; conflicting simultaneous values are an error |
-| `strictTotalWorkBudget` | Makes the configured work budget an immutable whole-solve ceiling |
+| `strictTotalWorkBudget` | Requests an immutable whole-solve ceiling; true atomic containment is required and must be verified independently |
 | `nodeBudget` | Deterministic within-technique/local diagnostic guard; not portable cross-technique cost |
 | `timeBudgetMs` | Outer latency/safety deadline; must not control deterministic allocation when an explicit work budget is supplied |
 
@@ -48,6 +48,14 @@ Under ordinary production/offline-ladder semantics, `workBudget` is historically
 - changing default production to strict-total semantics is a policy change and requires solve-retention evidence.
 
 New APIs should prefer explicit `baseWorkBudget` / `totalWorkCap` language rather than extending the historical ambiguity.
+
+## Strict atomic containment: 2026-10-18 verification boundary
+
+The PG-I frozen twelve-parent control (run `39128573753`, issue [#2202](https://github.com/gamesbyian/Pathfinder-Game/issues/2202)) exposed **12/12 non-successful `strictTotalWorkBudget: true` runs above the requested 250,000 work units**, with excess of 3,997–21,255. Their negative solve outcomes remain descriptive; their actual costs are **not** source-qualified equal-250k controls.
+
+A correctly implemented **whole-solve** strict cap must refuse any `applyMove` (+1) or `isConnected` (+12) charge that would cross the immutable per-solve ceiling, before mutating the search state or charging either work meter. A refusal is deterministic work-budget censoring, including when less than 12 units remain, never an UNSAT proof or attempt error. The referee must still validate successes. Proving only that the *allocated* `_workCap` is within budget is insufficient: batched repair and beam search may advance past that allocation between checks.
+
+**Scope distinction:** `_strictWorkCap` also serves mutable per-technique offline census allocations and beam static-portfolio continuation tranches, where a phase can complete beyond a tranche cap so a faithful continuation can be captured. Do not impose the immutable whole-solve atomic policy on those uses. PR [#2203](https://github.com/gamesbyian/Pathfinder-Game/pull/2203) isolates the atomic opt-in in `_atomicStrictWorkCap`; exact-source 12-parent replay [39171380197](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39171380197) has now completed on PR merge source `a2ca855dcc643f07c316261277368369939591ac`: all 12 spent **exactly 250,000 work**, with no overrun, attempt-error, deadline censor or source/referee alarm, and no new cold solve. Its durable [summary](../reports/stress/pg-i-strict-250k-fixed-control-20261018.json) is scoped to that revision/cohort and PR integration still requires green CI. No existing historical >250k result may be silently reclassified.
 
 ## Current migration state
 

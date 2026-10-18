@@ -4,7 +4,9 @@ import { test } from 'vitest';
 import { solveLevel, runAttempt } from './orchestration.js';
 import type { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
-import { workMeter } from './work-meter.js';
+import { assertStrictWorkChargeAllowed, StrictWorkBudgetExhausted, workMeter } from './work-meter.js';
+import { createState, applyMove, undoMove, getNeighbors } from './search-state.js';
+import { isConnected } from './topology.js';
 import { prepLevel } from './prep.js';
 import { makeLineLevel, makeRepairGatedInfeasibleLevel, exhaustingDispatch, makeGoalAttractionDisabledRetryGatedInfeasibleLevel } from './orchestration-test-support.js';
 
@@ -208,6 +210,104 @@ test('strictTotalWorkBudget installs one remaining-work cap across every additiv
         assert.equal(lifecycle[name].actualWork, 0, 'controlled zero-work dispatch must meter exactly');
     }
     assert.equal(legacy.stageLifecycle, undefined, 'omitting lifecycle telemetry preserves the result shape');
+});
+
+test('strict work-meter preflights are atomic and distinguish move from connectivity work', () => {
+    const level = makeLineLevel();
+    const prep = prepLevel(level);
+    const start = level.gateKeys[0];
+    const state = createState(start, level, prep);
+    const globalBefore = workMeter.units;
+
+    prep._atomicStrictWorkCap = 0;
+    const pathBefore = state.path.slice();
+    assert.throws(
+        () => applyMove(start, state, level, prep, false),
+        (error: unknown) => error instanceof StrictWorkBudgetExhausted
+            && error.operation === 'applyMove' && error.attemptedCharge === 1 && error.remainingWork === 0,
+    );
+    assert.deepEqual(state.path, pathBefore, 'refused move must not mutate search path');
+    assert.equal(prep._workMeter.units, 0);
+    assert.equal(workMeter.units, globalBefore);
+
+    // One connectivity evaluation costs 12 canonical units. Eleven units remaining
+    // cannot legally buy it, and no partial charge may be recorded.
+    prep._atomicStrictWorkCap = 11;
+    assert.throws(
+        () => isConnected(start, state, level, prep),
+        (error: unknown) => error instanceof StrictWorkBudgetExhausted
+            && error.operation === 'isConnected' && error.attemptedCharge === 12 && error.remainingWork === 11,
+    );
+    assert.deepEqual(state.path, pathBefore);
+    assert.equal(prep._workMeter.units, 0);
+    assert.equal(workMeter.units, globalBefore);
+
+    // The guard accepts an exact fit and has no hidden off-by-one ceiling.
+    assert.doesNotThrow(() => assertStrictWorkChargeAllowed(9, 21, 12, 'isConnected'));
+    assert.throws(() => assertStrictWorkChargeAllowed(10, 21, 12, 'isConnected'), StrictWorkBudgetExhausted);
+});
+
+test('per-technique research strict caps remain independent of the atomic whole-solve opt-in', () => {
+    const level = makeLineLevel();
+    const prep = prepLevel(level);
+    const start = level.gateKeys[0];
+    const state = createState(start, level, prep);
+    const next = getNeighbors(start, state, level, prep)[0];
+    assert.ok(next !== undefined);
+    prep._strictWorkCap = 0;
+    assert.equal(prep._atomicStrictWorkCap, undefined, 'per-technique cap alone must not enable atomic refusal');
+    const globalBefore = workMeter.units;
+    const undo = applyMove(next, state, level, prep, false);
+    undoMove(undo, state);
+    assert.equal(prep._workMeter.units, 1);
+    assert.equal(workMeter.units, globalBefore + 1);
+});
+
+test('strict whole-solve cap censors a batched attempt without overcharging or labelling it as a search error', async () => {
+    // A controlled dispatch emulates a repair restart that performs several moves
+    // without consulting the stage cap. Ordinary production paths do this naturally
+    // between their work checks; this pin isolates the shared meter/dispatcher seam.
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, gateKey, level, prep, , , , , , out] = args;
+        const state = createState(gateKey, level, prep);
+        const next = getNeighbors(gateKey, state, level, prep)[0];
+        assert.ok(next !== undefined, 'fixture must expose a legal move');
+        for (let i = 0; i < 32; i++) {
+            const undo = applyMove(next, state, level, prep, false);
+            undoMove(undo, state);
+        }
+        if (out) out.timedOut = true;
+        return null;
+    };
+    const opts = {
+        timeBudgetMs: 60_000, nodeBudget: 1_000,
+        baseWorkBudget: 3, strictTotalWorkBudget: true,
+        attemptBudgetTelemetry: true, attemptSearchForTesting: dispatch,
+    };
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), opts);
+    assert.equal(result.ok, false);
+    assert.equal(result.workSpent, 3, 'whole solve must never pay the fourth atomic move');
+    assert.equal(result.status, 'work-budget-reached', 'a refused atomic charge is a budget censor even if work remains');
+    assert.equal(result.attempts.reduce((total, a) => total + (a.workSpent ?? 0), 0), 3);
+    assert.ok(result.attempts.some(a => a.outcome === 'timed-out'),
+        'strict interruption must remain a censored search outcome');
+    assert.ok(result.attempts.every(a => a.outcome !== 'error'),
+        'strict exhaustion is not an attempt error or an UNSAT proof');
+});
+
+test('tiny real strict search doses never cross their whole-solve work ceilings', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    for (const cap of [1, 11, 12, 13, 37, 64]) {
+        const result = await solveLevel(level, {
+            timeBudgetMs: 60_000, nodeBudget: 1_000,
+            baseWorkBudget: cap, strictTotalWorkBudget: true,
+            attemptBudgetTelemetry: true,
+        });
+        assert.ok(result.workSpent !== undefined && result.workSpent <= cap, `strict cap ${cap} charged ${result.workSpent}`);
+        assert.equal(result.attempts.reduce((sum, a) => sum + (a.workSpent ?? 0), 0),
+            result.workSpent, 'attempt accounting must still close under strict interruption');
+        assert.ok(result.attempts.every(a => a.outcome !== 'error'), 'ordinary budget exits are not errors');
+    }
 });
 
 test('the ordinary repair fallback loop gets fresh work room, not a stale cap left by the main loop (regression, fixed 2026-08-20)', async () => {
