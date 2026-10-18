@@ -1,0 +1,152 @@
+# Disposable research-only exposure: 12 historically nominated distinct Corpus-2 parents.
+# No production policy, Hint mutation, cross-era inference or historical winner routing.
+# Retire after the exact source/plan/result is committed under the PG-I question.
+name: PG-I independent resistant-parent five-method equal-work exposure
+on:
+  push:
+    branches:
+      - chatgpt/pg-i-resistance-equal-work-exposure-20261018
+    paths:
+      - .github/workflows/pg-i-resistant-parent-exposure-20261018.yml
+      - scripts/stress/pg-i-resistant-parent-exposure.mjs
+      - reports/stress/pg-i-resistant-parent-20261018-frozen-selection.json
+permissions:
+  contents: read
+concurrency:
+  group: pg-i-resistance-exposure-20261018
+  cancel-in-progress: false
+jobs:
+  plan:
+    name: Source-verify, seal 60-cell plan, and canary
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Exercise actual isolated-plan CLI contract
+        run: node scripts/stress/pg-i-resistant-parent-exposure.mjs --self-test
+      - name: Freeze all IDs and positions and exact five-method contract
+        run: node scripts/stress/pg-i-resistant-parent-exposure.mjs --mode=plan --out=tmp/pg-i/plan.json
+      - name: Canary each execution family under strict canonical work
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const plan=JSON.parse(readFileSync('tmp/pg-i/plan.json','utf8'));
+          if(plan.expectedCells!==60||plan.independentParentCount!==12||plan.methods.length!==5)
+            throw Error('unfrozen PG-I plan population');
+          const first=plan.parentSelection[0].id;
+          const cells=plan.cells.filter(c=>c.levelId===first).map(c=>({
+            ...c,cellId:'CANARY::'+c.cellId,workBudget:100000,
+          }));
+          if(cells.length!==5||new Set(cells.map(c=>c.techniqueKeys[0])).size!==5)
+            throw Error('missing canary execution technique');
+          writeFileSync('tmp/pg-i/canary-plan.json',JSON.stringify({...plan,cells,expectedCells:5}));
+          NODE
+          node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+            --plan=tmp/pg-i/canary-plan.json --shard=1 --shards=1 --workers=2 \
+            --out=tmp/pg-i/canary.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('tmp/pg-i/canary.json','utf8'));
+          if(r.partial||r.results?.length!==5||r.results.some(x=>['error','referee-invalid'].includes(x.status)))
+            throw Error('source-pinned five-technique canary failed');
+          console.log('PG-I five-method canary: '+r.results.map(x=>x.status).join(', '));
+          NODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-i-resistance-sealed-plan
+          path: |
+            tmp/pg-i/plan.json
+            tmp/pg-i/canary-plan.json
+            tmp/pg-i/canary.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  shards:
+    name: Equal-work shard ${{ matrix.shard }}/3
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v8
+        with:
+          name: pg-i-resistance-sealed-plan
+          path: tmp/pg-i
+      - name: Read-only current-code canonical-work isolated census
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/pg-i/shards
+          timeout -k 30s --preserve-status 315m \
+            node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+            --plan=tmp/pg-i/plan.json \
+            --shard=${{ matrix.shard }} --shards=3 --workers=3 \
+            --out=tmp/pg-i/shards/shard-${{ matrix.shard }}.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-i-resistance-shard-${{ matrix.shard }}
+          path: tmp/pg-i/shards/shard-${{ matrix.shard }}.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  combine:
+    name: Exact 60-cell integrity and twelve-parent verdict
+    needs: [plan, shards]
+    if: ${{ always() && needs.plan.result == 'success' && needs.shards.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v8
+        with:
+          name: pg-i-resistance-sealed-plan
+          path: tmp/pg-i
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: pg-i-resistance-shard-*
+          path: tmp/pg-i/shards
+          merge-multiple: true
+      - name: Verify exact cell identity and classify genuine work/censoring
+        run: |
+          node scripts/stress/pg-i-resistant-parent-exposure.mjs --mode=combine \
+            --plan=tmp/pg-i/plan.json --input-dir=tmp/pg-i/shards \
+            --out=tmp/pg-i/verdict.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-i-resistance-12-parent-exact-verdict
+          path: |
+            tmp/pg-i/plan.json
+            tmp/pg-i/verdict.json
+          if-no-files-found: warn
+          retention-days: 90
