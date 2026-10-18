@@ -1,0 +1,41 @@
+# Temporary isolated 24-parent actual production participation canary.
+name: PG-L independent actual co-dispatch holdout 24
+on:
+  push:
+    branches:
+      - chatgpt/pg-l-independent-dispatch-holdout-20261018
+    paths:
+      - .github/workflows/pg-l-independent-dispatch-holdout-20261018.yml
+permissions:
+  contents: read
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Exact current dispatch identity field contract
+        run: node scripts/run-bundled.mjs scripts/stress/pg-l-independent-dispatch-run.mjs -- --self-test
+      - name: Frozen previously-unseen 24-parent actual production dispatch canary
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/run-bundled.mjs scripts/stress/pg-l-independent-dispatch-run.mjs -- --out=tmp/pg-l-independent/dispatch.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('tmp/pg-l-independent/dispatch.json','utf8'));
+          if(r.summary.parents!==24||r.sourceSelection.length!==24||r.summary.errors!==0)throw Error('incomplete/errored PG-L holdout');
+          console.log('PG-L INDEPENDENT DISPATCH COMPLETE '+JSON.stringify(r.summary));
+          NODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-l-independent-production-dispatch-24-20261018
+          path: tmp/pg-l-independent/dispatch.json
+          if-no-files-found: warn
+          retention-days: 90
