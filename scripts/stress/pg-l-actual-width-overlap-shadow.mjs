@@ -21,11 +21,13 @@ const dispatchEvidence='reports/stress/pg-l-actual-dispatch-250k-20261017-001.js
 const profiles=['objectiveFirst','intersectionHarvest'];
 const width=5000,budgetMs=600000;
 // Literal source-verified production co-dispatch, not a generic parent population.
-// Same real gate, target beam width, and min(source observed per-profile work).
+// Same real gate and target beam width, at each scorer's own observed work dose.
+// For R02781 intersectionHarvest both plain and mechanic-bucket variants are offered;
+// the compact dispatcher does not identify which was executed. We use plain here.
 const frozen=[
- {id:'R02781',gateKey:458753,perArmWorkBudget:32750},
- {id:'R02579',gateKey:327682,perArmWorkBudget:41156},
- {id:'R02037',gateKey:655370,perArmWorkBudget:23719},
+ {id:'R02781',gateKey:458753,workByProfile:{objectiveFirst:37362,intersectionHarvest:32750}},
+ {id:'R02579',gateKey:327682,workByProfile:{objectiveFirst:41156,intersectionHarvest:41156}},
+ {id:'R02037',gateKey:655370,workByProfile:{objectiveFirst:23719,intersectionHarvest:23719}},
 ];
 const assert=(p,m)=>{if(!p)throw Error(m)};
 const hash=(x)=>createHash('sha256').update(typeof x==='string'?x:JSON.stringify(x)).digest('hex');
@@ -83,7 +85,7 @@ for(const row of frozen){
  const src=dispatchById.get(row.id);assert(src,'missing frozen co-dispatch parent '+row.id);
  for(const profile of profiles){
   const matches=src.beams.filter(b=>b[0]===profile&&b[1]===width&&b[2]===row.gateKey);
-  assert(matches.length===1&&matches[0][3]===row.perArmWorkBudget,'production gate/width/work mismatch '+row.id+' '+profile);
+  assert(matches.length===1&&matches[0][3]===row.workByProfile[profile],'production gate/width/work mismatch '+row.id+' '+profile);
  }
 }
 assert(new Set(frozen.map(p=>p.id)).size===3,'source co-dispatch duplication');
@@ -138,15 +140,15 @@ async function one({level,gateKey,profileName,observation,perArmWorkBudget}){
 }
 const parents=[];
 for(let i=0;i<cohort.length;i++){
- const {id,gateKey,perArmWorkBudget}=cohort[i],source=byId.get(id);
+ const {id,gateKey,workByProfile}=cohort[i],source=byId.get(id);
  const {id:_id,stressMeta:_meta,...raw}=source;
  const level=Solver.prepareLevelForSolver(raw,{source:'raw'});
  assert(Array.isArray(level.gateKeys)&&level.gateKeys.length>0,'missing gate '+id);
  assert(level.gateKeys.includes(gateKey),'frozen actual production gate unavailable '+id);
  const arms=[];
  for(const profileName of profiles){
-  const control=await one({level,gateKey,profileName,observation:false,perArmWorkBudget});
-  const observed=await one({level,gateKey,profileName,observation:true,perArmWorkBudget});
+  const control=await one({level,gateKey,profileName,observation:false,perArmWorkBudget:workByProfile[profileName]});
+  const observed=await one({level,gateKey,profileName,observation:true,perArmWorkBudget:workByProfile[profileName]});
   for(const field of ['found','solutionHash','status','workSpent','nodesExpanded']){
    assert(control.result[field]===observed.result[field],
     id+' '+profileName+' observer mutated '+field+' '+JSON.stringify([control.result[field],observed.result[field]]));
@@ -155,7 +157,7 @@ for(let i=0;i<cohort.length;i++){
    trace:observed.observed});
  }
  const contrast=overlapSummary(arms[0].trace,arms[1].trace);
- const emitted={levelId:id,gateKey,productionWorkPerProfile:perArmWorkBudget,
+ const emitted={levelId:id,gateKey,productionWorkPerProfile:workByProfile,
   armResults:arms.map(a=>({...a.observed,sourceIsolatedControlWork:a.control.workSpent,
    generatedRecords:a.trace.generatedRecords,parentEvents:a.trace.parentEvents,
    parentExpansionWork:a.trace.parentExpansionWork,
@@ -172,7 +174,7 @@ assert(parents.length===3,'source subset lost');
 const informative=parents.filter(p=>p.armResults.every(a=>a.parentEvents>=2));
 const mean=(v)=>v.length?v.reduce((x,y)=>x+y,0)/v.length:null;
 const summary={parents:parents.length,informativeParents:informative.length,
- observerParityAlarms:0,scoringProfiles:profiles,perParentNominalWorkBudgets:frozen.map(p=>[p.id,p.perArmWorkBudget]),
+ observerParityAlarms:0,scoringProfiles:profiles,perParentNominalWorkBudgets:frozen.map(p=>[p.id,p.workByProfile]),
  exactActionComparisonPairs:parents.length,
  aggregateObserverCanonicalWork:parents.reduce((n,p)=>n+p.armResults.reduce((a,x)=>a+x.workSpent,0),0),
  meanExactStateJaccard:mean(informative.map(p=>p.contrasts.overlaps.exactAll.jaccard).filter(Number.isFinite)),
@@ -184,7 +186,7 @@ const report={schema:'pathfinder.pg-l-actual-width-action-overlap/v1',kind:'read
  selection:{selection:'fixed three source-verified production co-dispatch development parents; enriched, not random/population representative',
   dispatchEvidence,dispatchRunId:39098565429,selected:cohort,gateSelection:'exact actual production gate for each',profiles,
   width,budgetMs,control:'isolated same-config beam attempt without observer for every observed arm'},
- caveat:'Actual production widths/gates and source-observed work doses are replayed in SEPARATE isolated actions, not a single scheduler invocation. Shared path hashes are observations, not reusable sound proof or guaranteed avoided work. No hints in solve. Selected three-parent co-dispatch subset cannot establish population prevalence or cold solves.',
+ caveat:'Actual production widths/gates and per-profile source-observed work doses are replayed in SEPARATE isolated actions, not a single scheduler invocation. Shared path hashes are observations, not reusable sound proof or guaranteed avoided work. No hints in solve. Selected three-parent co-dispatch subset cannot establish population prevalence or cold solves.',
  summary,parents};
 const target=path.resolve(outArg.slice(6));
 mkdirSync(path.dirname(target),{recursive:true});
