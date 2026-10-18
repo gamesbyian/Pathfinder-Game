@@ -232,26 +232,6 @@
         "mode": "artifact-only",
         "reason": "This one-shot Stage A experiment publishes its frozen result and standard solver-sweep artifact; it is not a recurring compact failure-response producer."
       }
-    },
-    {
-      "id": "pg-i-resistant-parent-exposure-20261018",
-      "workflow": ".github/workflows/pg-i-resistant-parent-exposure-20261018.yml",
-      "disposition": "unsupported",
-      "reason": "Frozen one-shot PG-I per-parent/per-method research result is a specialized, referee-checked result schema, not the standard compact failure-response transport. Preserve full attempt/work/censoring evidence in the uploaded machine artifact; no Hint writer/consumer is authorized.",
-      "durability": {
-        "mode": "artifact-only",
-        "reason": "One-shot current-code isolated T1 five-method cold exposure; solver-experiment result artifacts and exact valid paths are retained for research review, never silently ingested into canonical Hint stores."
-      }
-    },
-    {
-      "id": "pg-i-resistant-parent-production-control-20261018",
-      "workflow": ".github/workflows/pg-i-resistant-parent-production-control-20261018.yml",
-      "disposition": "unsupported",
-      "reason": "Frozen one-shot PG-I per-parent/per-method research result is a specialized, referee-checked result schema, not the standard compact failure-response transport. Preserve full attempt/work/censoring evidence in the uploaded machine artifact; no Hint writer/consumer is authorized.",
-      "durability": {
-        "mode": "artifact-only",
-        "reason": "Frozen current cold production 250k reference cohort for the PG-I equal-work exposure; exact referee-valid paths and failure evidence retained only as research output, never automatically written into Hint stores."
-      }
     }
   ]
 }
