@@ -1,6 +1,6 @@
 # PG-O Stage-2 real-beam partial-to-solution-manifold proxy preflight 002
 
-> **Status:** active bounded experiment, outcome pending
+> **Status:** concluded-negative on this historical-hint geometry proxy; [completed result 002](2026-10-17-pg-o-real-frontier-manifold-proxy-result-002.md) preserves exact 50-case evidence
 > **Question:** do genuinely beam-produced unfinished Pathfinder routes lie geometrically near the *same-depth prefix manifold* of accepted solutions, and is that resemblance informative about exact future completion?
 > **Research question:** `WS2-G1-COMPLETE-PATH-LNS`
 > **Evidence role:** development/cheapest falsifier; **zero production solver changes**.
@@ -33,3 +33,7 @@ Only after all features are frozen join the CP-SAT LIVE/DEAD labels and report i
 - No history/level ID/hint/label is allowed in the prospective cold consumer, even if offline proxy looks excellent.
 
 Execution: `scripts/stress/pg-o-real-frontier-manifold-proxy.mjs` runs with a disposable, branch-only read-only GitHub Action. Delete the workflow before merge; preserve exact source/artifact hashes, machine results and the stable research-question join. No LNS engine or broad stochastic search is authorized here.
+
+## Successor disposition (2026-10-17)
+
+[Run 39089743702](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39089743702) completed every frozen case and matched reference hint. Two exact LIVE R03147 prefixes had minimum equal-depth reference-hint Jaccard distances 0.800 and 0.957; within-parent pairwise LIVE/DEAD ordering was only 0.620 (Jaccard/position) to 0.641 (longest common prefix) on 46 dependent comparisons. The retrospective hint-prefix geometry shortcut is **concluded-negative**, not a claim that LNS is impossible. Do not scale this signature or introduce stored hints into cold solving. PG-O remains active only for a *different hint-free current-state partial-to-relaxed-candidate and measurable local repairability* method, subject to independent-parent opportunity. Source-identical 50-row machine verdict is [permanent](stress/pg-o-real-frontier-manifold-proxy-20261017-001.json).
