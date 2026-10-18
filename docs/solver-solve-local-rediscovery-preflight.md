@@ -1,6 +1,6 @@
 # Solve-local fact rediscovery preflight
 
-> **Status:** original 2026-09-17 Phase 0 EXECUTED / CONCLUDED-NEGATIVE on its tested retained material; **REOPENED 2026-10-16 under PG-M only on materially changed evidence**: the later fresh exact-DEAD sibling population and newer PG-D/PG-J/PG-K exact-query material. Do not rerun the old Phase 0 unchanged. See [`result`](../reports/2026-09-17-lane-c-phase0-retained-evidence-rejoin-result-001.md).
+> **Status:** original 2026-09-17 Phase 0 CONCLUDED-NEGATIVE on B/C/D; 2026-10-17 **PG-M Phase-0 delta EXECUTED / CONCLUDED-NEGATIVE** on all six newer retained exact-query families: 165 observations, 162 unique exact prefix keys, zero identical cross-source repeated queries, and only three alias rows inside old topology data. [PG-M 001 result](../reports/2026-10-17-pg-m-exact-query-recurrence-delta-result-001.md). The general current-instance sound fact-reuse premise remains open only to materially new *per-invocation* telemetry.
 > **Question:** does one cold solve repeatedly derive the same expensive sound or decision-useful current-instance facts across branches, attempts, or stages often enough that typed solve-local reuse could add capability or save material work?
 > **Priority:** active retained-first PG-M, subordinate to the current ordering in `solver-optimization-workstreams.md`. Its first step is a **delta rejoin** against post-2026-09-17 evidence, not a new generic observer.
 > **Premise lineage:** [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md), [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md), and the August connectivity-certificate audits.
@@ -179,3 +179,7 @@ Stop this line if:
 - **DEAD-core work** may eventually produce sound conflict facts; if so, this preflight supplies the reuse/economics questions, not the core-extraction method.
 - **Cooperative blackboard portfolio** remains deferred until one concrete typed handoff proves that cross-process reuse pays.
 - **Class-3 dose reconciliation** is an exposure question and should not be mixed into this capability study.
+
+## Phase-0 delta successor disposition (2026-10-17)
+
+The formerly queued post-September retained-data rejoin is complete. [PG-M 001](../reports/2026-10-17-pg-m-exact-query-recurrence-delta-result-001.md) verifies 165 decisive exact-reference rows across six source families, 162 unique full raw-prefix queries, zero cross-source exact duplicate queries and 13 boards recurring with **different** prefixes. Repeated parent identity alone cannot authorize proof reuse. The result does **not** test recurrence of a general sound connectivity resource certificate within a current cold invocation, because offline oracle records lack typed fact dependencies, canonical attempt/stage sequence, timing and work economics. No new PG-M observer or blackboard is earned from this data alone. Reopen only if PG-L, PG-P or equivalent current invocation observation exposes specific expensive pre-computation sound-fact recurrence plus a plausibly cheaper lookup.
