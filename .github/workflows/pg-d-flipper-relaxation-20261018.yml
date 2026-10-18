@@ -1,0 +1,47 @@
+# One-shot read-only PG-D flipper automata; retire before evidence PR integration.
+name: PG-D flipper-axis relaxation screen
+on:
+  push:
+    branches:
+      - chatgpt/pg-d-flipper-relaxation-boundary-20261018
+    paths:
+      - .github/workflows/pg-d-flipper-relaxation-20261018.yml
+      - scripts/stress/pg-d-flipper-automaton-relaxation.mjs
+permissions:
+  contents: read
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Verify sound over-permissive automata on synthetic control
+        run: node scripts/run-bundled.mjs scripts/stress/pg-d-flipper-automaton-relaxation.mjs -- --self-test
+      - name: Replay full frozen exact-label cohort, support abstentions and P00009 contrasts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/run-bundled.mjs scripts/stress/pg-d-flipper-automaton-relaxation.mjs -- --out=tmp/pg-d-flipper/decision.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const v=JSON.parse(readFileSync('tmp/pg-d-flipper/decision.json','utf8'));
+          if(v.summary.sourceRows!==28||v.summary.uniquePrefixes!==25||v.summary.supportedPrefixes!==13||
+             v.summary.supportedLive!==9||v.summary.supportedDead!==4||v.summary.alarms!==0)
+             throw Error('PG-D source, soundness or supported-case contract failed');
+          if(v.summary.matchedFocalCases!==4||v.summary.focalContrasts!==2||
+             v.summary.depthSixSameAbstractSeed!==true)
+             throw Error('PG-D P00009 causal comparison lost');
+          console.log('PG-D SOURCE AND SOUNDNESS VERIFIED');
+          NODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-d-flipper-axis-relaxation-result-001
+          path: tmp/pg-d-flipper/decision.json
+          if-no-files-found: warn
+          retention-days: 90
