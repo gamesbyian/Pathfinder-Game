@@ -1,0 +1,450 @@
+{
+  "schema": "pathfinder.pg-l-static-policy-eligibility/v1",
+  "upstreamRunId": 39091213935,
+  "upstreamSourceCommit": "15ffc65bbee4c378a8915ca2677f195fd5ceb916",
+  "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "source": "current-main getConfiguredAttemptConfigs level-feature policy, no solver run",
+  "inferenceScope": "eligible ordered config inclusion only; unknown actual attempt dispatch, per-config work allocation, runtime policy participation or work savings",
+  "summary": {
+    "parents": 8,
+    "bothScoringActionsEligible": 8,
+    "bothResearchWidth500": 0,
+    "bothUnbucketed": 8,
+    "noObjective": 0,
+    "noIntersection": 0
+  },
+  "rows": [
+    {
+      "levelId": "R02781",
+      "gateKey": 458753,
+      "total": 16,
+      "beamConfigCount": 3,
+      "targets": {
+        "objectiveFirst": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 9,
+              "profile": "objectiveFirst",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        },
+        "intersectionHarvest": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 5,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": true
+            },
+            {
+              "index": 8,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        }
+      },
+      "bothEligible": true,
+      "bothResearchWidth500": false,
+      "bothUnbucketed": true
+    },
+    {
+      "levelId": "R02676",
+      "gateKey": 589832,
+      "total": 20,
+      "beamConfigCount": 6,
+      "targets": {
+        "objectiveFirst": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 3,
+              "profile": "objectiveFirst",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": true
+            },
+            {
+              "index": 5,
+              "profile": "objectiveFirst",
+              "beamWidth": 2000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            },
+            {
+              "index": 12,
+              "profile": "objectiveFirst",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        },
+        "intersectionHarvest": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 2,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": true
+            },
+            {
+              "index": 4,
+              "profile": "intersectionHarvest",
+              "beamWidth": 2000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            },
+            {
+              "index": 11,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        }
+      },
+      "bothEligible": true,
+      "bothResearchWidth500": false,
+      "bothUnbucketed": true
+    },
+    {
+      "levelId": "R02929",
+      "gateKey": 393221,
+      "total": 20,
+      "beamConfigCount": 6,
+      "targets": {
+        "objectiveFirst": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 3,
+              "profile": "objectiveFirst",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": true
+            },
+            {
+              "index": 5,
+              "profile": "objectiveFirst",
+              "beamWidth": 2000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            },
+            {
+              "index": 12,
+              "profile": "objectiveFirst",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        },
+        "intersectionHarvest": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 2,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": true
+            },
+            {
+              "index": 4,
+              "profile": "intersectionHarvest",
+              "beamWidth": 2000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            },
+            {
+              "index": 11,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        }
+      },
+      "bothEligible": true,
+      "bothResearchWidth500": false,
+      "bothUnbucketed": true
+    },
+    {
+      "levelId": "R02579",
+      "gateKey": 327682,
+      "total": 25,
+      "beamConfigCount": 2,
+      "targets": {
+        "objectiveFirst": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 16,
+              "profile": "objectiveFirst",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        },
+        "intersectionHarvest": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 17,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        }
+      },
+      "bothEligible": true,
+      "bothResearchWidth500": false,
+      "bothUnbucketed": true
+    },
+    {
+      "levelId": "R02024",
+      "gateKey": 262152,
+      "total": 16,
+      "beamConfigCount": 5,
+      "targets": {
+        "objectiveFirst": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 4,
+              "profile": "objectiveFirst",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        },
+        "intersectionHarvest": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 0,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        }
+      },
+      "bothEligible": true,
+      "bothResearchWidth500": false,
+      "bothUnbucketed": true
+    },
+    {
+      "levelId": "R02857",
+      "gateKey": 458765,
+      "total": 19,
+      "beamConfigCount": 6,
+      "targets": {
+        "objectiveFirst": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 3,
+              "profile": "objectiveFirst",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": true
+            },
+            {
+              "index": 5,
+              "profile": "objectiveFirst",
+              "beamWidth": 2000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            },
+            {
+              "index": 12,
+              "profile": "objectiveFirst",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        },
+        "intersectionHarvest": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 2,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": true
+            },
+            {
+              "index": 4,
+              "profile": "intersectionHarvest",
+              "beamWidth": 2000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            },
+            {
+              "index": 11,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        }
+      },
+      "bothEligible": true,
+      "bothResearchWidth500": false,
+      "bothUnbucketed": true
+    },
+    {
+      "levelId": "R02037",
+      "gateKey": 655370,
+      "total": 25,
+      "beamConfigCount": 2,
+      "targets": {
+        "objectiveFirst": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 16,
+              "profile": "objectiveFirst",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        },
+        "intersectionHarvest": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 17,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        }
+      },
+      "bothEligible": true,
+      "bothResearchWidth500": false,
+      "bothUnbucketed": true
+    },
+    {
+      "levelId": "R03004",
+      "gateKey": 131076,
+      "total": 17,
+      "beamConfigCount": 7,
+      "targets": {
+        "objectiveFirst": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 1,
+              "profile": "objectiveFirst",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": true
+            },
+            {
+              "index": 6,
+              "profile": "objectiveFirst",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        },
+        "intersectionHarvest": {
+          "eligible": true,
+          "configs": [
+            {
+              "index": 0,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": true
+            },
+            {
+              "index": 2,
+              "profile": "intersectionHarvest",
+              "beamWidth": 5000,
+              "technique": "beam",
+              "bias": null,
+              "mechanicBucket": false
+            }
+          ],
+          "exactResearchWidth500": false
+        }
+      },
+      "bothEligible": true,
+      "bothResearchWidth500": false,
+      "bothUnbucketed": true
+    }
+  ]
+}
