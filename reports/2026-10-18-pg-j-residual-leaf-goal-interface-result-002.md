@@ -5,7 +5,7 @@
 > **Decision:** adding two further current-prefix proxy scalars (endpoint-reachable nonterminal leaf count and shortest endpoint-to-goal graph hops) does not yield an exact outcome-safe or compressive state key: full articulation+leaves+goal combination leaves one opposite-fate collision and only 4/25 repeated-key prefixes. This particular additive topology-proxy form is closed.
 > **Remaining gate:** seek a *mechanic-authentic history-dependent necessary completion consequence* which distinguishes the surviving P00137 LIVE/DEAD pair and has measured nontrivial retained descendant-work exposure before any consumer; do not append increasingly specific proxy scalars.
 > **Research question:** `WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR`
-> **Evidence role:** retrospective development falsifier, post-hoc candidate inspection on already labelled observations
+> **Evidence role:** retrospective development falsifier
 > **Selection:** unchanged full 28 retained CP-SAT-labelled rows from three topology-fork source files, deduplicated to 25 prefixes across 7 independent human puzzles; no rows excluded using labels
 > **Population identity:** original/extension/replication frozen exact-label tables from 2026-09-16/17, grouped by level+entire prefix, compared only within the same level
 > **Inference scope:** failure of the specified geometry-proxy representation on a small selected exact-reference population; no population prevalence, soundness proof, cold search improvement, or future-state equivalence inference
