@@ -303,7 +303,7 @@ test('tiny real strict search doses never cross their whole-solve work ceilings'
             baseWorkBudget: cap, strictTotalWorkBudget: true,
             attemptBudgetTelemetry: true,
         });
-        assert.ok(result.workSpent <= cap, `strict cap ${cap} charged ${result.workSpent}`);
+        assert.ok(result.workSpent !== undefined && result.workSpent <= cap, `strict cap ${cap} charged ${result.workSpent}`);
         assert.equal(result.attempts.reduce((sum, a) => sum + (a.workSpent ?? 0), 0),
             result.workSpent, 'attempt accounting must still close under strict interruption');
         assert.ok(result.attempts.every(a => a.outcome !== 'error'), 'ordinary budget exits are not errors');
