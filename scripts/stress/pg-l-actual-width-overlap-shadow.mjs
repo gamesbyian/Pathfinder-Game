@@ -20,6 +20,8 @@ const corpusFile='data/stress/stress-levels-random.json';
 const dispatchEvidence='reports/stress/pg-l-actual-dispatch-250k-20261017-001.json';
 const profiles=['objectiveFirst','intersectionHarvest'];
 const width=5000,budgetMs=600000;
+const multiplier=Number(process.argv.find(x=>x.startsWith('--budget-multiplier='))?.slice(20)??1);
+if(![1,4].includes(multiplier))throw Error('PG-L only predeclared budget multipliers 1 and 4 supported');
 // Literal source-verified production co-dispatch, not a generic parent population.
 // Same real gate and target beam width, at each scorer's own observed work dose.
 // For R02781 intersectionHarvest both plain and mechanic-bucket variants are offered;
@@ -147,8 +149,8 @@ for(let i=0;i<cohort.length;i++){
  assert(level.gateKeys.includes(gateKey),'frozen actual production gate unavailable '+id);
  const arms=[];
  for(const profileName of profiles){
-  const control=await one({level,gateKey,profileName,observation:false,perArmWorkBudget:workByProfile[profileName]});
-  const observed=await one({level,gateKey,profileName,observation:true,perArmWorkBudget:workByProfile[profileName]});
+  const control=await one({level,gateKey,profileName,observation:false,perArmWorkBudget:workByProfile[profileName]*multiplier});
+  const observed=await one({level,gateKey,profileName,observation:true,perArmWorkBudget:workByProfile[profileName]*multiplier});
   for(const field of ['found','solutionHash','status','workSpent','nodesExpanded']){
    assert(control.result[field]===observed.result[field],
     id+' '+profileName+' observer mutated '+field+' '+JSON.stringify([control.result[field],observed.result[field]]));
@@ -157,7 +159,7 @@ for(let i=0;i<cohort.length;i++){
    trace:observed.observed});
  }
  const contrast=overlapSummary(arms[0].trace,arms[1].trace);
- const emitted={levelId:id,gateKey,productionWorkPerProfile:workByProfile,
+ const emitted={levelId:id,gateKey,productionWorkPerProfile:workByProfile,experimentalWorkMultiplier:multiplier,
   armResults:arms.map(a=>({...a.observed,sourceIsolatedControlWork:a.control.workSpent,
    generatedRecords:a.trace.generatedRecords,parentEvents:a.trace.parentEvents,
    parentExpansionWork:a.trace.parentExpansionWork,
@@ -185,8 +187,8 @@ const report={schema:'pathfinder.pg-l-actual-width-action-overlap/v1',kind:'read
   corpusSha256},
  selection:{selection:'fixed three source-verified production co-dispatch development parents; enriched, not random/population representative',
   dispatchEvidence,dispatchRunId:39098565429,selected:cohort,gateSelection:'exact actual production gate for each',profiles,
-  width,budgetMs,control:'isolated same-config beam attempt without observer for every observed arm'},
- caveat:'Actual production widths/gates and per-profile source-observed work doses are replayed in SEPARATE isolated actions, not a single scheduler invocation. Shared path hashes are observations, not reusable sound proof or guaranteed avoided work. No hints in solve. Selected three-parent co-dispatch subset cannot establish population prevalence or cold solves.',
+  width,budgetMs,multiplier,control:'isolated same-config beam attempt without observer for every observed arm'},
+ caveat:'Actual production widths/gates and per-profile source-observed work doses (times fixed 1x or 4x multiplier) are replayed in SEPARATE isolated actions, not a single scheduler invocation. Shared path hashes are observations, not reusable sound proof or guaranteed avoided work. No hints in solve. Selected three-parent co-dispatch subset cannot establish population prevalence or cold solves.',
  summary,parents};
 const target=path.resolve(outArg.slice(6));
 mkdirSync(path.dirname(target),{recursive:true});
