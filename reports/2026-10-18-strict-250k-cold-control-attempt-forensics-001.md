@@ -7,11 +7,13 @@
 > **Research question:** `WS2-VARIANT-RESPONSE-HARDNESS`
 > **Evidence role:** forensic
 > **Selection:** original PG-I 12 selected before the current 250k solver observations using its frozen source-historical hardness cohort
-> **Population identity:** `reports/stress/pg-i-resistant-parent-20261018-frozen-selection.json` at PR #2201; random stress-corpus SHA256 `d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb`
+> **Population identity:** sha256:d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb
 > **Selection history:** 625 historically baseline-unsolved, no-recorded-T1-success candidates after explicit exclusions; FNV-1a/avalanche frozen hash ranked first 12, not an unselected distribution estimate
 > **Inference scope:** exact attempt-level accounting on the original twelve source-identified cold controls only; no claim about general solve prevalence or exact per-primitive first charge
 
 <!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"active","lastEvidenceDate":"2026-10-18","decision":"For all twelve 250k strict cold controls, most overshoot was billed by later attempts after the first budget crossing. Keep exact-cost comparison blocked until fixed source-accurate replay.","remainingGate":"Exact-source fixed strict-250k rerun of twelve frozen parents, with no actual overshoots and correct censoring/referee outcomes","joins":{"researchQuestion":"WS2-VARIANT-RESPONSE-HARDNESS","premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"forensic","scope":{"populationIdentity":"sha256:d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb","selection":"prespecified historical-hardness frozen 12 of 625 after exclusions","inferenceScope":"original PG-I cold control attempt-level work accounting"},"claimRefs":[],"sourceArtifacts":["reports/stress/pg-i-resistant-parent-20261018-frozen-selection.json"],"successors":{"questions":[],"artifacts":[]},"prospective":{"expectation":null,"surprise":"Most strict overshoot accrued in subsequent attempts already marked budget-starved","anomaly":"strict work 250k controls overshoot"}} -->
+
+The frozen twelve-parent roster is `reports/stress/pg-i-resistant-parent-20261018-frozen-selection.json` at PR #2201. The population identity above is the source corpus digest, with the exact parent selection pinned separately by that roster.
 
 ## Source and calculation
 
