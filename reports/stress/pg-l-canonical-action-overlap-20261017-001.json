@@ -1,0 +1,731 @@
+{
+  "schema": "pathfinder.pg-l-action-overlap-shadow/v1",
+  "kind": "read-only canonical beam action overlap",
+  "evidenceRole": "development",
+  "source": {
+    "code": "15ffc65bbee4c378a8915ca2677f195fd5ceb916",
+    "corpusFile": "data/stress/stress-levels-random.json",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb"
+  },
+  "selection": {
+    "seed": "pathfinder-pg-l-action-overlap-cold-8-20261017-001",
+    "selection": "outcome-blind SHA256 of seed + canonical levelId, first 8 independent corpus rows",
+    "selected": [
+      {
+        "id": "R02781",
+        "selectionHash": "002c25c3a0e3f598b20afbb8b8f9d85a9a9a2dc4858c9ac1189daa08256d478f"
+      },
+      {
+        "id": "R02676",
+        "selectionHash": "0037859948312ba1e42ea0595c2d4d616765b818a6c3317642df94c43ac30181"
+      },
+      {
+        "id": "R02929",
+        "selectionHash": "004996fa65fa79b7b03d2f2f60d494d393dc1425cb7bc68405ae22dd5219bae5"
+      },
+      {
+        "id": "R02579",
+        "selectionHash": "00e31c2d6d8ee08ad8d2517635af3c5f546278aa500f3df52a9d6f6c513beae7"
+      },
+      {
+        "id": "R02024",
+        "selectionHash": "00eb47aff55898571d3565fd779b676b7e88cbd1d10c71950c37476e210130b5"
+      },
+      {
+        "id": "R02857",
+        "selectionHash": "01265c5e50536c464429dbf6cc8d4827cb4e2f698bec414a3242cd67f1063f35"
+      },
+      {
+        "id": "R02037",
+        "selectionHash": "0130d20a1a7324ae6cfc2d506d14a963f961523c4f034376e4064a04521ca747"
+      },
+      {
+        "id": "R03004",
+        "selectionHash": "016407c28eefd12e3df5a35dd22adb04c3107d7f5163f221ea5aab4686dbef49"
+      }
+    ],
+    "gateSelection": "first canonical prepared gate",
+    "profiles": [
+      "objectiveFirst",
+      "intersectionHarvest"
+    ],
+    "perArmWorkBudget": 150000,
+    "width": 500,
+    "budgetMs": 600000,
+    "control": "isolated identical beam attempt without observer for every observed arm"
+  },
+  "caveat": "Full-prefix hashes are observational path identity, not complete state equivalence across histories; truncated root prefixes are ONLY basin descriptors. No cross-action shared runtime or transfer proof, no cold policy, no new solves claimed.",
+  "summary": {
+    "parents": 8,
+    "informativeParents": 8,
+    "observerParityAlarms": 0,
+    "scoringProfiles": [
+      "objectiveFirst",
+      "intersectionHarvest"
+    ],
+    "perArmNominalWorkBudget": 150000,
+    "exactActionComparisonPairs": 8,
+    "aggregateObserverCanonicalWork": 2437362,
+    "meanExactStateJaccard": 0.2914038566924377,
+    "meanDeepExactStateJaccard": 0.2781790296596589,
+    "meanEightMovePrefixJaccard": 0.9535320257431812
+  },
+  "parents": [
+    {
+      "levelId": "R02781",
+      "gateKey": 458753,
+      "armResults": [
+        {
+          "gateKey": 458753,
+          "profileName": "objectiveFirst",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 151890,
+          "nodesExpanded": 0,
+          "elapsedMs": 315,
+          "sourceIsolatedControlWork": 151890,
+          "generatedRecords": 48,
+          "parentEvents": 16904,
+          "parentExpansionWork": 90007,
+          "uniqueExactProcessedPaths": 16904,
+          "uniqueDeepExactProcessedPaths": 16894,
+          "exactSetHash": "1d1b2f11bb04bc7bd1428de1ba431b133ffcbc5d85dfc3efc7354055643eefd0"
+        },
+        {
+          "gateKey": 458753,
+          "profileName": "intersectionHarvest",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 152782,
+          "nodesExpanded": 0,
+          "elapsedMs": 277,
+          "sourceIsolatedControlWork": 152782,
+          "generatedRecords": 50,
+          "parentEvents": 18030,
+          "parentExpansionWork": 89206,
+          "uniqueExactProcessedPaths": 18030,
+          "uniqueDeepExactProcessedPaths": 18020,
+          "exactSetHash": "a7dc74c4f8f42b3f3e8a040fa7acefc543e09bf3c389a68f525a37bfbb9d714a"
+        }
+      ],
+      "contrasts": {
+        "overlaps": {
+          "exactAll": {
+            "a": 16904,
+            "b": 18030,
+            "shared": 5284,
+            "union": 29650,
+            "jaccard": 0.178212478920742,
+            "sharedFractionSmaller": 0.31258873639375295
+          },
+          "exactDeep": {
+            "a": 16894,
+            "b": 18020,
+            "shared": 5274,
+            "union": 29640,
+            "jaccard": 0.17793522267206477,
+            "sharedFractionSmaller": 0.3121818397064046
+          },
+          "prefixFour": {
+            "a": 1,
+            "b": 1,
+            "shared": 1,
+            "union": 1,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          },
+          "prefixEight": {
+            "a": 3,
+            "b": 3,
+            "shared": 3,
+            "union": 3,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          }
+        },
+        "matchingParentExpansionWorkLowerCount": 29382,
+        "workOfParentExpansionsAcrossBothActions": 179213,
+        "overlappingExpansionWorkRatio": 0.3279003197312695,
+        "note": "Identical processed path occurrence is a descriptive work overlap, not a sound reusable proof or necessarily avoidable work."
+      }
+    },
+    {
+      "levelId": "R02676",
+      "gateKey": 589832,
+      "armResults": [
+        {
+          "gateKey": 589832,
+          "profileName": "objectiveFirst",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 150692,
+          "nodesExpanded": 0,
+          "elapsedMs": 303,
+          "sourceIsolatedControlWork": 150692,
+          "generatedRecords": 41,
+          "parentEvents": 15840,
+          "parentExpansionWork": 77863,
+          "uniqueExactProcessedPaths": 15840,
+          "uniqueDeepExactProcessedPaths": 15745,
+          "exactSetHash": "7b6e93cf7c3c0fcf152196208d307e7d56127c2ccaa165718faf446049efb1e4"
+        },
+        {
+          "gateKey": 589832,
+          "profileName": "intersectionHarvest",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 152001,
+          "nodesExpanded": 0,
+          "elapsedMs": 240,
+          "sourceIsolatedControlWork": 152001,
+          "generatedRecords": 42,
+          "parentEvents": 16458,
+          "parentExpansionWork": 71968,
+          "uniqueExactProcessedPaths": 16458,
+          "uniqueDeepExactProcessedPaths": 16363,
+          "exactSetHash": "1ff145a79f1c51f702060cf1dffa2a3323565b87b5c6062863265af7f06da0a3"
+        }
+      ],
+      "contrasts": {
+        "overlaps": {
+          "exactAll": {
+            "a": 15840,
+            "b": 16458,
+            "shared": 5801,
+            "union": 26497,
+            "jaccard": 0.21893044495603275,
+            "sharedFractionSmaller": 0.3662247474747475
+          },
+          "exactDeep": {
+            "a": 15745,
+            "b": 16363,
+            "shared": 5706,
+            "union": 26402,
+            "jaccard": 0.21611999090977957,
+            "sharedFractionSmaller": 0.36240076214671324
+          },
+          "prefixFour": {
+            "a": 2,
+            "b": 2,
+            "shared": 2,
+            "union": 2,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          },
+          "prefixEight": {
+            "a": 52,
+            "b": 52,
+            "shared": 52,
+            "union": 52,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          }
+        },
+        "matchingParentExpansionWorkLowerCount": 22595,
+        "workOfParentExpansionsAcrossBothActions": 149831,
+        "overlappingExpansionWorkRatio": 0.30160647663033685,
+        "note": "Identical processed path occurrence is a descriptive work overlap, not a sound reusable proof or necessarily avoidable work."
+      }
+    },
+    {
+      "levelId": "R02929",
+      "gateKey": 393221,
+      "armResults": [
+        {
+          "gateKey": 393221,
+          "profileName": "objectiveFirst",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 150783,
+          "nodesExpanded": 0,
+          "elapsedMs": 317,
+          "sourceIsolatedControlWork": 150783,
+          "generatedRecords": 45,
+          "parentEvents": 16928,
+          "parentExpansionWork": 83059,
+          "uniqueExactProcessedPaths": 16928,
+          "uniqueDeepExactProcessedPaths": 16784,
+          "exactSetHash": "220322398e2487618eb4fd8c8970e7e99e8db88035286e94c10c8047d9a107db"
+        },
+        {
+          "gateKey": 393221,
+          "profileName": "intersectionHarvest",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 153096,
+          "nodesExpanded": 0,
+          "elapsedMs": 303,
+          "sourceIsolatedControlWork": 153096,
+          "generatedRecords": 46,
+          "parentEvents": 17295,
+          "parentExpansionWork": 83177,
+          "uniqueExactProcessedPaths": 17295,
+          "uniqueDeepExactProcessedPaths": 17151,
+          "exactSetHash": "14a66880b08b533dca8b815e5f08efe0c5c03400d220dbb664d0487807d34171"
+        }
+      ],
+      "contrasts": {
+        "overlaps": {
+          "exactAll": {
+            "a": 16928,
+            "b": 17295,
+            "shared": 7319,
+            "union": 26904,
+            "jaccard": 0.2720413321439191,
+            "sharedFractionSmaller": 0.43236058601134214
+          },
+          "exactDeep": {
+            "a": 16784,
+            "b": 17151,
+            "shared": 7175,
+            "union": 26760,
+            "jaccard": 0.2681240657698057,
+            "sharedFractionSmaller": 0.4274904671115348
+          },
+          "prefixFour": {
+            "a": 3,
+            "b": 3,
+            "shared": 3,
+            "union": 3,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          },
+          "prefixEight": {
+            "a": 78,
+            "b": 78,
+            "shared": 78,
+            "union": 78,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          }
+        },
+        "matchingParentExpansionWorkLowerCount": 36742,
+        "workOfParentExpansionsAcrossBothActions": 166236,
+        "overlappingExpansionWorkRatio": 0.44204624750354915,
+        "note": "Identical processed path occurrence is a descriptive work overlap, not a sound reusable proof or necessarily avoidable work."
+      }
+    },
+    {
+      "levelId": "R02579",
+      "gateKey": 327682,
+      "armResults": [
+        {
+          "gateKey": 327682,
+          "profileName": "objectiveFirst",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 150147,
+          "nodesExpanded": 0,
+          "elapsedMs": 288,
+          "sourceIsolatedControlWork": 150147,
+          "generatedRecords": 36,
+          "parentEvents": 14977,
+          "parentExpansionWork": 98983,
+          "uniqueExactProcessedPaths": 14977,
+          "uniqueDeepExactProcessedPaths": 14000,
+          "exactSetHash": "fc63ffca6c59c6091996aae3fe9a5dbf966982cc757a300e56ce84ffc699b451"
+        },
+        {
+          "gateKey": 327682,
+          "profileName": "intersectionHarvest",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 151399,
+          "nodesExpanded": 0,
+          "elapsedMs": 271,
+          "sourceIsolatedControlWork": 151399,
+          "generatedRecords": 37,
+          "parentEvents": 15477,
+          "parentExpansionWork": 98760,
+          "uniqueExactProcessedPaths": 15477,
+          "uniqueDeepExactProcessedPaths": 14500,
+          "exactSetHash": "225f18ae7fb6ddd2535d8107ad0ecd07b34816a343a0a5e902efd2f06a59224d"
+        }
+      ],
+      "contrasts": {
+        "overlaps": {
+          "exactAll": {
+            "a": 14977,
+            "b": 15477,
+            "shared": 5978,
+            "union": 24476,
+            "jaccard": 0.24423925478019284,
+            "sharedFractionSmaller": 0.39914535621285974
+          },
+          "exactDeep": {
+            "a": 14000,
+            "b": 14500,
+            "shared": 5021,
+            "union": 23479,
+            "jaccard": 0.21385067507134034,
+            "sharedFractionSmaller": 0.35864285714285715
+          },
+          "prefixFour": {
+            "a": 19,
+            "b": 19,
+            "shared": 19,
+            "union": 19,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          },
+          "prefixEight": {
+            "a": 500,
+            "b": 500,
+            "shared": 480,
+            "union": 520,
+            "jaccard": 0.9230769230769231,
+            "sharedFractionSmaller": 0.96
+          }
+        },
+        "matchingParentExpansionWorkLowerCount": 42012,
+        "workOfParentExpansionsAcrossBothActions": 197743,
+        "overlappingExpansionWorkRatio": 0.4249151676671235,
+        "note": "Identical processed path occurrence is a descriptive work overlap, not a sound reusable proof or necessarily avoidable work."
+      }
+    },
+    {
+      "levelId": "R02024",
+      "gateKey": 262152,
+      "armResults": [
+        {
+          "gateKey": 262152,
+          "profileName": "objectiveFirst",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 153940,
+          "nodesExpanded": 0,
+          "elapsedMs": 321,
+          "sourceIsolatedControlWork": 153940,
+          "generatedRecords": 40,
+          "parentEvents": 16879,
+          "parentExpansionWork": 87741,
+          "uniqueExactProcessedPaths": 16879,
+          "uniqueDeepExactProcessedPaths": 15851,
+          "exactSetHash": "0a9d4ee6a2504ae574b75d35a5a275fd7efcc6c8dfb040fdde711886b8959dd8"
+        },
+        {
+          "gateKey": 262152,
+          "profileName": "intersectionHarvest",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 152294,
+          "nodesExpanded": 0,
+          "elapsedMs": 288,
+          "sourceIsolatedControlWork": 152294,
+          "generatedRecords": 42,
+          "parentEvents": 17633,
+          "parentExpansionWork": 81839,
+          "uniqueExactProcessedPaths": 17633,
+          "uniqueDeepExactProcessedPaths": 16605,
+          "exactSetHash": "b1f411792954f71690cd271431e9dda6542af207372f120c4f6d742eb1cd9b4d"
+        }
+      ],
+      "contrasts": {
+        "overlaps": {
+          "exactAll": {
+            "a": 16879,
+            "b": 17633,
+            "shared": 4112,
+            "union": 30400,
+            "jaccard": 0.13526315789473684,
+            "sharedFractionSmaller": 0.2436163279815155
+          },
+          "exactDeep": {
+            "a": 15851,
+            "b": 16605,
+            "shared": 3121,
+            "union": 29335,
+            "jaccard": 0.10639168229077893,
+            "sharedFractionSmaller": 0.19689609488360355
+          },
+          "prefixFour": {
+            "a": 33,
+            "b": 33,
+            "shared": 33,
+            "union": 33,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          },
+          "prefixEight": {
+            "a": 214,
+            "b": 214,
+            "shared": 177,
+            "union": 251,
+            "jaccard": 0.7051792828685259,
+            "sharedFractionSmaller": 0.8271028037383178
+          }
+        },
+        "matchingParentExpansionWorkLowerCount": 18218,
+        "workOfParentExpansionsAcrossBothActions": 169580,
+        "overlappingExpansionWorkRatio": 0.21486024295317843,
+        "note": "Identical processed path occurrence is a descriptive work overlap, not a sound reusable proof or necessarily avoidable work."
+      }
+    },
+    {
+      "levelId": "R02857",
+      "gateKey": 458765,
+      "armResults": [
+        {
+          "gateKey": 458765,
+          "profileName": "objectiveFirst",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 151927,
+          "nodesExpanded": 0,
+          "elapsedMs": 270,
+          "sourceIsolatedControlWork": 151927,
+          "generatedRecords": 35,
+          "parentEvents": 14355,
+          "parentExpansionWork": 76190,
+          "uniqueExactProcessedPaths": 14355,
+          "uniqueDeepExactProcessedPaths": 13500,
+          "exactSetHash": "988afafe2103933548a6f079fe87ddb88e35bdec0fa032b8eaa056f74786ff75"
+        },
+        {
+          "gateKey": 458765,
+          "profileName": "intersectionHarvest",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 153083,
+          "nodesExpanded": 0,
+          "elapsedMs": 267,
+          "sourceIsolatedControlWork": 153083,
+          "generatedRecords": 37,
+          "parentEvents": 15355,
+          "parentExpansionWork": 81111,
+          "uniqueExactProcessedPaths": 15355,
+          "uniqueDeepExactProcessedPaths": 14500,
+          "exactSetHash": "3f97d325c4dc0901ea5c145bf2e407aefc27ffd6bf17a0f77344862a28403ffd"
+        }
+      ],
+      "contrasts": {
+        "overlaps": {
+          "exactAll": {
+            "a": 14355,
+            "b": 15355,
+            "shared": 6077,
+            "union": 23633,
+            "jaccard": 0.25714043921635,
+            "sharedFractionSmaller": 0.4233368164402647
+          },
+          "exactDeep": {
+            "a": 13500,
+            "b": 14500,
+            "shared": 5222,
+            "union": 22778,
+            "jaccard": 0.2292562999385372,
+            "sharedFractionSmaller": 0.38681481481481483
+          },
+          "prefixFour": {
+            "a": 21,
+            "b": 21,
+            "shared": 21,
+            "union": 21,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          },
+          "prefixEight": {
+            "a": 475,
+            "b": 475,
+            "shared": 475,
+            "union": 475,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          }
+        },
+        "matchingParentExpansionWorkLowerCount": 35455,
+        "workOfParentExpansionsAcrossBothActions": 157301,
+        "overlappingExpansionWorkRatio": 0.450791794076325,
+        "note": "Identical processed path occurrence is a descriptive work overlap, not a sound reusable proof or necessarily avoidable work."
+      }
+    },
+    {
+      "levelId": "R02037",
+      "gateKey": 655370,
+      "armResults": [
+        {
+          "gateKey": 655370,
+          "profileName": "objectiveFirst",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 157031,
+          "nodesExpanded": 0,
+          "elapsedMs": 231,
+          "sourceIsolatedControlWork": 157031,
+          "generatedRecords": 45,
+          "parentEvents": 18264,
+          "parentExpansionWork": 84231,
+          "uniqueExactProcessedPaths": 18264,
+          "uniqueDeepExactProcessedPaths": 18084,
+          "exactSetHash": "44369a6b5b2fbe7c13c52b10aa3627d435976baddf2a579a4a301d3c360a3078"
+        },
+        {
+          "gateKey": 655370,
+          "profileName": "intersectionHarvest",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 151496,
+          "nodesExpanded": 0,
+          "elapsedMs": 226,
+          "sourceIsolatedControlWork": 151496,
+          "generatedRecords": 44,
+          "parentEvents": 17741,
+          "parentExpansionWork": 80478,
+          "uniqueExactProcessedPaths": 17741,
+          "uniqueDeepExactProcessedPaths": 17561,
+          "exactSetHash": "02c7df64c910dbb97c2ed433a8b0f0af0dafefb5e7408f9fdaa61ed4827e5ca3"
+        }
+      ],
+      "contrasts": {
+        "overlaps": {
+          "exactAll": {
+            "a": 18264,
+            "b": 17741,
+            "shared": 15669,
+            "union": 20336,
+            "jaccard": 0.7705055074744296,
+            "sharedFractionSmaller": 0.8832083873513331
+          },
+          "exactDeep": {
+            "a": 18084,
+            "b": 17561,
+            "shared": 15489,
+            "union": 20156,
+            "jaccard": 0.768456042865648,
+            "sharedFractionSmaller": 0.8820112749843403
+          },
+          "prefixFour": {
+            "a": 4,
+            "b": 4,
+            "shared": 4,
+            "union": 4,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          },
+          "prefixEight": {
+            "a": 91,
+            "b": 91,
+            "shared": 91,
+            "union": 91,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          }
+        },
+        "matchingParentExpansionWorkLowerCount": 71802,
+        "workOfParentExpansionsAcrossBothActions": 164709,
+        "overlappingExpansionWorkRatio": 0.8718649254139118,
+        "note": "Identical processed path occurrence is a descriptive work overlap, not a sound reusable proof or necessarily avoidable work."
+      }
+    },
+    {
+      "levelId": "R03004",
+      "gateKey": 131076,
+      "armResults": [
+        {
+          "gateKey": 131076,
+          "profileName": "objectiveFirst",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 153287,
+          "nodesExpanded": 0,
+          "elapsedMs": 266,
+          "sourceIsolatedControlWork": 153287,
+          "generatedRecords": 43,
+          "parentEvents": 16498,
+          "parentExpansionWork": 76614,
+          "uniqueExactProcessedPaths": 16498,
+          "uniqueDeepExactProcessedPaths": 16163,
+          "exactSetHash": "6d9ca6f8e035e46ddf55501a55fa8e6c8fa07cce291d3af5406c148bfdc618bb"
+        },
+        {
+          "gateKey": 131076,
+          "profileName": "intersectionHarvest",
+          "observation": true,
+          "found": false,
+          "solutionHash": null,
+          "status": "work-budget-phase-boundary",
+          "workSpent": 151514,
+          "nodesExpanded": 0,
+          "elapsedMs": 281,
+          "sourceIsolatedControlWork": 151514,
+          "generatedRecords": 43,
+          "parentEvents": 16551,
+          "parentExpansionWork": 80489,
+          "uniqueExactProcessedPaths": 16551,
+          "uniqueDeepExactProcessedPaths": 16216,
+          "exactSetHash": "60acf07d0e307b1b5d49983c5dfd55a78586cc1806e9b3890655699ff1e8eae1"
+        }
+      ],
+      "contrasts": {
+        "overlaps": {
+          "exactAll": {
+            "a": 16498,
+            "b": 16551,
+            "shared": 6713,
+            "union": 26336,
+            "jaccard": 0.2548982381530984,
+            "sharedFractionSmaller": 0.4068978057946418
+          },
+          "exactDeep": {
+            "a": 16163,
+            "b": 16216,
+            "shared": 6378,
+            "union": 26001,
+            "jaccard": 0.24529825775931696,
+            "sharedFractionSmaller": 0.394604961950133
+          },
+          "prefixFour": {
+            "a": 11,
+            "b": 11,
+            "shared": 11,
+            "union": 11,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          },
+          "prefixEight": {
+            "a": 169,
+            "b": 169,
+            "shared": 169,
+            "union": 169,
+            "jaccard": 1,
+            "sharedFractionSmaller": 1
+          }
+        },
+        "matchingParentExpansionWorkLowerCount": 33229,
+        "workOfParentExpansionsAcrossBothActions": 157103,
+        "overlappingExpansionWorkRatio": 0.42302183917557273,
+        "note": "Identical processed path occurrence is a descriptive work overlap, not a sound reusable proof or necessarily avoidable work."
+      }
+    }
+  ]
+}
