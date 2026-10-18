@@ -1,0 +1,46 @@
+# Disposable holdout sequel; source IDs were frozen before all overlap outcomes.
+name: PG-L independent width5000 beam overlap confirmation
+on:
+  push:
+    branches:
+      - chatgpt/pg-l-independent-dispatch-holdout-20261018
+    paths:
+      - .github/workflows/pg-l-independent-wide-overlap-20261018.yml
+      - scripts/stress/pg-l-independent-wide-overlap-shadow.mjs
+permissions:
+  contents: read
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Pure full-history overlap and work accounting contracts
+        run: node scripts/run-bundled.mjs scripts/stress/pg-l-independent-wide-overlap-shadow.mjs -- --self-test
+      - name: Isolated exact-source scorer OFF/ON 1x and 4x nine-parent confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/run-bundled.mjs scripts/stress/pg-l-independent-wide-overlap-shadow.mjs -- --budget-multiplier=1 --out=tmp/pg-l-independent-overlap/verdict-1x.json
+          node scripts/run-bundled.mjs scripts/stress/pg-l-independent-wide-overlap-shadow.mjs -- --budget-multiplier=4 --out=tmp/pg-l-independent-overlap/verdict-4x.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          for(const mul of [1,4]){
+            const r=JSON.parse(readFileSync(`tmp/pg-l-independent-overlap/verdict-${mul}x.json`,'utf8'));
+            if(r.summary.parents!==9||r.summary.exactActionComparisonPairs!==9||r.summary.observerParityAlarms!==0)throw Error('independent co-dispatch source coverage');
+            if(r.selection.width!==5000||r.selection.multiplier!==mul||r.selection.selected.length!==9)throw Error('width/dose identity');
+            console.log(`PG-L INDEPENDENT WIDE ${mul}x VERDICT `+JSON.stringify(r.summary));
+          }
+          NODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-l-independent-wide-overlap-20261018
+          path: tmp/pg-l-independent-overlap/verdict-*.json
+          if-no-files-found: warn
+          retention-days: 90
