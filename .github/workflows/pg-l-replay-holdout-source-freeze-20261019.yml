@@ -1,0 +1,39 @@
+# One-shot source-only frozen 24-parent independent holdout.
+name: PG-L prospective replay holdout source freeze
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/pg-l-replay-holdout-source-freeze-20261019.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pg-l-replay-holdout-source-freeze-20261019
+  cancel-in-progress: false
+jobs:
+  freeze:
+    name: Source-only selection, no solver or hints
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/stress/pg-l-flood-replay-source-holdout-freeze.mjs --self-test
+      - name: Freeze exact source identities
+        run: |
+          mkdir -p logs/pg-l-flood-holdout
+          node scripts/stress/pg-l-flood-replay-source-holdout-freeze.mjs \
+            --out=logs/pg-l-flood-holdout/population.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: pg-l-flood-replay-independent-population-20261019
+          path: logs/pg-l-flood-holdout/population.json
+          retention-days: 90
