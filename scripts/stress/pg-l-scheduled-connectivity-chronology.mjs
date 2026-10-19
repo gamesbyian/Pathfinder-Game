@@ -41,7 +41,7 @@ export function collector(expectedGate){
  const repeats=[];
  let calls=0,observed=0,otherWidth=0,keys=0,keyChars=0;
  let sameProfileLater=0,crossHits=0,crossEarlierOrdinals=0,crossResultDisagreements=0;
- let laterWork=0,matchedWork=0,laterTrue=0,laterFalse=0,zeroWorkCalls=0;
+ let laterWork=0,matchedWork=0,laterTrue=0,laterFalse=0;
  let maxObservedFullPathDepth=0;
  const hitHashSample=[];
  const observer={
