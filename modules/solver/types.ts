@@ -474,8 +474,24 @@ export interface Bc1ShadowCandidateInfo {
     theorem?: 'bc1' | 'bc1g';
 }
 
+export interface ScheduledConnectivityResearchRecord {
+    /** Research callback is synchronous: do not retain mutable state/prep objects. */
+    pos: number;
+    state: SolverSearchState;
+    prep: PrepLevel;
+    level: NormalizedLevel;
+    connected: boolean;
+    workBefore: number;
+    workAfter: number;
+    /** Includes real production ordinal/scorer/gate/beam width when available. */
+    attemptContext: BeamResearchAttemptContext | null;
+}
+
 export interface BeamResearchObserver {
     observe(record: BeamResearchRecord): void;
+    /** Optional true scheduled isConnected() fact; flood still fully executes.
+     * Called only after successful original connectivity evaluation, never in prod. */
+    observeScheduledConnectivity?(record: ScheduledConnectivityResearchRecord): void;
     /**
      * Opt-in one-generation expansion accounting. When true, generated-stage records include
      * parentExpansions with canonical work spent expanding each incoming frontier node. Off by
