@@ -481,6 +481,8 @@ export interface ScheduledConnectivityResearchRecord {
     prep: PrepLevel;
     level: NormalizedLevel;
     connected: boolean;
+    /** Only when the observer requests it, the exact fresh reached-cell rows. */
+    reachedRows?: number[];
     workBefore: number;
     workAfter: number;
     /** Includes real production ordinal/scorer/gate/beam width when available. */
@@ -492,6 +494,8 @@ export interface BeamResearchObserver {
     /** Optional true scheduled isConnected() fact; flood still fully executes.
      * Called only after successful original connectivity evaluation, never in prod. */
     observeScheduledConnectivity?(record: ScheduledConnectivityResearchRecord): void;
+    /** Opt-in read-only snapshot of reachable cells after a scheduled flood; no policy effect. */
+    includeScheduledConnectivityReachRows?: boolean;
     /**
      * Opt-in one-generation expansion accounting. When true, generated-stage records include
      * parentExpansions with canonical work spent expanding each incoming frontier node. Off by
