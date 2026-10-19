@@ -1,0 +1,1050 @@
+{
+  "schema": "pathfinder.pg-j-normalized-required-visit-static-opportunity-audit/v1",
+  "evidenceRole": "source-only static structural eligibility, no search or oracle",
+  "corpus": "data/stress/stress-levels-random.json",
+  "corpusSourceSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "gitBlob": "999db4c0e2be706a10a2c71915f6672344a05338",
+  "derivation": "Effective required visit keys are union(raw mustPass coordinates, landmarks with mechanical role mustPass/mustTurn/mustTurnCw/mustTurnCcw); raw mustCross and portal pair counts unchanged. Uses the same roles as modules/domain/landmark-rules.ts and modules/solver/normalization.ts, but is an independent static census, not actual solver execution.",
+  "summary": {
+    "corpusRecords": 1700,
+    "rawEligibility": 303,
+    "normalizedEligibility": 431,
+    "newlyEligibleFromLandmarkMP": 128,
+    "levelsWithAdditionalMandatoryLandmarkVisit": 936,
+    "levelsWithRawMPZeroButAdditionalMandatoryLandmarkVisit": 426,
+    "twelveFrozenParentsWithAdditionalMandatoryLandmarks": 6
+  },
+  "frozenExistingTwelve": [
+    {
+      "id": "R00565",
+      "corpusPosition": 88,
+      "rawMP": 7,
+      "effectiveMP": 14,
+      "additionalLandmarkMP": 7,
+      "MC": 4,
+      "portalPairs": 4,
+      "rawEligible": true,
+      "normalizedEligible": true
+    },
+    {
+      "id": "R02182",
+      "corpusPosition": 513,
+      "rawMP": 8,
+      "effectiveMP": 8,
+      "additionalLandmarkMP": 0,
+      "MC": 5,
+      "portalPairs": 7,
+      "rawEligible": true,
+      "normalizedEligible": true
+    },
+    {
+      "id": "R02695",
+      "corpusPosition": 1026,
+      "rawMP": 5,
+      "effectiveMP": 5,
+      "additionalLandmarkMP": 0,
+      "MC": 6,
+      "portalPairs": 4,
+      "rawEligible": true,
+      "normalizedEligible": true
+    },
+    {
+      "id": "R03125",
+      "corpusPosition": 1456,
+      "rawMP": 8,
+      "effectiveMP": 8,
+      "additionalLandmarkMP": 0,
+      "MC": 4,
+      "portalPairs": 7,
+      "rawEligible": true,
+      "normalizedEligible": true
+    },
+    {
+      "id": "R00869",
+      "corpusPosition": 136,
+      "rawMP": 7,
+      "effectiveMP": 7,
+      "additionalLandmarkMP": 0,
+      "MC": 5,
+      "portalPairs": 7,
+      "rawEligible": true,
+      "normalizedEligible": true
+    },
+    {
+      "id": "R02264",
+      "corpusPosition": 595,
+      "rawMP": 5,
+      "effectiveMP": 5,
+      "additionalLandmarkMP": 0,
+      "MC": 5,
+      "portalPairs": 4,
+      "rawEligible": true,
+      "normalizedEligible": true
+    },
+    {
+      "id": "R02801",
+      "corpusPosition": 1132,
+      "rawMP": 7,
+      "effectiveMP": 14,
+      "additionalLandmarkMP": 7,
+      "MC": 3,
+      "portalPairs": 5,
+      "rawEligible": true,
+      "normalizedEligible": true
+    },
+    {
+      "id": "R03195",
+      "corpusPosition": 1526,
+      "rawMP": 6,
+      "effectiveMP": 14,
+      "additionalLandmarkMP": 8,
+      "MC": 6,
+      "portalPairs": 7,
+      "rawEligible": true,
+      "normalizedEligible": true
+    },
+    {
+      "id": "R01208",
+      "corpusPosition": 198,
+      "rawMP": 6,
+      "effectiveMP": 6,
+      "additionalLandmarkMP": 0,
+      "MC": 4,
+      "portalPairs": 7,
+      "rawEligible": true,
+      "normalizedEligible": true
+    },
+    {
+      "id": "R02336",
+      "corpusPosition": 667,
+      "rawMP": 7,
+      "effectiveMP": 15,
+      "additionalLandmarkMP": 8,
+      "MC": 6,
+      "portalPairs": 5,
+      "rawEligible": true,
+      "normalizedEligible": true
+    },
+    {
+      "id": "R02897",
+      "corpusPosition": 1228,
+      "rawMP": 8,
+      "effectiveMP": 16,
+      "additionalLandmarkMP": 8,
+      "MC": 3,
+      "portalPairs": 7,
+      "rawEligible": true,
+      "normalizedEligible": true
+    },
+    {
+      "id": "R03247",
+      "corpusPosition": 1578,
+      "rawMP": 6,
+      "effectiveMP": 13,
+      "additionalLandmarkMP": 7,
+      "MC": 8,
+      "portalPairs": 4,
+      "rawEligible": true,
+      "normalizedEligible": true
+    }
+  ],
+  "newlyEligibleInputIds": [
+    {
+      "id": "R00139",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 5,
+      "portalPairs": 7
+    },
+    {
+      "id": "R00153",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 6,
+      "portalPairs": 5
+    },
+    {
+      "id": "R00481",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 5,
+      "portalPairs": 4
+    },
+    {
+      "id": "R00532",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 2,
+      "portalPairs": 6
+    },
+    {
+      "id": "R00647",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 5,
+      "portalPairs": 5
+    },
+    {
+      "id": "R00923",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 3,
+      "portalPairs": 7
+    },
+    {
+      "id": "R01022",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 3,
+      "portalPairs": 5
+    },
+    {
+      "id": "R01052",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 5,
+      "portalPairs": 6
+    },
+    {
+      "id": "R01058",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 8,
+      "portalPairs": 5
+    },
+    {
+      "id": "R01092",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 4,
+      "portalPairs": 7
+    },
+    {
+      "id": "R01097",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 8,
+      "portalPairs": 4
+    },
+    {
+      "id": "R01132",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 3,
+      "portalPairs": 4
+    },
+    {
+      "id": "R01154",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 6,
+      "portalPairs": 6
+    },
+    {
+      "id": "R01179",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 3,
+      "portalPairs": 5
+    },
+    {
+      "id": "R01269",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 7,
+      "portalPairs": 7
+    },
+    {
+      "id": "R01290",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 5,
+      "portalPairs": 4
+    },
+    {
+      "id": "R01351",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 5,
+      "portalPairs": 6
+    },
+    {
+      "id": "R01397",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 7,
+      "portalPairs": 4
+    },
+    {
+      "id": "R01485",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 4,
+      "portalPairs": 7
+    },
+    {
+      "id": "R01553",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 1,
+      "portalPairs": 7
+    },
+    {
+      "id": "R01554",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 5,
+      "portalPairs": 4
+    },
+    {
+      "id": "R01632",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 2,
+      "portalPairs": 7
+    },
+    {
+      "id": "R01655",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 2,
+      "portalPairs": 4
+    },
+    {
+      "id": "R01698",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 3,
+      "portalPairs": 7
+    },
+    {
+      "id": "R01724",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 6,
+      "portalPairs": 6
+    },
+    {
+      "id": "R01822",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 4,
+      "portalPairs": 7
+    },
+    {
+      "id": "R01872",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 6,
+      "portalPairs": 6
+    },
+    {
+      "id": "R01882",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 7,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02035",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 5,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02054",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 8,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02057",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 3,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02058",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 4,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02060",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 4,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02074",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 8,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02075",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 4,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02076",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 3,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02079",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 6,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02081",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 6,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02086",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 6,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02109",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 4,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02118",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 2,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02120",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 5,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02151",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 3,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02166",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 4,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02176",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 8,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02187",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 4,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02196",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 6,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02199",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 5,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02215",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 8,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02230",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 5,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02243",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 4,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02258",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 5,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02261",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 5,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02280",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 4,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02288",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 3,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02299",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 2,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02314",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 4,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02317",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 1,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02324",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 6,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02354",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 4,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02397",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 7,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02417",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 6,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02456",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 3,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02458",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 2,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02466",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 3,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02479",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 3,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02497",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 6,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02499",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 8,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02515",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 3,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02525",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 5,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02533",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 5,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02535",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 6,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02546",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 2,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02558",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 5,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02567",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 2,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02574",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 2,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02594",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 6,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02619",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 7,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02629",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 8,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02647",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 7,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02654",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 4,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02676",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 5,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02686",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 8,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02699",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 1,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02703",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 5,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02722",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 6,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02733",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 1,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02807",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 5,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02809",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 7,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02814",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 5,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02823",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 3,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02832",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 5,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02833",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 6,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02844",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 3,
+      "portalPairs": 6
+    },
+    {
+      "id": "R02848",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 7,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02868",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 7,
+      "portalPairs": 4
+    },
+    {
+      "id": "R02924",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 5,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02932",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 5,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02938",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 7,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02963",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 7,
+      "portalPairs": 5
+    },
+    {
+      "id": "R02969",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 2,
+      "portalPairs": 7
+    },
+    {
+      "id": "R02987",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 1,
+      "portalPairs": 6
+    },
+    {
+      "id": "R03029",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 5,
+      "portalPairs": 5
+    },
+    {
+      "id": "R03041",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 3,
+      "portalPairs": 6
+    },
+    {
+      "id": "R03061",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 6,
+      "portalPairs": 4
+    },
+    {
+      "id": "R03071",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 5,
+      "portalPairs": 4
+    },
+    {
+      "id": "R03088",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 4,
+      "portalPairs": 5
+    },
+    {
+      "id": "R03105",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 3,
+      "portalPairs": 4
+    },
+    {
+      "id": "R03130",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 6,
+      "portalPairs": 5
+    },
+    {
+      "id": "R03131",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 4,
+      "portalPairs": 4
+    },
+    {
+      "id": "R03143",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 8,
+      "portalPairs": 5
+    },
+    {
+      "id": "R03158",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 6,
+      "portalPairs": 4
+    },
+    {
+      "id": "R03166",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 6,
+      "portalPairs": 6
+    },
+    {
+      "id": "R03183",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 6,
+      "portalPairs": 4
+    },
+    {
+      "id": "R03186",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 4,
+      "portalPairs": 4
+    },
+    {
+      "id": "R03192",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 1,
+      "portalPairs": 7
+    },
+    {
+      "id": "R03197",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 5,
+      "portalPairs": 7
+    },
+    {
+      "id": "R03200",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 1,
+      "portalPairs": 6
+    },
+    {
+      "id": "R03213",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 6,
+      "portalPairs": 7
+    },
+    {
+      "id": "R03223",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 6,
+      "portalPairs": 7
+    },
+    {
+      "id": "R03276",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 6,
+      "portalPairs": 6
+    },
+    {
+      "id": "R03280",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 5,
+      "portalPairs": 4
+    },
+    {
+      "id": "R03307",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 3,
+      "portalPairs": 5
+    },
+    {
+      "id": "R03329",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 4,
+      "portalPairs": 4
+    },
+    {
+      "id": "R03337",
+      "rawMP": 0,
+      "effectiveMP": 6,
+      "MC": 5,
+      "portalPairs": 6
+    },
+    {
+      "id": "R03348",
+      "rawMP": 0,
+      "effectiveMP": 8,
+      "MC": 6,
+      "portalPairs": 5
+    },
+    {
+      "id": "R03362",
+      "rawMP": 0,
+      "effectiveMP": 7,
+      "MC": 2,
+      "portalPairs": 5
+    },
+    {
+      "id": "R03365",
+      "rawMP": 0,
+      "effectiveMP": 5,
+      "MC": 8,
+      "portalPairs": 4
+    }
+  ],
+  "interpretation": "Broad structural eligibility only. Does not assert that a proposed tiny subset relaxation is sound, participates in real search, saves metered work, or produces a cold solve. Existing twelve-parent outcome-blind roster is unchanged and remains a subset of the old raw-eligible stratum."
+}
