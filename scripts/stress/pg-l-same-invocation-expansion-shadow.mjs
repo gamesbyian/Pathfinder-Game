@@ -18,7 +18,7 @@ import {installBrowserStubs} from '../test-lib/browser-stubs.mjs';
 
 const CORPUS='data/stress/stress-levels-random.json';
 const SOURCE='reports/stress/pg-l-independent-dispatch-24-20261018-001.json';
-const CORPUS_SHA='d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eedd0a27c7ffb';
+const CORPUS_SHA='d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb';
 const PARENTS=['R00720','R01584']; // first two same-width successes by frozen dispatch order
 const PROFILES=['objectiveFirst','intersectionHarvest'];
 const WORK=250000,NODES=250000,WALL_MS=600000,MAX_UNIQUE_PATHS=350000;
