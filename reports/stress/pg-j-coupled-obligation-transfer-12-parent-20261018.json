@@ -1,0 +1,198 @@
+{
+  "schema": "pathfinder.pg-j-coupled-obligation-transfer-opportunity-freeze/v1",
+  "researchRole": "prospective-outcome-blind structural opportunity, no solver or oracle outputs",
+  "frozenBeforeAnyNewPGJTransferProbe": true,
+  "sourceCorpus": "data/stress/stress-levels-random.json",
+  "sourceBlobSha": "999db4c0e2be706a10a2c71915f6672344a05338",
+  "sourceSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "sourceRecords": 1700,
+  "eligibility": "mustPass.length >= 2 AND mustCross.length >= 1 AND portals.length >= 1; no hints, solve status, previous costs, runner telemetry, or prior winner paths used",
+  "eligibleRecords": 303,
+  "eligibleSort": "lexical ASCII ascending by parentId",
+  "selection": "For i=0..11 take zero-based eligible index (17 + 79*i) mod 303 (gcd(79,303)=1)",
+  "independentUnit": "nominal distinct corpus level ID; common generator ancestry/generalization remains unassessed",
+  "sampleSize": 12,
+  "rows": [
+    {
+      "rank": 1,
+      "parentId": "R00565",
+      "eligibleRank": 18,
+      "corpusPosition": 88,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "requiredLength": 83,
+      "requiredIntersections": 4,
+      "mustPass": 7,
+      "mustCross": 4,
+      "portals": 4
+    },
+    {
+      "rank": 2,
+      "parentId": "R02182",
+      "eligibleRank": 97,
+      "corpusPosition": 513,
+      "grid": {
+        "w": 15,
+        "h": 15
+      },
+      "requiredLength": 117,
+      "requiredIntersections": 6,
+      "mustPass": 8,
+      "mustCross": 5,
+      "portals": 7
+    },
+    {
+      "rank": 3,
+      "parentId": "R02695",
+      "eligibleRank": 176,
+      "corpusPosition": 1026,
+      "grid": {
+        "w": 13,
+        "h": 13
+      },
+      "requiredLength": 98,
+      "requiredIntersections": 6,
+      "mustPass": 5,
+      "mustCross": 6,
+      "portals": 4
+    },
+    {
+      "rank": 4,
+      "parentId": "R03125",
+      "eligibleRank": 255,
+      "corpusPosition": 1456,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "requiredLength": 78,
+      "requiredIntersections": 4,
+      "mustPass": 8,
+      "mustCross": 4,
+      "portals": 7
+    },
+    {
+      "rank": 5,
+      "parentId": "R00869",
+      "eligibleRank": 31,
+      "corpusPosition": 136,
+      "grid": {
+        "w": 13,
+        "h": 13
+      },
+      "requiredLength": 82,
+      "requiredIntersections": 5,
+      "mustPass": 7,
+      "mustCross": 5,
+      "portals": 7
+    },
+    {
+      "rank": 6,
+      "parentId": "R02264",
+      "eligibleRank": 110,
+      "corpusPosition": 595,
+      "grid": {
+        "w": 13,
+        "h": 13
+      },
+      "requiredLength": 81,
+      "requiredIntersections": 5,
+      "mustPass": 5,
+      "mustCross": 5,
+      "portals": 4
+    },
+    {
+      "rank": 7,
+      "parentId": "R02801",
+      "eligibleRank": 189,
+      "corpusPosition": 1132,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "requiredLength": 79,
+      "requiredIntersections": 3,
+      "mustPass": 7,
+      "mustCross": 3,
+      "portals": 5
+    },
+    {
+      "rank": 8,
+      "parentId": "R03195",
+      "eligibleRank": 268,
+      "corpusPosition": 1526,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "requiredLength": 105,
+      "requiredIntersections": 7,
+      "mustPass": 6,
+      "mustCross": 6,
+      "portals": 7
+    },
+    {
+      "rank": 9,
+      "parentId": "R01208",
+      "eligibleRank": 44,
+      "corpusPosition": 198,
+      "grid": {
+        "w": 14,
+        "h": 14
+      },
+      "requiredLength": 128,
+      "requiredIntersections": 4,
+      "mustPass": 6,
+      "mustCross": 4,
+      "portals": 7
+    },
+    {
+      "rank": 10,
+      "parentId": "R02336",
+      "eligibleRank": 123,
+      "corpusPosition": 667,
+      "grid": {
+        "w": 14,
+        "h": 14
+      },
+      "requiredLength": 109,
+      "requiredIntersections": 6,
+      "mustPass": 7,
+      "mustCross": 6,
+      "portals": 5
+    },
+    {
+      "rank": 11,
+      "parentId": "R02897",
+      "eligibleRank": 202,
+      "corpusPosition": 1228,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "requiredLength": 74,
+      "requiredIntersections": 3,
+      "mustPass": 8,
+      "mustCross": 3,
+      "portals": 7
+    },
+    {
+      "rank": 12,
+      "parentId": "R03247",
+      "eligibleRank": 281,
+      "corpusPosition": 1578,
+      "grid": {
+        "w": 15,
+        "h": 15
+      },
+      "requiredLength": 127,
+      "requiredIntersections": 12,
+      "mustPass": 6,
+      "mustCross": 8,
+      "portals": 4
+    }
+  ],
+  "intendedNextGate": "After sound generic small-subset relaxer is available, use these IDs as a fixed prospective source-only participation/cost pilot, not as current 250k matched-work production evidence. May terminate before execution if static complexity/eligibility fails. No other parent substitution based on prior outcomes."
+}
