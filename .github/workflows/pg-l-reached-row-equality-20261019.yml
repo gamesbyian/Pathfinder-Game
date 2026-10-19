@@ -1,0 +1,65 @@
+# Disposable PG-L read-only fresh flood row equality falsifier.
+name: PG-L reached-row exact repeat check
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/pg-l-reached-row-equality-20261019.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pg-l-reached-row-equality-20261019
+  cancel-in-progress: false
+jobs:
+  observe:
+    name: Source-authentic exact reached-row fidelity
+    runs-on: ubuntu-latest
+    timeout-minutes: 29
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Exact-key and reach rows self-test
+        run: node scripts/stress/pg-l-reached-rows-shadow.mjs --self-test
+      - name: Original 250k control and fresh reached-row equality
+        id: experiment
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs/pg-l-reached-rows
+          timeout -k 20s --preserve-status 24m \
+            node scripts/run-bundled.mjs scripts/stress/pg-l-reached-rows-shadow.mjs -- \
+            --out=logs/pg-l-reached-rows/verdict.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-l-reached-row-equality-20261019
+          path: logs/pg-l-reached-rows/verdict.json
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Enforce source-complete exact state equivalence
+        if: always()
+        env:
+          RESULT: ${{ steps.experiment.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RESULT" = success
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const v=JSON.parse(readFileSync('logs/pg-l-reached-rows/verdict.json','utf8'));
+          if(v.executionSha!==process.env.GITHUB_SHA
+            ||v.summary.parents!==2||v.summary.parityPasses!==2
+            ||v.summary.contradictionAlarms!==0||v.summary.reachRowAlarms!==0
+            ||v.summary.sourceCensored!==false)
+             throw Error('PG-L original source parity or reached-row invariant failed');
+          console.log('PG-L BITMAP REPEAT '+JSON.stringify(v.summary));
+          NODE
