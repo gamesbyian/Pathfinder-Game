@@ -11,7 +11,6 @@ import {installBrowserStubs} from '../test-lib/browser-stubs.mjs';
 const CORPUS='data/stress/stress-levels-random.json';
 const FREEZE='reports/stress/pg-l-flood-replay-independent-24-source-freeze-20261019-001.json';
 const SHA='d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb';
-const IDS=null; // resolved exclusively from frozen source-only manifest before solver access
 const BUDGET={baseWorkBudget:250000,nodeBudget:250000,timeBudgetMs:600000,strictTotalWorkBudget:true};
 const arg=process.argv.find(x=>x.startsWith('--out='))?.slice(6);
 const assert=(x,m)=>{if(!x)throw Error(m)};
