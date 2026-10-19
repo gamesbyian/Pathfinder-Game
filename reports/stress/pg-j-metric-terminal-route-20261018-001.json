@@ -1,0 +1,93 @@
+{
+  "schema": "pathfinder.pg-j-metric-terminal-route-retained-verdict/v1",
+  "sourceRun": 39204071913,
+  "sourceArtifactId": 12164484680,
+  "sourceExecutionSha": "9ea47208fce6c3c307a53edc3a463cb626b4670c",
+  "artifactZipSha256": "9b2638cede14e5756b40473f02e5b3136623a83856c9f01afd4084495ed8b1d7",
+  "artifactMember": "verdict.json",
+  "artifactMemberSha256": "2a04c5a3c5e4b6f65a3341d60d8c28dcb94a79426b607516dd9aab2c4a22c39f",
+  "sourceReference": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json",
+  "referenceModel": "reports/stress/pg-j-selected-one-pair-route-20261018-001.json",
+  "evidenceRole": "post-selected P00137 human parent retrospective bound and abstract cost",
+  "protocol": "zero/one Dijkstra per endpoint/arrival-axis/portal-pair-used token, then four-terminal-group DP; retains original frozen consumed axes, canonical always-straight MC exit and one input-chosen portal pair; forgets new edge use except terminal MC axes and all other portal history",
+  "summary": {
+    "sourcePrefixCases": 4,
+    "dependentHumanParents": 1,
+    "oracleDead": 2,
+    "oracleLive": 2,
+    "deadExcluded": 2,
+    "liveFalseExclusions": 0,
+    "fullRefereeValidLiveSuffixesIncluded": 2,
+    "sourceAlarms": 0,
+    "fuelAbstentions": 0,
+    "totalDijkstraPops": 13893,
+    "totalDijkstraEdges": 43487
+  },
+  "rows": [
+    {
+      "caseId": "P00137-w1-A2-B10-alternate",
+      "referenceLabel": "dead",
+      "remainingCountedMoves": 23,
+      "minimumRelaxedMetricMoves": 25,
+      "selectedPair": [
+        3,
+        524294
+      ],
+      "dijkstraPops": 3457,
+      "dijkstraEdges": 10603,
+      "terminalDpStates": 97,
+      "excludes": true
+    },
+    {
+      "caseId": "P00137-w1-A2-B10-original",
+      "referenceLabel": "live",
+      "remainingCountedMoves": 23,
+      "minimumRelaxedMetricMoves": 21,
+      "selectedPair": [
+        3,
+        524294
+      ],
+      "dijkstraPops": 3427,
+      "dijkstraEdges": 10901,
+      "terminalDpStates": 97,
+      "excludes": false,
+      "refereeValidWitness": true,
+      "sourceWitnessSuffixCountedMoves": 23,
+      "sourceWitnessSuffixTransitions": 25
+    },
+    {
+      "caseId": "P00137-w1-A2-B9-alternate",
+      "referenceLabel": "dead",
+      "remainingCountedMoves": 24,
+      "minimumRelaxedMetricMoves": 26,
+      "selectedPair": [
+        3,
+        524294
+      ],
+      "dijkstraPops": 3498,
+      "dijkstraEdges": 10865,
+      "terminalDpStates": 97,
+      "excludes": true
+    },
+    {
+      "caseId": "P00137-w1-A2-B9-original",
+      "referenceLabel": "live",
+      "remainingCountedMoves": 24,
+      "minimumRelaxedMetricMoves": 22,
+      "selectedPair": [
+        3,
+        524294
+      ],
+      "dijkstraPops": 3511,
+      "dijkstraEdges": 11118,
+      "terminalDpStates": 97,
+      "excludes": false,
+      "refereeValidWitness": true,
+      "sourceWitnessSuffixCountedMoves": 24,
+      "sourceWitnessSuffixTransitions": 26
+    }
+  ],
+  "inference": "Two exact DEAD differentiations and two accepted LIVE continuations on a single development-selected human parent, not new cold solves; abstract-pop counters do not measure canonical primitive work or relative wall-time. Extra MC straight exit constraint is source-native at both first and second crossing.",
+  "productionEffect": "none",
+  "nextGate": "Separate independent-parent, affordable actual-descendant-work and matched-work qualification before any production consumer; high structural eligibility is not a selector."
+}
