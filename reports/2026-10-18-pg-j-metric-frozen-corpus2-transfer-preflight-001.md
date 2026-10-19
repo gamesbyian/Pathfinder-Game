@@ -1,9 +1,9 @@
 # PG-J source-native grouped terminal metric transfer, frozen 12-parent opportunity gate (2026-10-18)
 
-> **Status:** active
-> **Last evidence:** 2026-10-18 — source-qualified P00137 [PG-J terminal metric 001](2026-10-18-pg-j-metric-terminal-route-preflight-001.md) 2/2 exact-DEAD and 2/2 complete referee-valid LIVE; no generated-level metric runs
-> **Decision:** test a strictly bounded **read-only** two-MP/one-MC/one-pair grouped terminal metric on original frozen Corpus2 retained beam paths, without replaying expensive beam search or modifying production
-> **Remaining gate:** source-verified artifact retrieval, canonical prefix legality, 12-parent fixed selection, per-source real graph cap and one independent-parent semantic participation test; no hot-path code or 250k solve A/B
+> **Status:** concluded-positive
+> **Last evidence:** 2026-10-18 — complete source-exact original-artifact [run 39205302329](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39205302329), execution `f53daa1c4b4bded39d576e19be89af9b74f00033`, artifact `12165890198`
+> **Decision:** Bounded-positive opportunity: the original immutable 12-parent retained-frontier cohort has two fuel-complete relaxed-metric impossibility candidates on two nominally independent source parents (R02182 and R02801), 18/24 participating source cells and zero illegal prefix replays. These are NOT independent oracle-proven DEAD states, canonical work savings or new cold solves.
+> **Remaining gate:** Review the two selected source input states for exact mechanic soundness, test full known LIVE controls and verify actual post-prefix retained descendant work exceeds derivation cost before independent oracle or any runtime consumer. Do not enlarge this same outcome-selected group without a new selection block.
 > **Research question:** `WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR`
 > **Evidence role:** opportunity
 > **Selection:** use all twelve immutable input-structure-selected parent IDs from PG-J #2210; within each select only the two **prespecified** score-rank endpoints from the most advanced previously captured original width-128 beam frontier
@@ -11,7 +11,7 @@
 > **Selection history:** prior P00137 selected exact fates and source-native structural saturation already seen; Corpus2 parent IDs and exact beam frontier rank/phase samples fixed *before this metric observer*; two rank choices are a prospective selector within historical snapshots, not random held-out parent generation
 > **Inference scope:** twelve nominal independent generated parents, at most 24 correlated historical retained prefixes, one isolated original beam technique. No referee oracle labels, cold rerouting, exact matched work, or generalized correctness result.
 
-<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"active","lastEvidenceDate":"2026-10-18","decision":"Bounded read-only two-MP/one-MC/one-pair terminal metric on two preselected retained prefixes per 12 frozen source parents, using original sealed run artifact only.","remainingGate":"Source-verified completed 12-parent observational cost/candidate rejection result; require real downstream descendant work and independent validation before solver consumer.","joins":{"researchQuestion":"WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR","premiseRefs":["P198","P204"],"measurementOpportunity":null},"evidenceRole":"opportunity","scope":{"populationIdentity":"sha256:d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb","selection":"fixed 12 generated parents and source-native last captured width128 phase; exact score rank 0 and floor((n-1)/2) on each","inferenceScope":"retrospective source-native retained prefix metric non-hot-path observation only, not independent unbiased solve experiment"},"claimRefs":[],"sourceArtifacts":["reports/stress/pg-j-coupled-obligation-transfer-12-parent-20261018.json","reports/stress/pg-j-corpus2-subset-native-beam-opportunity-20261018.json","reports/stress/pg-j-metric-terminal-route-20261018-001.json"],"successors":{"questions":["WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR"],"artifacts":[]},"prospective":{"expectation":"Structural participation is high but residual completion budgets remain loose, so the bounded terminal metric may reject zero retained source prefixes at phase <=48.","surprise":null,"anomaly":null}} -->
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-positive","lastEvidenceDate":"2026-10-18","decision":"Bounded-positive opportunity: the original immutable 12-parent retained-frontier cohort has two fuel-complete relaxed-metric impossibility candidates on two nominally independent source parents (R02182 and R02801), 18/24 participating source cells and zero illegal prefix replays. These are NOT independent oracle-proven DEAD states, canonical work savings or new cold solves.","remainingGate":"Review the two selected source input states for exact mechanic soundness, test full known LIVE controls and verify actual post-prefix retained descendant work exceeds derivation cost before independent oracle or any runtime consumer. Do not enlarge this same outcome-selected group without a new selection block.","joins":{"researchQuestion":"WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR","premiseRefs":["P198","P204"],"measurementOpportunity":null},"evidenceRole":"opportunity","scope":{"populationIdentity":"sha256:d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb","selection":"fixed 12 generated parents and source-native last captured width128 phase; exact score rank 0 and floor((n-1)/2) on each","inferenceScope":"retrospective source-native retained prefix metric non-hot-path observation only, not independent unbiased solve experiment"},"claimRefs":[],"sourceArtifacts":["reports/stress/pg-j-coupled-obligation-transfer-12-parent-20261018.json","reports/stress/pg-j-corpus2-subset-native-beam-opportunity-20261018.json","reports/stress/pg-j-metric-terminal-route-20261018-001.json","reports/stress/pg-j-metric-frozen-corpus2-transfer-20261018-001.json"],"successors":{"questions":["WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR"],"artifacts":[]},"prospective":{"expectation":"Structural participation is high but residual completion budgets remain loose, so the bounded terminal metric may reject zero retained source prefixes at phase <=48.","surprise":"Frozen twelve-parent original source artifact yielded two completely exhausted relaxed route graphs at R02182 rank0/depth37 and R02801 rank2/depth48, despite prior broad eligibility saturation. None is independently oracle-proven DEAD; affected descendant work still unknown.","anomaly":null}} -->
 
 ## Freeze the data and action *before* reading new metric outcomes
 
@@ -41,3 +41,39 @@ A Dijkstra run beyond **5,000 settled states** is UNKNOWN, not DEAD. Record all 
 - No new cold solve, no production default, no hint-conditioned selector and no eligibility-to-benefit substitution are allowed at this stage.
 
 The one-shot source artifact fetch workflow is disposable. It should be retired after exact-source result preservation, while the executable observer stays reproducible in the repo. If artifact access fails, **stop and document** rather than falling back to a new, differently selected 12-parent run.
+
+## Original-artifact transfer result and bounded disposition
+
+The exact original source run [39205302329](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39205302329) completed all twelve frozen parents without rerunning any native beam search. Execution SHA `f53daa1c4b4bded39d576e19be89af9b74f00033`; artifact `12165890198`, ZIP SHA256 `726751999a028f58979a8acfba5062d7c0df17260f5aae9b882e0183250165c3`, member `verdict.json` SHA256 `388ec3cfde06184d6df3fc0c7b32b124a001007925c9df97287afb2205b18753`. Every source member and the original generated corpus was checksum-verified before execution. The [durable source-identity and per-parent summary](stress/pg-j-metric-frozen-corpus2-transfer-20261018-001.json) retains both literal selected candidate paths; the full 24 cells remain in the immutable run artifact.
+
+| Frozen outcome measure | Source-observed value |
+| --- | ---: |
+| Independent source parent IDs | **12/12** |
+| Preselected original retained prefixes | **24/24** |
+| Fully eligible two-MP/one-zero-visit-MC/one-unused-portal-pair metric cells | **18/24** |
+| Missing mechanics / intentional abstentions | 6/24 |
+| Original-prefix canonical replay alarms | **0** |
+| Relaxed metric graph exhausted with **no terminal completion** | **2/18** |
+| Distinct parents contributing such candidates | **2/12** |
+| Censored candidate cells with fuel exhaustion | **0** |
+| Dijkstra abstract state expansions / candidate arcs across 18 metric runs | 63,984 / 165,799 |
+| Newly referee-validated source DEAD prefixes / new cold solves | **0 / 0** |
+
+The two **candidate necessary infeasibilities** arose at *different source levels*:
+
+| Generated source | Selected original beam state | Actual prior isolated beam work | Counted remaining | Metric result | Abstract effort |
+| --- | --- | ---: | ---: | --- | ---: |
+| `R02182` | depth 37, original score rank 0 of 128 | 40,426 | 82 | **No relaxed route** under subset constraints | 2,365 Dijkstra pops / 6,627 arcs |
+| `R02801` | depth 48, original score rank 2 of 6 | 39,738 | 34 | **No relaxed route** under subset constraints | 1,276 Dijkstra pops / 2,800 arcs |
+
+In both cases the metric searched all its reachable relaxed graph states (not `UNKNOWN` from an artificial state cap), after canonical path replay. This is a stronger *developmental nomination* than the earlier 287/297 almost-universal prerequisite: a subset graph can be actually empty even when the static objectives are present. **But do not silently promote** an empty relaxed graph to a source-oracle-confirmed DEAD prefix without a separate mechanically faithful correctness check; only P00137 has the accepted complete LIVE witness regression and prior CP-SAT exact labels. Both new cases were discovered by inspecting the prospective source cohort, so subsequent confirmatory selection cannot treat the same two parents as independent holdouts.
+
+The metric's 1.3k–2.4k Dijkstra popped states and 2.8k–6.6k candidate arcs on the nominated prefixes remain **unpriced in canonical solver work**, because each is a graph oracle, not a native `applyMove` or `isConnected` call. The observed 40k beam spent *before* each prefix was captured; it is **not** work that pruning the prefix could recover. The actual marginal descendant work after these retained prefixes, including retention/persistence of their descendants, has **not** been measured.
+
+## Cost and correctness before consumer
+
+**Next smallest work (not another broad matrix):** perform read-only original-beam continuation on **these two source-selected prefixes**, with a source-matched decision-inert parent-expansion/retained-lineage counter over a few subsequent phases. Compare cumulative actual `applyMove+12×isConnected` descendant work to the full cost of computing the metric; do not confuse replay-instrumentation cost with a prospective production charge. Test the general zero-visit-MC and one-pair abstraction against additional source-referee accepted paths, including landmark-normalized levels, before any native hard-prune proposal. If both source descendants immediately vanish, close this candidate as uneconomic irrespective of the mathematical result.
+
+**No production routing/pruning change is authorized.** Distinct pre-frozen parent IDs, not 24 prefix cells, are the independent unit. The original run was width128 `objectiveFirst` and phase-bounded nominal40k, not a strict near-typical shared 250k work A/B. No CP-SAT run, new referee-valid solution or lost production control is claimed.
+
+The one-shot artifact-fetch workflow is now retired after source-exact preservation. The executable offline observer is retained for reproducibility.
