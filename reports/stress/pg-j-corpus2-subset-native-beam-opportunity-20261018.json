@@ -1,0 +1,249 @@
+{
+  "schema": "pathfinder.pg-j-corpus2-subset-native-beam-opportunity-retained/v1",
+  "evidenceRole": "source-authentic-structural-participation-only",
+  "result": "PASS participation stop gate, SATURATED eligibility signal; no candidate prune or new solve inferred",
+  "sourceRun": 39197248687,
+  "sourceArtifactId": 12162297866,
+  "sourceExecutionCommit": "ca05b01f6af7870833d7afefc9ba2f8039641df1",
+  "artifactZipSha256": "ee28aff1f8eb0953beed46203b7b1ac0ec7df7ed25e27fd2b0da6c6c87576307",
+  "artifactMember": "opportunity.json",
+  "artifactMemberSha256": "11c3415fbf45b2ed87565414520b811f348419337680983be1a770a0e4928918",
+  "frozenPopulation": "reports/stress/pg-j-coupled-obligation-transfer-12-parent-20261018.json",
+  "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "sourceDetails": {
+    "beamProfile": "objectiveFirst",
+    "beamWidth": 128,
+    "gate": "first normalized gate",
+    "desiredPhaseDepths": [
+      8,
+      16,
+      24,
+      32,
+      48
+    ],
+    "nominalPhaseBoundedWork": 40000,
+    "nodesCap": 50000,
+    "wallSafetyMs": 120000,
+    "phaseBoundaryOvershootPossible": true,
+    "sampling": "unique score ranks 0, floor((N-1)/4), floor((N-1)/2), floor(3(N-1)/4), N-1",
+    "eligible": "canonical replay prefix with >=2 outstanding effective MP, >=1 pending MC, and >=1 fully unconsumed portal pair",
+    "observerMeter": "separate per-prep replay work, not charged to source beam and not a causal speedup"
+  },
+  "summary": {
+    "independentParents": 12,
+    "parentsWithSampledFrontiers": 12,
+    "parentsWithEligibleRetainedPrefixes": 12,
+    "sampledPrefixes": 297,
+    "eligiblePrefixes": 287,
+    "ineligiblePrefixes": 10,
+    "sourceValidIsolatedSolves": 0,
+    "totalBeamWork": 480622,
+    "separateReplayWork": 7276,
+    "nominalPhaseOverruns": 9,
+    "primaryParticipationGatePassed": true,
+    "canonicalEffectiveRawNormalizationAlarm": 0,
+    "firstSourceRunnerFailedBeforeEvidence": true,
+    "sampleEligibilityRate": 0.9663299663299664
+  },
+  "rows": [
+    {
+      "parentId": "R00565",
+      "workSpent": 34503,
+      "sampled": 25,
+      "eligible": 20,
+      "status": "checkpoints-complete",
+      "phases": [
+        8,
+        16,
+        24,
+        32,
+        48
+      ],
+      "lastPhaseEligible": 0,
+      "eligibleAtInitialFourPhases": 20
+    },
+    {
+      "parentId": "R02182",
+      "workSpent": 40426,
+      "sampled": 25,
+      "eligible": 25,
+      "status": "phase-boundary-work-stop",
+      "phases": [
+        8,
+        16,
+        24,
+        32,
+        37
+      ],
+      "lastPhaseEligible": 5,
+      "eligibleAtInitialFourPhases": 20
+    },
+    {
+      "parentId": "R02695",
+      "workSpent": 40850,
+      "sampled": 25,
+      "eligible": 25,
+      "status": "phase-boundary-work-stop",
+      "phases": [
+        8,
+        16,
+        24,
+        32,
+        41
+      ],
+      "lastPhaseEligible": 5,
+      "eligibleAtInitialFourPhases": 20
+    },
+    {
+      "parentId": "R03125",
+      "workSpent": 40222,
+      "sampled": 25,
+      "eligible": 25,
+      "status": "phase-boundary-work-stop",
+      "phases": [
+        8,
+        16,
+        24,
+        32,
+        36
+      ],
+      "lastPhaseEligible": 5,
+      "eligibleAtInitialFourPhases": 20
+    },
+    {
+      "parentId": "R00869",
+      "workSpent": 40331,
+      "sampled": 25,
+      "eligible": 25,
+      "status": "phase-boundary-work-stop",
+      "phases": [
+        8,
+        16,
+        24,
+        32,
+        42
+      ],
+      "lastPhaseEligible": 5,
+      "eligibleAtInitialFourPhases": 20
+    },
+    {
+      "parentId": "R02264",
+      "workSpent": 39453,
+      "sampled": 22,
+      "eligible": 17,
+      "status": "checkpoints-complete",
+      "phases": [
+        8,
+        16,
+        24,
+        32,
+        48
+      ],
+      "lastPhaseEligible": 0,
+      "eligibleAtInitialFourPhases": 17
+    },
+    {
+      "parentId": "R02801",
+      "workSpent": 39738,
+      "sampled": 25,
+      "eligible": 25,
+      "status": "checkpoints-complete",
+      "phases": [
+        8,
+        16,
+        24,
+        32,
+        48
+      ],
+      "lastPhaseEligible": 5,
+      "eligibleAtInitialFourPhases": 20
+    },
+    {
+      "parentId": "R03195",
+      "workSpent": 40262,
+      "sampled": 25,
+      "eligible": 25,
+      "status": "phase-boundary-work-stop",
+      "phases": [
+        8,
+        16,
+        24,
+        32,
+        39
+      ],
+      "lastPhaseEligible": 5,
+      "eligibleAtInitialFourPhases": 20
+    },
+    {
+      "parentId": "R01208",
+      "workSpent": 40413,
+      "sampled": 25,
+      "eligible": 25,
+      "status": "phase-boundary-work-stop",
+      "phases": [
+        8,
+        16,
+        24,
+        32,
+        40
+      ],
+      "lastPhaseEligible": 5,
+      "eligibleAtInitialFourPhases": 20
+    },
+    {
+      "parentId": "R02336",
+      "workSpent": 41996,
+      "sampled": 25,
+      "eligible": 25,
+      "status": "phase-boundary-work-stop",
+      "phases": [
+        8,
+        16,
+        24,
+        32,
+        41
+      ],
+      "lastPhaseEligible": 5,
+      "eligibleAtInitialFourPhases": 20
+    },
+    {
+      "parentId": "R02897",
+      "workSpent": 40282,
+      "sampled": 25,
+      "eligible": 25,
+      "status": "phase-boundary-work-stop",
+      "phases": [
+        8,
+        16,
+        24,
+        32,
+        39
+      ],
+      "lastPhaseEligible": 5,
+      "eligibleAtInitialFourPhases": 20
+    },
+    {
+      "parentId": "R03247",
+      "workSpent": 42146,
+      "sampled": 25,
+      "eligible": 25,
+      "status": "phase-boundary-work-stop",
+      "phases": [
+        8,
+        16,
+        24,
+        32,
+        41
+      ],
+      "lastPhaseEligible": 5,
+      "eligibleAtInitialFourPhases": 20
+    }
+  ],
+  "ineligibilityPattern": {
+    "R00565": "all five final depth48 samples lack an unused portal pair; 5 remaining MP and 2 pending MC each",
+    "R02264": "final depth48 five samples lack pending MC (one row) or 2 outstanding MP (four rows)",
+    "noOtherIneligibleParents": true
+  },
+  "qualification": "Sampled score ranks and multiple depths are clustered within each of twelve source parents. 287/297 is observation-level eligibility, not 287 independent samples, and does not show nonredundant necessary rejections. Nine phase-boundary runs consumed more than nominal 40k; not equal-cost strict work comparisons. No retrieved historical winners, hints, oracle fates or performance outcomes affected the beam.",
+  "nextGate": "Only authorize a fuel-capped read-only 2MP/1MC/1portal-pair necessary-bound observer with cheap/current-state selector, source-correctness/witness checks, and candidate-local retained descendant-work accounting. Demand nonredundant true rejects and positive amortized work before production."
+}
