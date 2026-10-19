@@ -1,0 +1,159 @@
+{
+  "schema": "pathfinder.pg-n-neighborhood-history-interface/v1",
+  "evidenceRole": "selected-retrospective-falsifier",
+  "selection": "all three previously oracle-labelled topology-fork source tables; no new cases",
+  "sourceFiles": [
+    {
+      "path": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+      "sha256": "6e044d1ae62cad6e4f678c9b13aabd67b805fab2898ad539ab42b0f5e62209e2",
+      "rows": 12
+    },
+    {
+      "path": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+      "sha256": "3024ce09aa7693ba1c6d852def97192715a87ca725c7052332fe6984455e6589",
+      "rows": 8
+    },
+    {
+      "path": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json",
+      "sha256": "13671b809d8e0a6f36d86859f5165bceb82c986d8a011bd9a279fd4d47ebd13e",
+      "rows": 8
+    }
+  ],
+  "summary": {
+    "sourceRows": 28,
+    "uniquePrefixes": 25,
+    "aliases": 3,
+    "parents": 7,
+    "live": 17,
+    "dead": 8
+  },
+  "candidates": {
+    "endpoint-depth-entry": {
+      "distinctSignatures": 21,
+      "repeatedGroups": 4,
+      "repeatedRows": 8,
+      "mixedGroups": 2,
+      "mixedIndependentParents": [
+        "P00009",
+        "P00137"
+      ],
+      "repeatedWitnesses": [
+        {
+          "corpus": "data/levels.json",
+          "levelId": "P00075",
+          "cases": [
+            {
+              "caseId": "P00075-w2-A0-B5-original",
+              "referenceLabel": "live",
+              "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json"
+            },
+            {
+              "caseId": "P00075-w2-A0-B5-alternate",
+              "referenceLabel": "live",
+              "source": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json"
+            }
+          ]
+        },
+        {
+          "corpus": "data/levels.json",
+          "levelId": "P00009",
+          "cases": [
+            {
+              "caseId": "P00009-w1-A0-B6-original",
+              "referenceLabel": "live",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "caseId": "P00009-w1-A0-B6-alternate",
+              "referenceLabel": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            }
+          ]
+        },
+        {
+          "corpus": "data/levels.json",
+          "levelId": "P00148",
+          "cases": [
+            {
+              "caseId": "P00148-w0-A6-B10-alternate",
+              "referenceLabel": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "caseId": "P00148-w0-A5-B10-alternate",
+              "referenceLabel": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            }
+          ]
+        },
+        {
+          "corpus": "data/levels.json",
+          "levelId": "P00137",
+          "cases": [
+            {
+              "caseId": "P00137-w1-A2-B10-original",
+              "referenceLabel": "live",
+              "source": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json"
+            },
+            {
+              "caseId": "P00137-w1-A2-B10-alternate",
+              "referenceLabel": "dead",
+              "source": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json"
+            }
+          ]
+        }
+      ]
+    },
+    "endpoint-depth-entry-neighbor-visits": {
+      "distinctSignatures": 24,
+      "repeatedGroups": 1,
+      "repeatedRows": 2,
+      "mixedGroups": 0,
+      "mixedIndependentParents": [],
+      "repeatedWitnesses": [
+        {
+          "corpus": "data/levels.json",
+          "levelId": "P00148",
+          "cases": [
+            {
+              "caseId": "P00148-w0-A6-B10-alternate",
+              "referenceLabel": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "caseId": "P00148-w0-A5-B10-alternate",
+              "referenceLabel": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            }
+          ]
+        }
+      ]
+    },
+    "endpoint-depth-entry-neighbor-axes": {
+      "distinctSignatures": 24,
+      "repeatedGroups": 1,
+      "repeatedRows": 2,
+      "mixedGroups": 0,
+      "mixedIndependentParents": [],
+      "repeatedWitnesses": [
+        {
+          "corpus": "data/levels.json",
+          "levelId": "P00148",
+          "cases": [
+            {
+              "caseId": "P00148-w0-A6-B10-alternate",
+              "referenceLabel": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            },
+            {
+              "caseId": "P00148-w0-A5-B10-alternate",
+              "referenceLabel": "dead",
+              "source": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "caveat": "No unlabeled controls, cold solves, production work or sound equivalence proof. No mixed fate with only one repeated same-DEAD pair is effectively zero demonstrated useful compression."
+}
