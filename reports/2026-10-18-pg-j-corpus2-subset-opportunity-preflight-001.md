@@ -1,0 +1,31 @@
+# PG-J Corpus2 source-native subset opportunity (2026-10-18)
+
+> **Status:** active
+> **Last evidence:** 2026-10-18 — PG-J coupled one-pair P00137 semantic finding and outcome-blind twelve-parent structural freeze, no Corpus2 real-frontier results yet
+> **Decision:** first measure genuine retained beam frontier eligibility for a bounded two-MP/one-MC/one-pair necessary subset on the twelve frozen parents; no hard-prune code or oracle calls
+> **Remaining gate:** source-authentic 12-parent retained-frontier producer with replay legality, explicit actual work, observer participation, source SHA and no historical steering
+> **Research question:** `WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR`
+> **Evidence role:** opportunity
+> **Selection:** twelve outcome-blind, distinct ID-ranked generated Corpus2 levels frozen in [source selector](stress/pg-j-coupled-obligation-transfer-12-parent-20261018.json), not selected by prior solver outcomes or P00137 reference fates
+> **Population identity:** sha256:d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb
+> **Inference scope:** selected 12-parent, one-width/one-profile production-native beam frontier/eligibility telemetry only; no correct prune, work benefit or new cold solve
+
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"active","lastEvidenceDate":"2026-10-18","decision":"Measure legal retained beam frontier eligibility for the current-input-only small obligation subset before implementing or spending on any residual DP consumer.","remainingGate":"One bounded 12-parent objectiveFirst width128 source-native beam pause/replay opportunity census","joins":{"researchQuestion":"WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR","premiseRefs":["P198","P204"],"measurementOpportunity":null},"evidenceRole":"opportunity","scope":{"populationIdentity":"sha256:d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb","selection":"12 outcomes-blind generated Corpus2 parent IDs fixed in pg-j-coupled-obligation-transfer-12-parent-20261018.json","inferenceScope":"source-native retained beam prefixes under one current-input choice of gate/scorer/width, not all production stages or all Corpus2 levels"},"claimRefs":[],"sourceArtifacts":["reports/stress/pg-j-coupled-obligation-transfer-12-parent-20261018.json"],"successors":{"questions":["WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR"],"artifacts":[]},"prospective":{"expectation":"A substantial fraction of source-native retained frontier prefixes might have two outstanding MP sites, one outstanding MC crossing and at least one portal pair not consumed.","surprise":null,"anomaly":null}} -->
+
+## Why this is a separate question
+
+The [PG-J P00137 model](2026-10-18-pg-j-coupled-obligation-route-preflight-001.md) is semantically promising (two historically unpruned exact-DEAD prefixes excluded) but requires up to 5.3k abstract states to reject one of them. Applying it directly to the generated corpus would be unsound as an economic claim: Corpus2 has 5–8 MPs and commonly multiple MCs and portal pairs, and not one exact P00137-shaped board. Before coding even a smaller DP, first establish that **real search reaches the proposed prerequisite state**.
+
+## Frozen source-native observer
+
+For each of the twelve fixed generated parents, independent cold level preparation, canonical **first gate**, exact `objectiveFirst` scorer, width **128**, no extra mechanic bucket retention or hints. Sample native beam continuation frontiers after phases **8, 16, 24, 32 and 48**, stopping after the first phase-complete checkpoint at or above nominal **40,000 canonical work** or **50,000 nodes**, and no more than **120 s wall**. A phase-complete pause can overshoot the nominal work amount: retain actual charged work, do not claim strict 40k equality. The only purpose is a few realistic frontier prefix states, not matching production output or demonstrating solved set.
+
+At each captured phase, sample deterministic score-rank positions `0, floor((n-1)/4), floor((n-1)/2), floor(3(n-1)/4), n-1` (unique). Reconstruct literal retained ancestor paths from the beam's `prev` chain, replay each **from scratch on an independent prep work meter** through actual `getNeighbors/applyMove`, then record whether at least **two** MP sites remain unvisited, at least **one** MC obligation is still unmet, and at least **one portal pair** is unconsumed. This three-way conjunction is the **conditional necessary eligibility for a 2MP/1MC/one-pair abstract DP**. It does not itself prove the DP can reject or amortize its cost. Portal pairs are considered consumed when either endpoint has been visited (canonical endpoints are single-use); a consumed pair is not an optional resource for a future chosen pair. Record actual remaining counted length, prefix replay cost, phase work and sampled rank. No outcome label enters runtime selection.
+
+**Primary gate:** at least 2 of 12 independent parents with one or more eligible retained prefixes and at least 8 eligible sampled prefixes total. This was selected before collecting any new frontier data as a deliberately weak *nonzero participation* screen; it is **not** enough for a pruning or cold-solve experiment.
+
+**If gate fails:** close this source/width/profile subset-form negative, do not buy DP or move a hot-path operator. Other search-family or depth regimes may be distinct premises, but require a new opportunity reason.
+
+**If gate clears:** a strictly fuel-capped, overpermissive tiny 2MP/1MC/one-pair route oracle may be built *read-only* on the same frozen sample. A useful next claim requires a semantic rejection at a retained prefix, no rejected referee-valid witness, and candidate-local downstream work demonstrably exceeding the oracle's actual derivation charge. No source path, historical hint or response is allowed in the live solver; all prefix inspection happens offline.
+
+The beam sampling is a research-mode original technique, **not exact shared 250k whole-solve**, and an unexpected solve is only source/referee-valid isolated technique evidence, never automatically a near-typical cold-product solve. The producer emits compact data and a single immutable source-labeled artifact; retire its workflow after adjudication.
