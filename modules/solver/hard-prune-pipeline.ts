@@ -6,7 +6,7 @@ import { evaluateObligationClusters } from './joint-obligation-propagation.js';
 import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustCrossNeighborBudgetDeadlocked, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { isSolutionState } from './solution.js';
 import { stateSignature } from './nogood-cache.js';
-import { isConnected, probeUnscheduledConnectivityGoalCutCertificate } from './topology.js';
+import { isConnected, connectivityReachRowsForResearch, probeUnscheduledConnectivityGoalCutCertificate } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, PrepLevel, SolverSearchState } from './types.js';
@@ -274,6 +274,8 @@ export function evaluatePrunedMove(
             connectivityResearch({
                 pos: next, state, prep, level, connected, workBefore,
                 workAfter: prep._workMeter.units,
+                ...(prep._beamResearchObserver?.includeScheduledConnectivityReachRows
+                    ? { reachedRows: connectivityReachRowsForResearch(level) } : {}),
                 attemptContext: prep._beamResearchAttemptContext ?? null,
             });
             if (!connected) return reject(diagnostics, 'PRUNE_CONNECTIVITY');

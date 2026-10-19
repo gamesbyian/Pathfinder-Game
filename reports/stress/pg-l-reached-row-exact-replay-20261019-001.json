@@ -1,0 +1,82 @@
+{
+  "schema": "pathfinder.pg-l-reached-row-exact-state-replay-retained/v1",
+  "status": "concluded-positive-identity-only",
+  "evidenceRole": "postselected-source-native-scratch-equality",
+  "provenance": {
+    "runId": 39307715176,
+    "executionSha": "b61b27b3f19a3d78ac7aea552baad262677e0324",
+    "artifactId": 12214676843,
+    "artifactZipSha256": "b331f00f378e1351ec62408b3ec2cbe7b08804afd22e3f9f198e81c680448fb8",
+    "artifactMember": "verdict.json",
+    "artifactMemberSha256": "39a987aff90d2cee4cf76d8e1e9432639a6f38e9f74e23c82e33a24b0b054b39",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "previousNativeConnectivityWitness": "reports/stress/pg-l-source-native-connectivity-chronology-20261019-001.json"
+  },
+  "contract": {
+    "sourceParents": [
+      "R00720",
+      "R01584"
+    ],
+    "baseWorkBudget": 250000,
+    "nodeBudget": 250000,
+    "strictTotalWorkBudget": true,
+    "observerOffOnParity": true,
+    "sourceScorers": [
+      "objectiveFirst",
+      "intersectionHarvest"
+    ],
+    "width5000": true,
+    "identities": "same full path plus complete mechanic scalars and effective ablation context within one puzzle/gate",
+    "snapshot": "side-effect-free _reached row bitmaps copied immediately after actual native isConnected; 4 bytes per reached row"
+  },
+  "summary": {
+    "independentDevelopmentParents": 2,
+    "exactOffOnParityPasses": 2,
+    "sourcePositiveBothScorers": 2,
+    "crossScorerLaterMatchedCalls": 3111,
+    "repeatedTrueExactReachRows": 3085,
+    "repeatedFalseExactReachRows": 26,
+    "reachRowDisagreements": 0,
+    "booleanDisagreements": 0,
+    "chargedRepeatConnectivityWork": 37332,
+    "snapshottedScheduledCalls": 6330,
+    "totalRawSnapshotBytes": 313160,
+    "actuallySavedWork": 0,
+    "newColdSolves": 0
+  },
+  "rows": [
+    {
+      "id": "R00720",
+      "sourceGate": 131077,
+      "eligibleScheduledConnectivity": 2000,
+      "laterExactRepeats": 1000,
+      "laterTrueEqualBitmap": 988,
+      "laterFalseEqualBitmap": 12,
+      "rawStoredBitRowBytes": 88000,
+      "storedUniqueKeyRecords": 2000,
+      "sourceOffOnWork": 250000,
+      "sourceOffOnStatus": "node-budget-reached",
+      "reachRowDisagreements": 0
+    },
+    {
+      "id": "R01584",
+      "sourceGate": 327689,
+      "eligibleScheduledConnectivity": 4330,
+      "laterExactRepeats": 2111,
+      "laterTrueEqualBitmap": 2097,
+      "laterFalseEqualBitmap": 14,
+      "rawStoredBitRowBytes": 225160,
+      "storedUniqueKeyRecords": 4330,
+      "sourceOffOnWork": 250000,
+      "sourceOffOnStatus": "work-budget-reached",
+      "reachRowDisagreements": 0
+    }
+  ],
+  "caveats": [
+    "Run compares read-only actual fresh bitmaps, not a restoration/consumer implementation; the bitsets were never used to steer search.",
+    "Keys include all visited path cells and mechanic scalars by this runner's conservative serialization, within each source puzzle, but sample agreement is not a universal cache soundness proof.",
+    "Full read-only snapshot storage is 313,160 raw bytes for both scorers across two puzzles; string-key storage, JS Map objects, costs and lookup time are NOT included.",
+    "The full fresh-connected flood must still be available to BC1 and other consumers; restoring a bitmap and satisfying all side-effect expectations is separate engineering.",
+    "Post-selected parents do not estimate new independent population solve gains."
+  ]
+}
