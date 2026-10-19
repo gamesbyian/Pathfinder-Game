@@ -1,37 +1,34 @@
 # Solver optimization workstreams
 
-> **Status:** canonical live authority for solver research priority, execution state, and next gates.
-> **Program state (2026-10-17):** BC1-VX vertex/bridge-volume theorem-pruning is promoted default-ON by this integration, with explicit OFF rollback. Frozen paired development evidence: representative 300 +7/−0 (−4.2% work), first cold-64 +2/−0 (−1.19%), historical solved-control 150 +1/−0 (−3.748%), second cold-64 +2/−0 (−3.2761%); no attributable losses and zero false-prune alarms in 861,140 stored-solution witness states. Second cold-64 excludes the other cohorts; earlier sets partially overlap. These sampled populations establish useful capability within studied Corpus 2, not cross-construction generalization. Premise discovery remains active after the [blocker audit](../reports/2026-10-16-solver-blocker-suspicion-audit-001.md).
-> **History:** detailed narratives remain in the [2026-09-25 snapshot](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md), [2026-10-02 snapshot](../reports/2026-10-02-solver-optimization-workstreams-precompaction-snapshot-002.md), dated reports, and the [queue reconciliation](../reports/2026-10-16-solver-research-queue-exhumation-reconciliation-001.md).
+> **Authority:** live solver research state and next gates, 2026-10-18. Full [precompaction queue](archive/snapshots/solver-optimization-workstreams-2026-10-18-before-context-compaction.txt), [Sept snapshot](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md), [Oct snapshot](../reports/2026-10-02-solver-optimization-workstreams-precompaction-snapshot-002.md) and [queue reconciliation](../reports/2026-10-16-solver-research-queue-exhumation-reconciliation-001.md) preserve chronology.
+> **Production:** BC1-VX default-ON with OFF rollback; see 2X.
 
-Method: [operating model](solver-research-operating-model.md) · [evidence](solver-evaluation-evidence.md) · [future work](solver-future-work.md) · [reasoning atlas](solver-reasoning-capability-atlas.md).
+Method: [operating model](solver-research-operating-model.md) · [evidence](solver-evaluation-evidence.md) · [future work](solver-future-work.md) · [capability atlas](solver-reasoning-capability-atlas.md).
 
 ## Current priority
 
-1. Keep **BC1-VX default-ON** with explicit rollback and continued referee/cold correctness checks. The *distinct* 2Y unconditional DFS/admissible transfer is now **closed negative on its tested form** (4,463 prune events but just 698/3,548,882 canonical work units saved at the 250k dose, no extra solves). Reopen transfer only for a cheap current-state selective trigger or amortized cut computation with real headroom. Do not repeat the closed beam promotion tests.
-2. Concentrate independent-premise work on **PG-L** co-dispatch/actual overlap (active separate PR), **PG-C/H/I/N** under their current bounded opportunity tests, and **PG-G** independent-parent ordering causality (the tested cold D4 tie rule lost a control solve). **PG-M and PG-P are on-demand/reopen-only** after their completed negative diagnostics, not currently authorized generic observer reruns.
-3. Continue narrow **PG-D** current-input flipper/trail-switch consequences and **PG-J** topology completion-regime microscopes. **PG-K** may reopen only a different current-state dependency/length-changing revision premise after its 12-parent exact-DEAD negative; no further historic-hint splice campaign.
-4. PG-O remains conditional on a genuinely new hint-free candidate after its tested negative; PG-P's actual descent pilot has concluded without earning repair code. Treat both as scoped premise gates, not architecture/operator promotions.
-5. PG-B remains an optional frozen pricing re-dispatch only if that compute becomes decision-relevant.
+1. Preserve **BC1-VX default-ON**, rollback and referee/cold checks. The distinct unconditional 2Y DFS/admissible transfer saved only 698/3.55M work: tested form closed.
+2. Work distinct premises: **PG-L** co-dispatch (separate owner), **PG-C/H/I/N**, **PG-G** causal ordering, narrow **PG-D/J** mechanical inference. PG-M/P and tested PG-K/O require new gates.
+3. Do not repeat five-method, repair-OFF, width512, static flipper-route, rank-only or hint-splice negatives; PG-B repricing only if decision-relevant.
 
-Promotion remains: **premise -> cheapest falsifier -> smallest consumer -> matched-work economics -> independent confirmation proportional to selection -> production promotion**. A later-stage threshold does not automatically prohibit a cheaper earlier diagnostic.
+**Promotion:** cheapest falsifier → sound small consumer → canonical matched-work economics → independent confirmation → production. Cheap exploratory tests need not pre-satisfy later thresholds.
 
 ## Workstream state
 
-This table is the machine-readable authority. IDs identify workstreams; they are not ranks.
+This table is the live machine-readable authority; IDs are not priorities.
 
 | ID | Workstream | Execution state | Gate class | State / context | Next gate | Stable question ref |
 |---:|---|---|---|---|---|---|
-| 2 | Repair-deadline allocation | `closed` | `reopen-only` | promoted 2026-09-26; 7 gains/0 losses, 180/180 regression | materially different dose/premise | `WS2-REPAIR-DEADLINE-ALLOCATION` |
-| 2I | Capability invention | `closed` | `reopen-only` | CID-0027/0028 promoted; 8 new solves, 0 regressions | materially different exposure | `WS2-CAPABILITY-INVENTION-DEMAND` |
-| 1 | Automatic action selection | `on-demand` | `reopen-only` | offline capture confirmed; consumer is work-only, no cold-solve upside | explicit work-reduction objective or different signal | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
-| 2X | BC1-VX production promotion | `closed` | `reopen-only` | **default-ON 2026-10-17**; 861,140 stored-solution witness checks, zero alarms; four paired cohorts +7/+2/+1/+2 treatment-only outcomes, zero losses; second cold-64 R03278/R03265 49→51 with −3.2761% work. Both have earlier accepted hints; new *cold* rescues, not first-ever logical solutions | keep explicit `STRATEGY_BC1_VERTEX_VOLUME_PRUNE=false` rollback and production correctness; new claims require new mechanism/population; shared DFS/admissible transfer is distinct 2Y | `WS2-CUT-BALANCE-PROJECTION` |
-| 2Y | BC1-VX shared hard-prune transfer | `active` | `instrument-only` | **25k observer-positive**: 218 DFS + 317 admissible post-gauntlet would-reject events, exact passive parity; **250k actual prune A/B** on same 8 development parents: DFS 0→0, admissible 2→2, 4,463 rejection events but only **698 / 3,548,882 (0.0197%) aggregate canonical work saved**, no new solve, sequential wall sums higher; unconditional extra Tarjan scan **form closed negative**, beam default-ON unchanged | stop unchanged always-scan DFS/admissible form; only reopen with a *cheap current-state selective trigger* or amortized cut reuse and real cost/work headroom before independent-parent cold A/B; repair still excluded; [2Y-002](../reports/2026-10-17-bc1vx-2y-250k-dfs-admissible-behavior-result-002.md) | `WS2-CUT-BALANCE-PROJECTION` |
-| 2F | Forced-work economics | `closed` | `reopen-only` | global/post-recognition/raw-degree forms closed | materially different sound recognizer | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
-| 2R | Parity response | `on-demand` | `reopen-only` | tested static response vocabulary closed | materially different parity mechanism | `WS2-PARITY-RESPONSE-SIGNATURE` |
-| 6/7 | Repair dependency discovery | `on-demand` | `reopen-only` | September one-parent exact divergence microscope was promising but October replication had only 2/24 eligible parents; **PG-P 001** real-repair-descent observer on 12 independent, retrospective hint-bearing parents captured 166,375 actual choices, 666 distinct elites and **12/12 exact observer OFF/ON parity**, but only three parents have equally scored early-different elite trajectories and no causally proven preterminal dependency | seek a *materially different current-repair failure regime* with typed, early dependency evidence and genuine consumer economics before another exact-pair campaign or operator; [PG-P 001](../reports/2026-10-18-pg-p-actual-repair-descent-shadow-result-001.md) | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
-| 5 | Exact/reference service | `on-demand` | `service` | truth service for bounded microscopes | only when a live discriminator requires it | — |
-| 3 | Generalization method | `method-complete` | `method` | independent-unit method established | preserve in confirmation | — |
+| 2 | Repair-deadline allocation | `closed` | `reopen-only` | Promoted: 7 gains/0 losses, 180/180 regression. | New dose or mechanism only. | `WS2-REPAIR-DEADLINE-ALLOCATION` |
+| 2I | Capability invention | `closed` | `reopen-only` | CID-0027/0028 promoted: 8 new solves, 0 regressions. | New exposure only. | `WS2-CAPABILITY-INVENTION-DEMAND` |
+| 1 | Automatic action selection | `on-demand` | `reopen-only` | Offline capture works; work-only consumer, no cold solves. | Different cold signal or work objective. | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
+| 2X | BC1-VX production promotion | `closed` | `reopen-only` | **BC1-VX default-ON** since 2026-10-17: 861,140 stored-witness states/0 alarms; four paired cohorts +7/+2/+1/+2 gains, no losses. Second cold64 49→51 with earlier hints. | Keep `STRATEGY_BC1_VERTEX_VOLUME_PRUNE=false` rollback and correctness gates; DFS 2Y distinct. | `WS2-CUT-BALANCE-PROJECTION` |
+| 2Y | BC1-VX shared hard-prune transfer | `active` | `instrument-only` | Unconditional DFS/admissible transfer **negative**: 4,463 rejects saved only 698/3,548,882 work, no solves. [2Y result](../reports/2026-10-17-bc1vx-2y-250k-dfs-admissible-behavior-result-002.md). | Cheap selective trigger or amortized reuse with real headroom; repair excluded. | `WS2-CUT-BALANCE-PROJECTION` |
+| 2F | Forced-work economics | `closed` | `reopen-only` | Global/post-recognition/raw-degree forms closed. | New sound recognizer. | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
+| 2R | Parity response | `on-demand` | `reopen-only` | Static parity response form negative. | Different parity mechanism. | `WS2-PARITY-RESPONSE-SIGNATURE` |
+| 6/7 | Repair dependency discovery | `on-demand` | `reopen-only` | [PG-P 001](../reports/2026-10-18-pg-p-actual-repair-descent-shadow-result-001.md): 12-parent repair observer, 166,375 choices/666 elites, 12/12 parity; no causal early dependency. | Prospective typed preterminal dependency with repair economics. | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
+| 5 | Exact/reference service | `on-demand` | `service` | Bounded exact/reference truth service. | Only active discriminator. | — |
+| 3 | Generalization method | `method-complete` | `method` | Independent-unit method established. | Preserve for confirmation. | — |
 | PG-C | First-loss refresh | `active` | `existing-data` | 28/28 witness-relative width losses, **0 proven irreversible**; hint splice 4/28, rank-only negative. [PG-C 002](../reports/2026-10-17-pg-c-retained-cutoff-rank-falsifier-002.md). | Replayable cold non-rank selector plus substantial downstream loss. | `WS2-FIRST-LOSS-CAUSAL-REFRESH` |
 | PG-D | Trail/switch feasibility | `active` | `existing-data` | 13 exact ordinary prefixes/4 parents: two flipper/frozen-axis route models reject **0/4 DEAD**, preserve 9 LIVE. [PG-D 003](../reports/2026-10-18-pg-d-flipper-automaton-relaxation-result-003.md). | New future-edge/MC path-history necessity + retained work; no new oracle/consumer yet. | `WS2-TRAIL-SWITCH-FEASIBILITY` |
 | PG-G | Symmetry tie-order causality | `active` | `existing-data` | Historical frame order repaired 6/6 cliffs; legal D4 tie rule **12→11** solves, +25.37% work: negative. | Different cold causal tie signal on independent parents. | `WS2-SYMMETRY-TIE-ORDER-CANONICALIZATION` |
@@ -47,26 +44,17 @@ This table is the machine-readable authority. IDs identify workstreams; they are
 
 ## Interpretation and closure
 
-PG-M is a **delta rejoin** on the fresh exact-DEAD sibling population and newer PG-D/J/K exact-query material. Its 2026-09-17 Phase 0 remains negative and must not be rerun unchanged. PG-O reopens only candidate shaping using real-search partials; the three naive constructors remain failed. PG-P is observation only; the 12-parent floor still gates reusable-interface confirmation.
-
-Closed tested forms include old pipeline-wide/unconditional/every-phase BC1, BC1-G production use, literal forced-work consumers, static parity/checkerboard response, D1 ranking, separator C0-C2, tested dependency-defined exact bisection, causal-revision tested form, naive LNS constructors, generic restart/stasis predictors, and size-1 DEAD-core relaxation. See [future work](solver-future-work.md) for exact reopen boundaries.
-
-Only three stable questions remain `deferred-reopen`: admissible-order retry repricing, parity-response signature, and forced-work economics.
+Closed tested forms include unconditional/every-phase BC1, BC1-G production, forced-work literal consumers, static parity, D1 ranking, separator C0–C2, old exact dependency bisection, naive LNS, restart/stasis and size-1 DEAD-core. [Future work](solver-future-work.md) preserves exact reopen triggers. Deferred-reopen questions: admissible retry repricing, parity response, forced-work economics.
 
 ## Standing rules
 
-- Use canonical `workSpent` for competing techniques.
-- Cold behavior cannot consume level ID, historical outcome, family ancestry, hint, or stored answer.
-- Timeout/unsupported/abstain/missing coverage are not DEAD/UNSAT.
-- Hard consumers require the appropriate proof/equivalence/monotonicity guarantee.
-- Independent confirmation gates transfer/promotion claims proportional to selection; it need not ban a non-contaminating feasibility prototype.
-- Sample minima gate the claim they were designed for, not every cheaper observability question.
-- Recurring-producer requirements gate standing resource promotion, not valid scoped one-off science.
-- Durable frameworks need repeated decision-bearing demand. Disposable narrow falsifiers are allowed with stop/delete rules.
-- Negatives are scoped to tested form, population, seam, and work contract unless the semantic parent was falsified.
-- **No-stranding:** executable unresolved falsifiers belong here or require a concrete blocker elsewhere.
-- **Transactional state:** reconcile question state, dated evidence, future-work/opt-in disposition when relevant, and lifecycle tests in the same change.
+- Compare canonical `workSpent = applyMove + 12×isConnected`; distinguish node/wall, phase overshoot and strict work.
+- Cold runtime never uses IDs, previous outcomes, ancestry, hints or stored answers; retrospective witnesses label offline analysis only.
+- Timeout, abstention, unsupported or missing coverage ≠ DEAD. Hard pruning needs sound proof/equivalence.
+- Independent units and selection govern confirmation. Sample minima apply to the claims they were specified for.
+- Standing producers require demand; one-offs require saved evidence, explicit stop and workflow retirement.
+- **No stranding:** unsettled executable premises belong here or have concrete blockers elsewhere. Reconcile reports, future-work and workflow lifecycle on state changes.
 
 ## Cheap evidence routing
 
-Prefer retained/indexed evidence before bespoke acquisition. Chronology and detailed evidence live in dated reports; exact deferred triggers live in [future work](solver-future-work.md); blocker classification lives in the [operating model](solver-research-operating-model.md).
+Prefer indexed reports; [future work](solver-future-work.md) tracks deferred triggers and [operating model](solver-research-operating-model.md) governs evidence.
