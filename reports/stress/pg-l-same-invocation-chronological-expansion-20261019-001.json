@@ -1,0 +1,106 @@
+{
+  "schema": "pathfinder.pg-l-same-invocation-chronological-expansion-retained/v1",
+  "status": "concluded-positive-opportunity-not-reuse",
+  "evidenceRole": "development-selected-production-chronology",
+  "provenance": {
+    "runId": 39218477592,
+    "artifactId": 12170118134,
+    "artifactName": "pg-l-same-invocation-expansion-20261019",
+    "artifactZipSha256": "e29ddc7d80c9b40c94bacbcaf0f33c8352cf299e38a8b859aee1af33aa0b2b39",
+    "rawMember": "verdict.json",
+    "rawMemberSha256": "8a1541a54aaf4397aa5cffaf42f4ccef9aed97c065f491e4a17a509c08ba3c6b",
+    "executionSha": "71bab1c7f8eab7a039e0d8c19186f6276c2cbc57",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "sourceDispatch": "reports/stress/pg-l-independent-dispatch-24-20261018-001.json"
+  },
+  "protocol": {
+    "sourceParentIds": [
+      "R00720",
+      "R01584"
+    ],
+    "trueProductionSolveLevel": true,
+    "observerDefaultOff": true,
+    "matchedControlObserverWork": true,
+    "baseWorkBudget": 250000,
+    "nodeBudget": 250000,
+    "strictTotalWorkBudget": true,
+    "nominalWorkOvershoot": false,
+    "noHints": true,
+    "targetScorers": [
+      "objectiveFirst",
+      "intersectionHarvest"
+    ],
+    "sameGateAndWidth5000": true,
+    "observerInert": true,
+    "limits": {
+      "maxUniqueFullPathKeys": 350000,
+      "maxKeyCharacters": 50000000
+    },
+    "precommittedMinimumDuplicateWork": 1000
+  },
+  "summary": {
+    "independentParents": 2,
+    "sourcePositiveCoDispatchParents": 2,
+    "observerParityPasses": 2,
+    "chronologicalCrossScorerDuplicateParentExpansions": 5699,
+    "chronologicalLaterExpansionCanonicalWork": 48066,
+    "matchedMinimumCanonicalWork": 48066,
+    "parentsPassingMinimum": 2,
+    "sourceErrors": 0,
+    "newColdSolves": 0
+  },
+  "rows": [
+    {
+      "parentId": "R00720",
+      "gate": 131077,
+      "status": "node-budget-reached",
+      "canonicalWork": 250000,
+      "nodes": 187670,
+      "attempts": 130,
+      "producerProfile": "objectiveFirst",
+      "producerOrdinal": 9,
+      "consumerProfile": "intersectionHarvest",
+      "consumerOrdinal": 10,
+      "mechanicBucketRetention": false,
+      "uniqueProducerFullPaths": 3411,
+      "uniqueConsumerFullPaths": 3411,
+      "chronologicalDuplicateFullPaths": 3411,
+      "chargedLaterCanonicalWork": 18740,
+      "matchedMinimumWork": 18740,
+      "otherWidthIgnored": 0,
+      "fullPathKeyRecords": 6822,
+      "fullPathKeyCharacters": 427528,
+      "observerParity": true
+    },
+    {
+      "parentId": "R01584",
+      "gate": 327689,
+      "status": "work-budget-reached",
+      "canonicalWork": 250000,
+      "nodes": 176575,
+      "attempts": 83,
+      "producerProfile": "intersectionHarvest",
+      "producerOrdinal": 9,
+      "consumerProfile": "objectiveFirst",
+      "consumerOrdinal": 10,
+      "mechanicBucketRetention": false,
+      "uniqueProducerFullPaths": 2288,
+      "uniqueConsumerFullPaths": 2288,
+      "chronologicalDuplicateFullPaths": 2288,
+      "chargedLaterCanonicalWork": 29326,
+      "matchedMinimumWork": 29326,
+      "otherWidthIgnored": 16,
+      "fullPathKeyRecords": 4576,
+      "fullPathKeyCharacters": 254210,
+      "observerParity": true
+    }
+  ],
+  "cautions": [
+    "Two sources selected after earlier high overlap; not independent generalization or duplicate rate.",
+    "Full-path identity means literal same path in one level only; cache must have all mechanic/prune/configuration prerequisites.",
+    "Later parent expansion work is paid native canonical work, not equivalent to a safe exact caching saving.",
+    "The second scorer may score children differently, so a successful cache must share only scorer-independent mechanics and recompute scorer-specific child scores/retention.",
+    "5000-wide beam generated native expansion sum is only a part of full invocation canonical work.",
+    "No changes to solver production semantics."
+  ]
+}
