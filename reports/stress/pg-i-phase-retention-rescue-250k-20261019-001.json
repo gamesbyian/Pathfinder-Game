@@ -1,0 +1,158 @@
+{
+  "schema": "pathfinder.pg-i-source-phase-retention-rescue-result/v1",
+  "status": "concluded-mechanism-positive-but-no-solves",
+  "evidenceRole": "postselected-development-actual-native-six-cell-counterfactual",
+  "provenance": {
+    "runId": 39344017379,
+    "executionSha": "dc38dcf5f11599a1c769f7d3b587e7c1e46566da",
+    "artifactId": 12229743497,
+    "artifactName": "pg-i-phase-retention-rescue-20261019",
+    "zipSha256": "d25dc4b350a57d065a6108372ae0809d48441387e41a1badb9022aa8502f3461",
+    "member": "result.json",
+    "memberSha256": "410e51b16a871014a4ddd8fe3a7bcbec68396a6f3e1cc0a8cbe3b6aa0214e64b",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "priorFirstLoss": "reports/stress/pg-i-post-taper-first-loss-20261019-001.json"
+  },
+  "protocol": {
+    "independentParentCount": 2,
+    "selectedOnHistoricalOutcome": true,
+    "armsPerParent": [
+      "segmented-original-control",
+      "single-source-selected-one-phase-pulse",
+      "sustained-phase-selected-intervention"
+    ],
+    "strictAtomicWorkCap": 250000,
+    "nodeCap": 250000,
+    "historyUsedOnlyForAfterDecisionWitnessLabels": true,
+    "sourceFullPrunesUnchanged": true,
+    "developmentOnly": true
+  },
+  "summary": {
+    "sourceSelectedParents": 2,
+    "armCells": 6,
+    "exactControlParities": 2,
+    "solves": {
+      "control": 0,
+      "pulse": 0,
+      "sustained": 0
+    },
+    "new250kIsolatedSolves": 0,
+    "targetWitnessRescuedAtDecision": {
+      "pulse": 2,
+      "sustained": 2
+    },
+    "sourceRefereeOrPruneAlarms": 0,
+    "sourceWorkCapViolations": 0,
+    "maxWork": 250000,
+    "materialLateWitnessContinuation": {
+      "parentId": "R02108",
+      "pulseLastSupportDepth": 63,
+      "sustainedLastSupportDepth": 64,
+      "priorLastSupportDepth": 29,
+      "sourceWasBudgetCensored": true
+    }
+  },
+  "rows": [
+    {
+      "parentId": "R03031",
+      "scorer": "objectiveFirst",
+      "mechanicBucketRetention": false,
+      "selector": "width512→544 at depth19",
+      "priorKnownWinnerPoolRank": 526,
+      "priorDiscard": "score-width-culled",
+      "oldSourceWork": 239505,
+      "arms": [
+        {
+          "arm": "control",
+          "status": "exhausted",
+          "work": 239505,
+          "winnerRetainedAtDecision": false,
+          "winnerRetainedRank": null,
+          "lastWitnessDepth": 19,
+          "firstWitnessLossDepth": 19,
+          "firstWitnessLossStage": "score-width-culled",
+          "workAfterFinalWitness": 177753,
+          "validSolve": false
+        },
+        {
+          "arm": "pulse",
+          "status": "exhausted",
+          "work": 239773,
+          "winnerRetainedAtDecision": true,
+          "winnerRetainedRank": 526,
+          "lastWitnessDepth": 20,
+          "firstWitnessLossDepth": 20,
+          "firstWitnessLossStage": "score-width-culled",
+          "workAfterFinalWitness": 174556,
+          "validSolve": false
+        },
+        {
+          "arm": "sustained",
+          "status": "exhausted",
+          "work": 249196,
+          "winnerRetainedAtDecision": true,
+          "winnerRetainedRank": 526,
+          "lastWitnessDepth": 20,
+          "firstWitnessLossDepth": 20,
+          "firstWitnessLossStage": "score-width-culled",
+          "workAfterFinalWitness": 183979,
+          "validSolve": false
+        }
+      ]
+    },
+    {
+      "parentId": "R02108",
+      "scorer": "intersectionHarvest",
+      "mechanicBucketRetention": true,
+      "selector": "bucket quotas→global top512 at depth29",
+      "priorKnownWinnerPoolRank": 329,
+      "priorDiscard": "mechanic-bucket-culled",
+      "oldSourceWork": 249995,
+      "arms": [
+        {
+          "arm": "control",
+          "status": "strict-work-charge-refused",
+          "work": 249995,
+          "winnerRetainedAtDecision": false,
+          "winnerRetainedRank": null,
+          "lastWitnessDepth": 29,
+          "firstWitnessLossDepth": 29,
+          "firstWitnessLossStage": "mechanic-bucket-culled",
+          "workAfterFinalWitness": 138032,
+          "validSolve": false
+        },
+        {
+          "arm": "pulse",
+          "status": "strict-work-charge-refused",
+          "work": 250000,
+          "winnerRetainedAtDecision": true,
+          "winnerRetainedRank": 329,
+          "lastWitnessDepth": 63,
+          "firstWitnessLossDepth": null,
+          "firstWitnessLossStage": null,
+          "workAfterFinalWitness": 0,
+          "validSolve": false
+        },
+        {
+          "arm": "sustained",
+          "status": "strict-work-charge-refused",
+          "work": 250000,
+          "winnerRetainedAtDecision": true,
+          "winnerRetainedRank": 329,
+          "lastWitnessDepth": 64,
+          "firstWitnessLossDepth": null,
+          "firstWitnessLossStage": null,
+          "workAfterFinalWitness": 0,
+          "validSolve": false
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Source IDs, specific phases and treatment types were selected after seeing deep 10M winner paths and true first-loss phase. This never qualifies as an independent product solve-rate experiment.",
+    "The known-live witness surviving to budget refusal at depth63/64 is a support observation, not a solution or proof that the remainder is close enough for the current budget.",
+    "No user-facing solver policy was changed; all extra width/bucket choices exist only in a direct source-native research runner.",
+    "All 6 variants returned no referee-valid solution at exact work<=250000; the 38k+ effective downstream progress on one path cannot be treated as saved work.",
+    "The scored original R03031 prefix is culled again one phase after rescue even when extra width 544 persists; static near-threshold margin does not solve it."
+  ]
+}
