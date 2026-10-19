@@ -318,6 +318,20 @@ export interface PrepLevel {
     /** Research-only beam observer. Absent in every production call. The observer receives copied
      * replay-complete paths and may label them, but cannot affect search decisions. */
     _beamResearchObserver?: BeamResearchObserver | null;
+    /** Offline-only read-only bucket-diversity debt profiler, distinct from expensive
+     * full-path BeamResearchObserver. Never set by product or ordinary solveLevel. */
+    _mechanicBucketOpportunityObserver?: {
+        observe(record: {
+            phaseDepth: number; workSpent: number; width: number;
+            rankedPoolSize: number; bucketCount: number; actualSelected: number;
+            globallyTopKDisplaced: number; topHalfDisplaced: number;
+            topQuarterDisplaced: number; minimumDisplacedGlobalRank: number | null;
+            outsideTopKPromoted: number; largestPromotedGlobalRank: number | null;
+            totalScoreDebt: number; relativeScoreDebt: number;
+            effectiveMechanicBuckets: boolean;
+        }): void;
+    } | null;
+
     /** Research-only orchestration context for the currently executing attempt. Search only copies
      *  this into observer records; no solver policy reads it. The ordinal is aligned with
      *  SolveResult.attempts insertion order for ordinary ladder execution. */
