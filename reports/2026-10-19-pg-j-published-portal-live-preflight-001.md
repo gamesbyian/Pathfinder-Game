@@ -7,7 +7,7 @@
 > **Research question:** `WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR`
 > **Evidence role:** correctness-control
 > **Selection:** exactly `P00118,P00134,P00143,P00146` (lexical order), each first stored source hint record `data/hints/<ID>.json`, depths 1,5,9,13,17,21,25,29,33,41,49,57,65 within the hint path
-> **Population identity:** four explicit published human puzzle IDs and first stored paths, not the generated Corpus2; source data/hints files are repository evidence
+> **Population identity:** published-P00118-P00134-P00143-P00146-first-hint
 > **Selection history:** selected using current raw mechanics to guarantee portal-bearing MP/MC and existence of persistent published accepted hint data, after the ineligible R02108 stress-parent result; any positive is newly qualified published controls, **not** independent frozen generated holdouts
 > **Inference scope:** actual full referee-valid published LIVE paths containing source-valid selected MP/MC/portal transitions; no new cold solutions, exact source DEAD classifications or canonical work savings
 
