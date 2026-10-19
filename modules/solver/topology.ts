@@ -57,6 +57,26 @@ function _reached(k: number): boolean {
         : _reachGenBuf[k] === _reachGen;
 }
 
+// Research-only pure snapshot of the most recent isConnected() reach relation.
+// Must be invoked synchronously after that exact call, before another flood.
+// The same canonical bit rows cover BOTH the bit-parallel and generation-tagged
+// BFS backends; taking a snapshot never advances the global reach generation,
+// mutates a row, charges work or affects pruning.
+export function connectivityReachRowsForResearch(level: NormalizedLevel): number[] {
+    const { w, h } = level.grid;
+    if (w > 30 || h > 30) throw new Error('connectivity row snapshot unsupported grid dimension');
+    const rows: number[] = [];
+    for (let y = 0; y < h; y++) {
+        let mask = 0;
+        for (let x = 0; x < w; x++) {
+            if (_reached((y << 16) | x)) mask |= 1 << x;
+        }
+        rows.push(mask >>> 0);
+    }
+    return rows;
+}
+
+
 // Shared BFS-neighbor admissibility check for isConnected/isConnectedForFalseGoalTriggerSearch. Pulled out to a
 // plain module-level function (no captured variables) rather than a per-call closure: this is
 // the hottest inner loop in the solver (isConnected runs 10^5-10^6 times on beam-heavy levels),
