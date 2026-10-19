@@ -111,8 +111,8 @@ function selfTest(){
   'local visit signature');
  requireTrue(summarize(rows,'endpoint-depth-entry-neighbor-axes').mixedGroups===0,
   'local consumed-axis signature');
- const c=row('c',[[0,0],[1,0],[2,0],[2,1]],'live');
- const d=row('d',[[0,0],[0,1],[1,1],[2,1]],'dead');
+ const c=row('c',[[0,0],[1,0],[1,-1],[2,-1],[2,0],[2,1]],'live');
+ const d=row('d',[[0,0],[0,1],[1,1],[1,0],[2,0],[2,1]],'dead');
  requireTrue(summarize([c,d],'endpoint-depth-entry').mixedGroups===1,
   'same-entry mixed case');
  requireTrue(summarize([c,d],'endpoint-depth-entry-neighbor-visits').mixedGroups===0,
