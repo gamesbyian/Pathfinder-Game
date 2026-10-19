@@ -264,7 +264,22 @@ export function evaluatePrunedMove(
 
     if (runConnectivity && (!cfg || cfg.PRUNE_CONNECTIVITY)) {
         reached(diagnostics, 'PRUNE_CONNECTIVITY');
-        if (!isConnected(next, state, level, prep)) return reject(diagnostics, 'PRUNE_CONNECTIVITY');
+        // PG-L read-only: capture the exact charged scheduled call, not estimated
+        // parent-expansion overlap. The flood ALWAYS runs in the ordinary path;
+        // the observer receives only synchronous, transient mutable objects.
+        const connectivityResearch = prep._beamResearchObserver?.observeScheduledConnectivity;
+        if (connectivityResearch) {
+            const workBefore = prep._workMeter.units;
+            const connected = isConnected(next, state, level, prep);
+            connectivityResearch({
+                pos: next, state, prep, level, connected, workBefore,
+                workAfter: prep._workMeter.units,
+                attemptContext: prep._beamResearchAttemptContext ?? null,
+            });
+            if (!connected) return reject(diagnostics, 'PRUNE_CONNECTIVITY');
+        } else if (!isConnected(next, state, level, prep)) {
+            return reject(diagnostics, 'PRUNE_CONNECTIVITY');
+        }
     }
 
     return 'pass';
