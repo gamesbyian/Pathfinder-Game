@@ -1,0 +1,181 @@
+{
+  "schema": "pathfinder.pg-i-late-512-taper-strict250k-exact-result/v1",
+  "status": "concluded-negative",
+  "evidenceRole": "post-outcome-selected-development-source-native",
+  "source": {
+    "runId": 39321496434,
+    "executionSha": "7d2c36b6ee3c5fa6889d4aa7ec4c5f54e4e716ae",
+    "artifactId": 12220346639,
+    "artifactName": "pg-i-late-beam-taper-20261019",
+    "artifactZipSha256": "67ade2895756505076b89dd3f6d93965b41697add1d230fae7c01f4a6b647a5a",
+    "artifactMember": "result.json",
+    "artifactMemberSha256": "f6984f2beec6ac2f30b2a09303e154297938a30cce3345a74a10390267af8a58",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "winnerData": "reports/stress/pg-i-early-equal-work-cold-solves-20261018.json"
+  },
+  "protocol": {
+    "independentDevelopmentParents": 2,
+    "sourceMethodCells": 3,
+    "armsPerCell": [
+      "unpaused5000",
+      "width5000-to-phase8-then512",
+      "width5000-to-phase16-then512"
+    ],
+    "exactWorkCap": 250000,
+    "nodeCap": 250000,
+    "wallSafetyMs": 600000,
+    "strictAtomicChargeRefusal": true,
+    "historyOnlyUsedForMethodGateAndPostHocPrefixLabel": true,
+    "sourceScoreAndPrunesUnmodified": true
+  },
+  "summary": {
+    "parentUnits": 2,
+    "sourceCells": 3,
+    "armCells": 9,
+    "validCells": 9,
+    "controlSolves": 0,
+    "taperDepth8Solves": 0,
+    "taperDepth16Solves": 0,
+    "newNear250kIsolatedSolves": 0,
+    "regressions": 0,
+    "errors": 0,
+    "validPauses": 6,
+    "sourceWinnerPrefixesRetainedAtPause": 6,
+    "peakChargedWork": 250000
+  },
+  "rows": [
+    {
+      "sourceMethodOrdinal": 1,
+      "parentId": "R03031",
+      "profile": "objectiveFirst",
+      "mechanicBucketRetention": false,
+      "originalDeepSolveWork": 2203630,
+      "arms": [
+        {
+          "name": "wide-control",
+          "status": "strict-work-charge-refused",
+          "actualWork": 250000,
+          "refereeValidSolve": false,
+          "sourceValid": true
+        },
+        {
+          "name": "taper-depth8",
+          "status": "exhausted",
+          "actualWork": 209739,
+          "refereeValidSolve": false,
+          "sourceValid": true,
+          "checkpointDepth": 8,
+          "workAtPause": 1501,
+          "frontierSizeAtPause": 52,
+          "retainedHistoricalWinnerPosition": 1,
+          "retainedHistoricalWinnerScore": 1101.303364632238,
+          "postHocHistoricalWinnerRetained": true
+        },
+        {
+          "name": "taper-depth16",
+          "status": "exhausted",
+          "actualWork": 239505,
+          "refereeValidSolve": false,
+          "sourceValid": true,
+          "checkpointDepth": 16,
+          "workAtPause": 23568,
+          "frontierSizeAtPause": 1842,
+          "retainedHistoricalWinnerPosition": 26,
+          "retainedHistoricalWinnerScore": 1526.7300469483569,
+          "postHocHistoricalWinnerRetained": true
+        }
+      ]
+    },
+    {
+      "sourceMethodOrdinal": 2,
+      "parentId": "R03031",
+      "profile": "intersectionHarvest",
+      "mechanicBucketRetention": true,
+      "originalDeepSolveWork": 2309229,
+      "arms": [
+        {
+          "name": "wide-control",
+          "status": "strict-work-charge-refused",
+          "actualWork": 249989,
+          "refereeValidSolve": false,
+          "sourceValid": true
+        },
+        {
+          "name": "taper-depth8",
+          "status": "strict-work-charge-refused",
+          "actualWork": 249989,
+          "refereeValidSolve": false,
+          "sourceValid": true,
+          "checkpointDepth": 8,
+          "workAtPause": 1501,
+          "frontierSizeAtPause": 52,
+          "retainedHistoricalWinnerPosition": 1,
+          "retainedHistoricalWinnerScore": 875.7095461658841,
+          "postHocHistoricalWinnerRetained": true
+        },
+        {
+          "name": "taper-depth16",
+          "status": "strict-work-charge-refused",
+          "actualWork": 249990,
+          "refereeValidSolve": false,
+          "sourceValid": true,
+          "checkpointDepth": 16,
+          "workAtPause": 23568,
+          "frontierSizeAtPause": 1842,
+          "retainedHistoricalWinnerPosition": 26,
+          "retainedHistoricalWinnerScore": 1239.3643192488262,
+          "postHocHistoricalWinnerRetained": true
+        }
+      ]
+    },
+    {
+      "sourceMethodOrdinal": 3,
+      "parentId": "R02108",
+      "profile": "intersectionHarvest",
+      "mechanicBucketRetention": true,
+      "originalDeepSolveWork": 3067681,
+      "arms": [
+        {
+          "name": "wide-control",
+          "status": "strict-work-charge-refused",
+          "actualWork": 250000,
+          "refereeValidSolve": false,
+          "sourceValid": true
+        },
+        {
+          "name": "taper-depth8",
+          "status": "strict-work-charge-refused",
+          "actualWork": 249995,
+          "refereeValidSolve": false,
+          "sourceValid": true,
+          "checkpointDepth": 8,
+          "workAtPause": 20487,
+          "frontierSizeAtPause": 1225,
+          "retainedHistoricalWinnerPosition": 8,
+          "retainedHistoricalWinnerScore": 239.29934386295776,
+          "postHocHistoricalWinnerRetained": true
+        },
+        {
+          "name": "taper-depth16",
+          "status": "strict-work-charge-refused",
+          "actualWork": 250000,
+          "refereeValidSolve": false,
+          "sourceValid": true,
+          "checkpointDepth": 16,
+          "workAtPause": 207493,
+          "frontierSizeAtPause": 3827,
+          "retainedHistoricalWinnerPosition": 73,
+          "retainedHistoricalWinnerScore": 705.2202891717743,
+          "postHocHistoricalWinnerRetained": true
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Exactly two source parents were selected because of earlier 10M isolated successes, not an independent confirmation set.",
+    "Preserved winner positions are retrospective measurements on true hint-free frontiers; method and gate were themselves historically winner-selected and not eligible as cold product steering.",
+    "After pause winner retained does NOT imply it survives later width=512 frontier culls. No later loss depth was captured in this run.",
+    "The natural exhaustion for objectiveFirst after depth8 (209739 work) matches an earlier always-512 negative; depth16 late taper exhausted at 239505 work, also without solve.",
+    "A score/position win on the 5000-wide phase16 source is not proof that a cheap score selector exists or that an independent 250k production solve would result."
+  ]
+}
