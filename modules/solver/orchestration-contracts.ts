@@ -5,7 +5,7 @@
 // every other extracted module — and orchestration.ts itself — can depend on this one without a
 // cycle. See modules/solver/orchestration.ts's own header for the split this file is part of.
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit, ConnectivityRejectionObserver, ConnectivityCertificateShadowObserver, JointObligationObserver, BeamResearchObserver, ParityCapacityObserver, ParityPhaseDistanceObserver } from './types.js';
+import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit, ConnectivityRejectionObserver, ConnectivityCertificateShadowObserver, JointObligationObserver, BeamResearchObserver, ExperimentalConnectivityReplayStats, ParityCapacityObserver, ParityPhaseDistanceObserver } from './types.js';
 import type { runAttemptSearch } from './attempt-dispatch.js';
 import { canonicalAblationFeatureName, normalizeHistoricalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
 import { normalizeSolverStageId } from './stage-policy.js';
@@ -247,6 +247,15 @@ export interface SolveOpts {
     /** Experiment-only whole-solve enforcement: turns `baseWorkBudget` from the production scheduler's base
      * allocation into an immutable total work cap. Omitted/false preserves production additive tiers. */
     strictTotalWorkBudget?: boolean;
+    /** OFF by default. Research-only exact same-state cross-scorer flood replay.
+     * 'neutral' synthetically charges the full 12 units on a replay hit to
+     * prove semantic search identity; 'saving' credits a verified skipped flood
+     * and may alter the remaining technique schedule under the SAME total cap.
+     * No production/worker UI may set this. */
+    experimentalConnectivityReplay?: {
+        mode: 'neutral' | 'saving';
+        stats: ExperimentalConnectivityReplayStats;
+    };
     /** Opt-in diagnostic attempt-ceiling fields. Omitted keeps ordinary result objects unchanged. */
     attemptBudgetTelemetry?: boolean;
     /** Opt-in per-technique lifecycle/progress summary for experiment artifacts. */
