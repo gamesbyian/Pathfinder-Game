@@ -70,7 +70,7 @@ export async function runAttempt(
     let path: number[] | null = null;
     let attemptError: Attempt['error'] | undefined;
     const previousBeamResearchAttemptContext = prep._beamResearchAttemptContext ?? null;
-    if (prep._beamResearchObserver) {
+    if (prep._beamResearchObserver || prep._experimentalConnectivityReplay) {
         const attemptOrdinal = prep._beamResearchAttemptOrdinal ?? 0;
         prep._beamResearchAttemptOrdinal = attemptOrdinal + 1;
         prep._beamResearchAttemptContext = {

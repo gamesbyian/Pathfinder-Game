@@ -7,6 +7,7 @@ import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBou
 import { isSolutionState } from './solution.js';
 import { stateSignature } from './nogood-cache.js';
 import { isConnected, connectivityReachRowsForResearch, probeUnscheduledConnectivityGoalCutCertificate } from './topology.js';
+import { evaluateExperimentalConnectivityReplay } from './connectivity-replay-experiment.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, PrepLevel, SolverSearchState } from './types.js';
@@ -267,6 +268,11 @@ export function evaluatePrunedMove(
         // PG-L read-only: capture the exact charged scheduled call, not estimated
         // parent-expansion overlap. The flood ALWAYS runs in the ordinary path;
         // the observer receives only synchronous, transient mutable objects.
+        if (prep._experimentalConnectivityReplay) {
+            if (!evaluateExperimentalConnectivityReplay(next, state, level, prep)) {
+                return reject(diagnostics, 'PRUNE_CONNECTIVITY');
+            }
+        } else {
         const connectivityResearch = prep._beamResearchObserver?.observeScheduledConnectivity;
         if (connectivityResearch) {
             const workBefore = prep._workMeter.units;
@@ -281,6 +287,7 @@ export function evaluatePrunedMove(
             if (!connected) return reject(diagnostics, 'PRUNE_CONNECTIVITY');
         } else if (!isConnected(next, state, level, prep)) {
             return reject(diagnostics, 'PRUNE_CONNECTIVITY');
+        }
         }
     }
 

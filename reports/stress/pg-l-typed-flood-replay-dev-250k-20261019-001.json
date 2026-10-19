@@ -1,0 +1,92 @@
+{
+  "schema": "pathfinder.pg-l-typed-flood-replay-development-250k-result/v1",
+  "status": "development-neutral-parity-passed-no-gain",
+  "evidenceRole": "two-postselected-native-replay-consumer",
+  "provenance": {
+    "runId": 39309688289,
+    "executionSha": "25db5529b12f37de7b1757c0995ab7db3938a44c",
+    "artifactId": 12213994567,
+    "archiveSha256": "99b33c742eaabfc35b5484dc80f2b6d2d8ea2af5ee5d80eb266928e8a85ce12d",
+    "member": "verdict.json",
+    "memberSha256": "e66f590ce1d52f0fb84879936eefbec80a8b271de9b9572beab1f28d1caeeadc",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb"
+  },
+  "protocol": {
+    "sourceParents": [
+      "R00720",
+      "R01584"
+    ],
+    "postSelected": true,
+    "experimentalOnly": true,
+    "workCap": 250000,
+    "nodeCap": 250000,
+    "strictTotal": true,
+    "noHints": true,
+    "threeArms": [
+      "ordinary baseline",
+      "exact scratch replay with original native charges",
+      "complete scratch replay with duplicate 12-unit charges removed"
+    ],
+    "allSavingResultsRefereeValid": true,
+    "anyCacheCensored": false
+  },
+  "summary": {
+    "independentDevelopmentParents": 2,
+    "neutralExactFullSolverParityPasses": 2,
+    "neutralChronologicalHits": 3111,
+    "savingChronologicalHits": 3111,
+    "chargedNativeWorkDisplaced": 37332,
+    "baselineSolves": 0,
+    "savingSolves": 0,
+    "newSourceSelected250kSolves": 0,
+    "sourceSelectedLosses": 0
+  },
+  "rows": [
+    {
+      "id": "R00720",
+      "sourceGate": 131077,
+      "originalStatus": "node-budget-reached",
+      "neutralStatus": "node-budget-reached",
+      "savingStatus": "node-budget-reached",
+      "originalTotalWork": 250000,
+      "savingTotalWork": 250000,
+      "neutralHits": 1000,
+      "savingHits": 1000,
+      "trueHits": 988,
+      "falseHits": 12,
+      "workSavedGross": 12000,
+      "sourceOriginalNodes": 187670,
+      "savingUniqueStoredKeys": 1000,
+      "savingKeyCharacters": 245489,
+      "savingRawReachRowBytes": 44000,
+      "sourceCensored": false
+    },
+    {
+      "id": "R01584",
+      "sourceGate": 327689,
+      "originalStatus": "work-budget-reached",
+      "neutralStatus": "work-budget-reached",
+      "savingStatus": "work-budget-reached",
+      "originalTotalWork": 250000,
+      "savingTotalWork": 250000,
+      "neutralHits": 2111,
+      "savingHits": 2111,
+      "trueHits": 2097,
+      "falseHits": 14,
+      "workSavedGross": 25332,
+      "sourceOriginalNodes": 176575,
+      "savingUniqueStoredKeys": 2338,
+      "savingKeyCharacters": 593471,
+      "savingRawReachRowBytes": 121576,
+      "sourceCensored": false
+    }
+  ],
+  "limitations": [
+    "Full source artifact retains exact complete attempt arrays; compact ledger omits irrelevant long vectors.",
+    "Neutral mode is a strong scoped operational consistency check, not a mathematical theorem of general memo soundness.",
+    "37,332 source native charges avoided by saving treatment were respent in later stage/attempt work under the same total 250k cap; no additional solve was observed.",
+    "Stored full JSON keys and JS maps have unpriced CPU/memory overhead; raw reach snapshots are only a subset of total cost.",
+    "Two development-source parents nominated after prior overlap and already known hard; independent prospective holdout must be frozen before next A/B.",
+    "No production strategy default changed."
+  ]
+}

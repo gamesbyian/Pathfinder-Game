@@ -2,6 +2,7 @@
 // modules via `import type { T } from './types.js'` (ADR 0011 / docs/typing.md).
 
 import type { IntHashMap } from './int-hash-map.js';
+import type { NormalizedLevel } from '../domain/types.js';
 
 /**
  * The solver's mutable DFS/beam search state (see search-state.ts `createState`). All masks are
@@ -178,6 +179,27 @@ export interface ForcedPortalExit { from: number; to: number; }
  * Per-level precomputed solver data (see prep.ts `prepLevel`). **Partial/growing** — only the
  * fields read by already-typed solver modules are listed. Typed arrays are indexed by packed key.
  */
+/** PG-L offline only. No interactive/product entrypoint enables this. */
+export interface ExperimentalConnectivityReplayStats {
+    lookups: number;
+    misses: number;
+    chronologicalHits: number;
+    trueHits: number;
+    falseHits: number;
+    nativeWorkDisplaced: number;
+    storedKeys: number;
+    serializedKeyCharacters: number;
+    rawReachRowBytes: number;
+    storageCensored: boolean;
+}
+export interface ExperimentalConnectivityReplay {
+    mode: 'neutral' | 'saving';
+    stats: ExperimentalConnectivityReplayStats;
+    cache: Map<string, { connected: boolean; reachedRows: number[]; producerOrdinal: number; producerProfile: string }>;
+    maxKeys: number;
+    maxChars: number;
+}
+
 export interface PrepLevel {
     mustMaskForDFS: number;
     initialMustMask: number;
@@ -301,6 +323,8 @@ export interface PrepLevel {
      *  SolveResult.attempts insertion order for ordinary ladder execution. */
     _beamResearchAttemptContext?: BeamResearchAttemptContext | null;
     _beamResearchAttemptOrdinal?: number;
+    /** Optional offline-only exact path/config fresh-flood replay experiment, never product-enabled. */
+    _experimentalConnectivityReplay?: ExperimentalConnectivityReplay | null;
     /** Research-only counter telemetry; no paths/pools and never read by policy. */
     _beamFlowCounters?: Partial<Record<BeamFlowStage, number>> | null;
     /** Research-only attempt-scoped aggregate prune counts; no per-node records. */

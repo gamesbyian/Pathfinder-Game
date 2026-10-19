@@ -21,6 +21,22 @@ describe('canonical solver request projection', () => {
         assert.deepEqual([...SOLVER_REQUEST_SEMANTIC_FIELDS].sort(), expected);
     });
 
+    test('experimental offline replay mode affects semantic request identity, but mutable stats do not', () => {
+        const off = canonicalSolverRequestString({});
+        const neutral = canonicalSolverRequestString({
+            experimentalConnectivityReplay: { mode: 'neutral', stats: {} as any },
+        });
+        const saving = canonicalSolverRequestString({
+            experimentalConnectivityReplay: { mode: 'saving', stats: { lookups: 42 } as any },
+        });
+        const savingOtherStats = canonicalSolverRequestString({
+            experimentalConnectivityReplay: { mode: 'saving', stats: { lookups: 314 } as any },
+        });
+        assert.notEqual(off, neutral);
+        assert.notEqual(neutral, saving);
+        assert.equal(saving, savingOtherStats);
+    });
+
     test('omitted syntax and explicit production defaults project identically', () => {
         const omitted = canonicalSolverRequestString({});
         const explicit = canonicalSolverRequestString({

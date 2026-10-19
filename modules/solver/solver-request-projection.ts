@@ -54,6 +54,7 @@ export const SOLVER_REQUEST_SEMANTIC_FIELDS = Object.freeze([
     'nodeBudget',
     'baseWorkBudget',
     'strictTotalWorkBudget',
+    'experimentalConnectivityReplay',
     'schedulerMode',
     'staticPortfolio',
     'legacyLatencyPortfolioExperiment',
@@ -207,6 +208,9 @@ export function buildCanonicalSolverRequestProjection(opts: SolveOpts = {}) {
                 : null,
         },
         ablation,
+        // The offline scratch replay can change cold outcomes by freeing canonical work.
+        // Only the mode is semantic; the mutable telemetry object is not.
+        experimentalConnectivityReplayMode: opts.experimentalConnectivityReplay?.mode ?? null,
         stagePolicy: {
             repairAdditiveBudgetMultiplier: additiveOr(
                 opts.repairAdditiveBudgetMultiplierOverride, disabled, REPAIR_ADDITIVE_BUDGET_MULTIPLIER,
