@@ -76,7 +76,13 @@ for(const [index,item] of freeze.rows.entries()){
  prep._cfg=null;prep._metrics={nodesExpanded:0};prep._workCap=WORK_CAP;
  const gate=level.gateKeys[0],pairs=portalPairs(raw);
  assert(pairs.length===item.portals&&level.mustPassKeys.length===item.mustPass
-  &&level.mustCrossKeys.length===item.mustCross,'board mechanics changed');
+  &&level.mustCrossKeys.length===item.mustCross,
+  'board mechanics changed: '+JSON.stringify({
+    id:item.parentId,expected:{pairs:item.portals,mp:item.mustPass,mc:item.mustCross},
+    actual:{pairs:pairs.length,mp:level.mustPassKeys.length,mc:level.mustCrossKeys.length},
+    keys:{rawMustPass:raw.mustPass?.length,rawMustCross:raw.mustCross?.length,rawPortals:raw.portals?.length},
+    firstGate:gate,
+  }));
  const startTime=Date.now(),checkpoints=[];
  let continuation=undefined,resultPath=null,status='checkpoints-complete';
  for(const desired of PHASES){
