@@ -74,7 +74,7 @@ for(const [i,witness] of history.solutions.entries()){
   const prep=api.prepLevel(level);prep._cfg=null;prep._metrics={nodesExpanded:0};
   prep._workCap=WORK;prep._atomicStrictWorkCap=WORK;
   const started=Date.now();let status='exhausted',found=null,refereeValid=null,error=null;
-  let pause=null,finalOut={},phaseEarly=null;
+  let finalOut={},phaseEarly=null;
   try {
    if(a.checkpoint!==null){
     const pre={};
