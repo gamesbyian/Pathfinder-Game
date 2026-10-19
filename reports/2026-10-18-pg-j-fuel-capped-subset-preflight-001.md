@@ -1,0 +1,37 @@
+# PG-J fuel-capped coupled-obligation subset: source-native falsifier (2026-10-18)
+
+> **Status:** active
+> **Last evidence:** 2026-10-18 — fixed [12-parent beam opportunity 39197248687](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39197248687): 287/297 eligible sampled prefixes, no new solves
+> **Decision:** test one cheap, strictly over-permissive 2MP/1MC/one-pair route lower bound at a small outcome-blind sample of real retained beam states; no production prune
+> **Remaining gate:** fixed 12-parent, 36-or-fewer late-frontier cells with 6k-state/20k-transition abstention, canonical P00137 LIVE witness inclusion and source-qualified work/censoring
+> **Research question:** `WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR`
+> **Evidence role:** discovery
+> **Selection:** the existing twelve outcome-blind frozen Corpus2 parents; first gate, objectiveFirst width128 phase-complete nominal-40k real beams, three latest-phase score ranks per parent, no historical outcome steering
+> **Population identity:** sha256:d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb
+> **Inference scope:** at most 36 development-prefix queries clustered in twelve selected parents; source-native retained frontiers but not production shared-250k controls or independent validation of a hard prune
+
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"active","lastEvidenceDate":"2026-10-18","decision":"Test a frozen current-state two-MP/one-MC/one-pair relaxation with strict computation fuel at latest real retained beam frontier prefixes; no production behaviour change.","remainingGate":"One source-exact 12-parent/at-most-36-prefix semantic and cost participation run, P00137 LIVE witness inclusion, and explicit unknown-on-fuel classification.","joins":{"researchQuestion":"WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR","premiseRefs":["P198","P204"],"measurementOpportunity":null},"evidenceRole":"discovery","scope":{"populationIdentity":"sha256:d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb","selection":"frozen twelve nominally independent Corpus2 parent IDs and latest-phase top/middle/bottom score positions, one profile/gate/width; no historical wins","inferenceScope":"read-only bounded subset semantic route queries and CPU/state effort only; no matched-work production or descendant saving"},"claimRefs":[],"sourceArtifacts":["reports/stress/pg-j-corpus2-subset-native-beam-opportunity-20261018.json","reports/stress/pg-j-coupled-obligation-transfer-12-parent-20261018.json"],"successors":{"questions":["WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR"],"artifacts":[]},"prospective":{"expectation":"The highly saturated 2MP/MC/portal structural prerequisite may translate into no useful cheap necessary rejections, especially under a strict fuel cap.","surprise":null,"anomaly":null}} -->
+
+## Frozen one-shot design
+
+**Source and control:** use the original [PG-J native-beam producer](../scripts/stress/pg-j-corpus2-subset-opportunity.mjs) in a read-only opt-in mode. For each of the twelve frozen parents, first normalized gate, `objectiveFirst` width 128, phase checkpoints 8/16/24/32/48, nominal work cap 40,000 (phase-boundary overshoot explicitly measured). Sample **three score-rank positions only at the final achieved checkpoint**: index 0, midpoint and last in its existing five-rank sample; duplicates deduplicated. Replay literal source prefix on a separate canonical prep, never modifying beam search, its budgets, scoring, pruning or routing. If an unexpected source revision changes an earlier work/phase identity, mark source drift and do not silently substitute examples.
+
+**Single deterministic subset selector** on each current replay state:
+
+1. Choose the pair of *outstanding normalized* must-pass keys with largest Manhattan separation. Sort keys and break equal-distance ties lexicographically by packed key pair. The distance is used only to select a necessary subset, **never** as an admissible distance heuristic.
+2. Select one pending must-cross key farthest by Manhattan distance from the **current endpoint**, tie by packed cell key. A selected MC may already have exactly one earlier crossing: retain its actual prefix-used H/V bits.
+3. Among portal pairs with **neither endpoint yet visited**, select the pair nearest to either selected MP (minimum Manhattan distance), tie by packed endpoints. Track **only that pair's** future single-use state and mandatory zero-cost portal transition. Other portal pairs remain forced jumps but may be re-used abstractly.
+
+**Over-permissive bounded shortest-path product:** cell, incoming axis, portal-arrival flag, 2-bit selected MP visits, selected MC's orthogonal-axis-entry bits, selected pair's used bit. Every legal ordinary step costs one, forced portal landing jump costs zero. Preserve static neighbors, source prefix's immutable consumed edge-axis bits, selected MC's first-crossing straight-exit lock, goal termination, and selected pair's single-use endpoints. **Forget** all other MP/MC, future ordinary-cell edge-use, total intersection ceilings, flipper orientation/use, other portal pair reuse, must-turn/surround/adjacent-turn constraints and any other historical labels. All forgotten constraints only allow *more* abstract continuations. An accepted-path real continuation must map step-by-step into this graph before it can be treated as a sound necessary test.
+
+Use Dijkstra (nonnegative 0/1 costs) to find whether some abstract completion of all selected obligations exists within the remaining **counted** length. Stop immediately if found (no rejection); if all reachable nodes within the counted length are exhausted, report `necessary-reject` with lower-bound threshold `remaining+1`. At **6,000 discovered states or 20,000 successor transitions**, return `unknown-fuel`, never a DEAD claim. Resource cap must be an exact deterministic counter, not a phase boundary. No new CP-SAT labels or solver hints consumed.
+
+**Validity backstop:** run the two complete canonical referee-valid P00137 historical LIVE witnesses through the identical generalized abstract graph, confirming each real step is represented. Also preserve the two exact-DEAD P00137 contrasts as regression diagnostics, not independent outcome confirmation. Any LIVE exclusion cancels the mechanism.
+
+## Decisions (frozen before execution)
+
+- **Advance only on positive:** >=1 nonredundant `necessary-reject` from >=1 of the twelve source-native parent IDs, with no source mismatch or referee/LIVE alarm and actual completed fuel/cost metrics. This earns a separate *candidate-local descendant-work* shadow, not solver code.
+- **Conclude negative:** 0 nonredundant necessary rejections, whether because all are abstractly feasible or safely abstain due fuel. Do not vary subset selection, fuel, width, depth or historical parent IDs in response to a failed test without a new premise and prospective confirmation.
+- **Inconclusive:** source drift, invalid replay, missing frozen parents or correctness alarm; resolve the measurement error first, preserving the fixed protocol.
+
+The source prefixes are dependent within each parent and selected from a 40k *isolated beam* research ladder, not a 250k product control. A nominal 40k phase-complete work cap is **not exact** strict work. The abstract model's own states/transitions and CPU are **not canonical `applyMove+12*isConnected` work**, so no saved-work or new cold solve claim is possible from this run, even if a necessary reject is observed.
