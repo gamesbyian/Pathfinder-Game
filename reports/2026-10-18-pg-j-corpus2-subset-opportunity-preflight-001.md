@@ -16,6 +16,14 @@
 
 The [PG-J P00137 model](2026-10-18-pg-j-coupled-obligation-route-preflight-001.md) is semantically promising (two historically unpruned exact-DEAD prefixes excluded) but requires up to 5.3k abstract states to reject one of them. Applying it directly to the generated corpus would be unsound as an economic claim: Corpus2 has 5–8 MPs and commonly multiple MCs and portal pairs, and not one exact P00137-shaped board. Before coding even a smaller DP, first establish that **real search reaches the proposed prerequisite state**.
 
+## Recovered first-run source-normalization blocker (2026-10-18)
+
+The initial one-shot [run 39183544683](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39183544683) **failed before the first frontier** at `board mechanics changed`. Its self-test and dependency setup succeeded, but it produced no output artifact and cannot count as a negative opportunity observation.
+
+Root cause: the fixed structural freeze recorded **raw** `mustPass.length`, whereas canonical `normalizeRawLevel` additionally converts `mustTurn` (and `mustPass`) landmarks into mandatory `mustPassKeys` by design. The code had compared these two distinct representation layers as if equal. Inspection of all twelve immutable source parents confirmed that **6/12** add landmark-required visits: `R00565` has 7 raw MPs → 14 normalized, `R02801` 7→14, `R03195` 6→14, `R02336` 7→15, `R02897` 8→16, and `R03247` 6→13. The remaining six have matching raw/normalized MP counts. The updated source identity assertion now derives the effective canonical MP set from the same raw must-pass and must-turn/must-pass landmarks that normalization consumes. MC and portal-pair counts remain compared exactly. **No source parent, technique, budget, sample rank, threshold or frozen selection was changed.**
+
+This matters economically beyond the test failure: using a raw-only obligation count would understate remaining obligations on half the selected parents and distort a real residual subset trigger. The follow-up must use the *canonical* current state.
+
 ## Frozen source-native observer
 
 For each of the twelve fixed generated parents, independent cold level preparation, canonical **first gate**, exact `objectiveFirst` scorer, width **128**, no extra mechanic bucket retention or hints. Sample native beam continuation frontiers after phases **8, 16, 24, 32 and 48**, stopping after the first phase-complete checkpoint at or above nominal **40,000 canonical work** or **50,000 nodes**, and no more than **120 s wall**. A phase-complete pause can overshoot the nominal work amount: retain actual charged work, do not claim strict 40k equality. The only purpose is a few realistic frontier prefix states, not matching production output or demonstrating solved set.
