@@ -1,0 +1,70 @@
+# Single-use evidence-only PG-J retained-beam participation producer.
+name: PG-J Corpus2 subset opportunity
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/pg-j-corpus2-subset-opportunity-20261018.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: pg-j-corpus2-subset-opportunity-20261018
+  cancel-in-progress: false
+permissions:
+  contents: read
+
+jobs:
+  observe:
+    name: Frozen twelve-parent native beam observation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Exact-source checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Source protocol self-test
+        run: node scripts/stress/pg-j-corpus2-subset-opportunity.mjs --self-test
+      - name: Observe real retained frontiers without changing search
+        id: observe
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs/pg-j-subset
+          timeout -k 30s --preserve-status 25m \
+            node scripts/run-bundled.mjs scripts/stress/pg-j-corpus2-subset-opportunity.mjs -- \
+            --out=logs/pg-j-subset/opportunity.json
+      - name: Preserve raw evidence including unsuccessful gates
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-j-corpus2-subset-opportunity
+          path: logs/pg-j-subset/opportunity.json
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Enforce source and population identity, not outcome positivity
+        if: always()
+        shell: bash
+        env:
+          EXPERIMENT_RESULT: ${{ steps.observe.outcome }}
+        run: |
+          set -euo pipefail
+          test "$EXPERIMENT_RESULT" = success
+          node --input-type=module - <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('logs/pg-j-subset/opportunity.json','utf8'));
+          if(r.sourceHead!==process.env.GITHUB_SHA||r.summary.independentParents!==12
+             ||r.rows.length!==12||r.rows.some(x=>x.sampled===0)
+             ||r.summary.eligiblePrefixes>r.summary.sampledPrefixes)
+            throw Error('missing/invalid source-native beam opportunity evidence');
+          console.log(JSON.stringify(r.summary));
+          NODE
