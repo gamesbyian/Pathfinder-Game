@@ -1,0 +1,112 @@
+{
+  "schema": "pathfinder.pg-j-one-portal-pair-coupled-obligation-result/v1",
+  "status": "bounded-positive-post-selected",
+  "evidenceRole": "single-selected-human-parent-development",
+  "sourceRun": 39181114823,
+  "sourceArtifactId": 12155149899,
+  "sourceHead": "4a68ed0e6b706036e69c96e54b54be275358dcc9",
+  "artifactZipSha256": "735eab47e35445486d8b19908fdcc1f5f57078b2d9bcaec8bb3ce369c6c1de33",
+  "artifactMember": "verdict.json",
+  "artifactMemberSha256": "eb99f666f180c1d8dc2b9ffec1677686c0a678e7e752d1605a3f9b439c4a1a46",
+  "population": "all four pre-existing exact P00137 prefixes in one selected human parent, labels known prior to proposal",
+  "sourceReference": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json",
+  "test": "At P00137 prefixes only: retain the single portal pair nearest to any currently outstanding must-pass cell, with deterministic tie by packed portal endpoint ID; forget all other pair single-use constraints and all flipper constraints; retain initial frozen axis occupancy, MP+MC obligation, MC same-axis ban, first-cross straight exit and forced portals; compute minimal counted route through abstract supergraph. Selection depends only on current state, not outcome, but experiment development was post-selected.",
+  "summary": {
+    "cases": 4,
+    "exactDead": 2,
+    "exactLive": 2,
+    "deadDistinguished": 2,
+    "livePreserved": 2,
+    "stepwiseLiveWitnesses": 2,
+    "capHit": 0,
+    "selectedPairKeys": [
+      3,
+      524294
+    ],
+    "stateCountMin": 4740,
+    "stateCountMax": 5297,
+    "transitionCountMin": 13996,
+    "transitionCountMax": 16232
+  },
+  "rows": [
+    {
+      "caseId": "P00137-w1-A2-B10-alternate",
+      "referenceLabel": "dead",
+      "depth": 10,
+      "remainingLength": 23,
+      "nearestMustPassPortalKeys": [
+        3,
+        524294
+      ],
+      "manhattanDistanceToOutstandingMustPass": 1,
+      "selectedPairBound": 24,
+      "abstractStates": 4740,
+      "transitions": 13996,
+      "possibleAtBudget": false,
+      "capHit": false,
+      "witnessAudit": null
+    },
+    {
+      "caseId": "P00137-w1-A2-B10-original",
+      "referenceLabel": "live",
+      "depth": 10,
+      "remainingLength": 23,
+      "nearestMustPassPortalKeys": [
+        3,
+        524294
+      ],
+      "manhattanDistanceToOutstandingMustPass": 1,
+      "selectedPairBound": 20,
+      "abstractStates": 5206,
+      "transitions": 15985,
+      "possibleAtBudget": true,
+      "capHit": false,
+      "witnessAudit": {
+        "refereeValid": true,
+        "abstractTransitionComplete": true,
+        "witnessRemainingLength": 23,
+        "witnessSuffixTransitions": 25
+      }
+    },
+    {
+      "caseId": "P00137-w1-A2-B9-alternate",
+      "referenceLabel": "dead",
+      "depth": 9,
+      "remainingLength": 24,
+      "nearestMustPassPortalKeys": [
+        3,
+        524294
+      ],
+      "manhattanDistanceToOutstandingMustPass": 1,
+      "selectedPairBound": 25,
+      "abstractStates": 5150,
+      "transitions": 15527,
+      "possibleAtBudget": false,
+      "capHit": false,
+      "witnessAudit": null
+    },
+    {
+      "caseId": "P00137-w1-A2-B9-original",
+      "referenceLabel": "live",
+      "depth": 9,
+      "remainingLength": 24,
+      "nearestMustPassPortalKeys": [
+        3,
+        524294
+      ],
+      "manhattanDistanceToOutstandingMustPass": 1,
+      "selectedPairBound": 21,
+      "abstractStates": 5297,
+      "transitions": 16232,
+      "possibleAtBudget": true,
+      "capHit": false,
+      "witnessAudit": {
+        "refereeValid": true,
+        "abstractTransitionComplete": true,
+        "witnessRemainingLength": 24,
+        "witnessSuffixTransitions": 26
+      }
+    }
+  ],
+  "inference": "A smaller necessary-condition model distinguishes same two DEAD P00137 prefixes; no independent-parent transfer, cold-solve gain, sound proof on other prefix populations, or acceptable hot-path economics established. Retained states still several thousand per prefix."
+}
