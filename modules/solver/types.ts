@@ -2,6 +2,7 @@
 // modules via `import type { T } from './types.js'` (ADR 0011 / docs/typing.md).
 
 import type { IntHashMap } from './int-hash-map.js';
+import type { NormalizedLevel } from '../domain/types.js';
 
 /**
  * The solver's mutable DFS/beam search state (see search-state.ts `createState`). All masks are
