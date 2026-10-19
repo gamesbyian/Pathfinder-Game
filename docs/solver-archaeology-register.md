@@ -158,7 +158,7 @@ Current `modules/solver/search.ts` again uses an ordinary per-state DFS frame an
 
 ### Dependency-conditioned repair neighbourhoods
 
-**Status:** changed premise; generic positional repair tested negative. **2026-10-16 blocker audit:** dependency-defined locality confirmation remains unresolved, but the read-only descent-shadow discovery observer is now active under PG-P; the old 12-parent exact-pair floor applies to confirmation, not observation.
+**Status:** changed premise; generic positional repair tested negative. **2026-10-18 PG-P closeout:** [the 12-independent-parent actual repair-descent shadow](../reports/2026-10-18-pg-p-actual-repair-descent-shadow-result-001.md) ran with 12/12 native instrument-OFF/ON exact parity and found 3/12 equal-badness but different earlier elite routes, without a proof-bearing preterminal dependency or actionable repair. This specific cheap observer is closed negative; exact 12-parent matched-pair confirmation remains a promotion gate, not an obstacle to a *different* bounded diagnostic if new current-state causal evidence earns it.
 
 The uploaded CP-LNS/LNS research emphasizes effective neighbourhoods after propagation and variable/constraint relationships: choosing the right coupled decision universe can matter more than nominal destruction size or the sophistication of the selector. Pathfinder's closest historical treatment was positional rather than dependency-defined. Commit `5f0848994d11a5ba40161d5143ddc9f129223c59` added an elite-prefix DFS repair operator; its 20-level shared-budget A/B was 4/20 versus 5/20 control, including a confirmed budget-displacement loss. That closes the unchanged broad prefix-probe form.
 

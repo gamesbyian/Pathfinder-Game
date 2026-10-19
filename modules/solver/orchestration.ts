@@ -92,6 +92,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // Opt-in only. Existing production behavior deliberately remains untouched until a matched
     // confirmation can measure the solve-set effect of converting additive passes to one cap.
     prep._strictWorkCap = opts.strictTotalWorkBudget ? workStart + workBudget : undefined;
+    // The older _strictWorkCap is also used by equal-work census/static-portfolio
+    // per-attempt and resumable tranche budgets, which must keep their existing
+    // phase-capture semantics. Atomic charge refusal belongs ONLY to this whole-solve option.
+    prep._atomicStrictWorkCap = prep._strictWorkCap;
     if (prep._strictWorkCap !== undefined) prep._workCap = prep._strictWorkCap;
     prep._attemptBudgetTelemetry = opts.attemptBudgetTelemetry === true || opts.lifecycleTelemetry === true
         || opts.strictTotalWorkBudget === true;
@@ -476,7 +480,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // budget-limited, not searched out. Bit-identical to the plain `workSpent >= workBudget` check
     // whenever the reserve never triggered (every caller before this fix, and any run with an
     // infinite workBudget).
-    const workBudgetReached = workBudget !== Infinity && (workSpent >= workBudget || mainSearchEarlyTiersHitWorkCeiling);
+    const workBudgetReached = workBudget !== Infinity && (workSpent >= workBudget || mainSearchEarlyTiersHitWorkCeiling
+        || prep._strictWorkChargeRefused === true);
     const deadlineTruncated = totalMs >= timeBudgetMs && !nodeBudgetReached && !workBudgetReached;
     // A technique exception is not evidence that the level exhausted, timed out, or consumed its
     // node allowance. Attempts after it still run, but an unsuccessful aggregate remains visibly

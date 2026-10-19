@@ -1,0 +1,105 @@
+{
+  "schema": "pathfinder.pg-j-p00137-authoritative-replay-retained-summary/v1",
+  "sourceRun": 39177416485,
+  "sourceArtifactId": 12155295541,
+  "artifactZipSha256": "0b3e9ef18180def935816b9675ec4e679804b0883cc28505261a698e9c299473",
+  "member": "verdict.json",
+  "memberSha256": "e2d54f7fdc0090cb9aca516b72827edab35c74655182a66d69f9b1763c133c64",
+  "executionCommit": "0b68beaf7e4cf23df0fec9fbd073ab8e4297e22e",
+  "levelFile": "data/levels.json",
+  "levelSha256": "7904f5ae4ce75f172ac8b769d7672bb7d24f2469048b1fb8a7b12eafbf6fb4c0",
+  "sourceFiles": [
+    {
+      "path": "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+      "sha256": "6e044d1ae62cad6e4f678c9b13aabd67b805fab2898ad539ab42b0f5e62209e2"
+    },
+    {
+      "path": "reports/stress/class5-topology-fork-extension-exact-labels-2026-09-17.json",
+      "sha256": "3024ce09aa7693ba1c6d852def97192715a87ca725c7052332fe6984455e6589"
+    },
+    {
+      "path": "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json",
+      "sha256": "13671b809d8e0a6f36d86859f5165bceb82c986d8a011bd9a279fd4d47ebd13e"
+    }
+  ],
+  "selection": "all four original P00137 frozen exact prefix labels, one independent parent, selected after opposite-fate interface collision",
+  "summary": {
+    "independentParents": 1,
+    "sourceCases": 4,
+    "exactLive": 2,
+    "exactDead": 2,
+    "canonicallyReplayLegal": 4,
+    "liveRejectedByGauntlet": 0,
+    "deadRejectedByGauntlet": 0,
+    "replayStepCount": 38,
+    "rejectedSteps": 0
+  },
+  "rows": [
+    {
+      "caseId": "P00137-w1-A2-B9-original",
+      "referenceLabel": "live",
+      "depth": 9,
+      "remainingLength": 24,
+      "mustPassLB": 13,
+      "mustCrossLB": 13,
+      "replayWorkSpent": 117,
+      "replayLegal": true,
+      "firstPrune": null,
+      "intUse": 0,
+      "mpVisitedMask": 0,
+      "mustCrossMask": 1,
+      "flipperUsedMask": 0,
+      "portalJumps": 0
+    },
+    {
+      "caseId": "P00137-w1-A2-B9-alternate",
+      "referenceLabel": "dead",
+      "depth": 9,
+      "remainingLength": 24,
+      "mustPassLB": 13,
+      "mustCrossLB": 13,
+      "replayWorkSpent": 117,
+      "replayLegal": true,
+      "firstPrune": null,
+      "intUse": 0,
+      "mpVisitedMask": 0,
+      "mustCrossMask": 1,
+      "flipperUsedMask": 0,
+      "portalJumps": 0
+    },
+    {
+      "caseId": "P00137-w1-A2-B10-original",
+      "referenceLabel": "live",
+      "depth": 10,
+      "remainingLength": 23,
+      "mustPassLB": 11,
+      "mustCrossLB": 12,
+      "replayWorkSpent": 130,
+      "replayLegal": true,
+      "firstPrune": null,
+      "intUse": 0,
+      "mpVisitedMask": 0,
+      "mustCrossMask": 1,
+      "flipperUsedMask": 0,
+      "portalJumps": 0
+    },
+    {
+      "caseId": "P00137-w1-A2-B10-alternate",
+      "referenceLabel": "dead",
+      "depth": 10,
+      "remainingLength": 23,
+      "mustPassLB": 11,
+      "mustCrossLB": 12,
+      "replayWorkSpent": 130,
+      "replayLegal": true,
+      "firstPrune": null,
+      "intUse": 0,
+      "mpVisitedMask": 0,
+      "mustCrossMask": 1,
+      "flipperUsedMask": 0,
+      "portalJumps": 0
+    }
+  ],
+  "scope": "selected forensic replay of the existing prune gauntlet at every prefix transition with connectivity requested, not production search execution, not independent solve-set evidence",
+  "limitations": "No near-typical budget claim, no new cold solve, no engine hard-prune change; multiple cases on the same human puzzle are dependent."
+}

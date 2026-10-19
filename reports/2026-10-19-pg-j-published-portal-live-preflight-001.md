@@ -1,0 +1,46 @@
+# PG-J published-portal FULL LIVE witness safety, four-parent source cohort (2026-10-19)
+
+> **Status:** concluded-positive
+> **Last evidence:** 2026-10-19 — [source-authentic Actions run 39209726864](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39209726864), exact execution `f6e1b08389521189ab8773f0e722eb8b08076da2`, artifact `12167186342`
+> **Decision:** Concluded-positive four published-parent LIVE correctness controls: 20/20 applicable complete first-hint source-referee-valid suffixes project into the generic relaxed graph with all four terminal events and exact counted length, zero false exclusions. No generated-parent or canonical-work transfer claim.
+> **Remaining gate:** Source-selected R02182/R02801 candidates still need independent soundness/necessary-bound corroboration and source-native descendant work sufficient to exceed metric cost; broader generated-parent LIVE controls before production prune.
+> **Research question:** `WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR`
+> **Evidence role:** correctness-control
+> **Selection:** exactly `P00118,P00134,P00143,P00146` (lexical order), each first stored source hint record `data/hints/<ID>.json`, depths 1,5,9,13,17,21,25,29,33,41,49,57,65 within the hint path
+> **Population identity:** published-P00118-P00134-P00143-P00146-first-hint
+> **Selection history:** selected using current raw mechanics to guarantee portal-bearing MP/MC and existence of persistent published accepted hint data, after the ineligible R02108 stress-parent result; any positive is newly qualified published controls, **not** independent frozen generated holdouts
+> **Inference scope:** actual full referee-valid published LIVE paths containing source-valid selected MP/MC/portal transitions; no new cold solutions, exact source DEAD classifications or canonical work savings
+
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-positive","lastEvidenceDate":"2026-10-19","decision":"Concluded-positive four published-parent LIVE correctness controls: 20/20 applicable complete first-hint source-referee-valid suffixes project into the generic relaxed graph with all four terminal events and exact counted length, zero false exclusions. No generated-parent or canonical-work transfer claim.","remainingGate":"Source-selected R02182/R02801 candidates still need independent soundness/necessary-bound corroboration and source-native descendant work sufficient to exceed metric cost; broader generated-parent LIVE controls before production prune.","joins":{"researchQuestion":"WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR","premiseRefs":["P198","P204"],"measurementOpportunity":null},"evidenceRole":"correctness-control","scope":{"populationIdentity":"published-P00118-P00134-P00143-P00146-first-hint","selection":"four named portal-bearing MP/MC published levels; first stored path from data/hints; prefix lengths 1/5/9/13/17/21/25/29/33/41/49/57/65","inferenceScope":"four published exact source LIVE witness controls; not source-independent generated-parent efficacy or cold matched-work test"},"claimRefs":[],"sourceArtifacts":["reports/stress/pg-j-stress-live-suffix-projection-20261019-001.json","reports/stress/pg-j-published-portal-live-witness-projection-20261019-001.json"],"successors":{"questions":["WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR"],"artifacts":[]},"prospective":{"expectation":"At least two published portal-bearing levels retain enough unused portal/MP/zero-visit-MC prerequisites at some fixed depths and allow full stepwise accepted suffix projection.","surprise":"All four preregistered human published levels' first hints were native-referee accepted, with 20/20 eligible complete suffix projections spread across all four distinct portal-bearing levels.","anomaly":null}} -->
+
+## Deterministic controls and noninterference
+
+For the four **published** source levels P00118, P00134, P00143 and P00146, use each level's canonical raw representation from `data/levels.json`. The corresponding `data/hints/Pxxxxx.json` stores real paths; select the **first stored** hint `hints[0].path` unconditionally, not a path whose characteristics are favorable. Require `solver.validateCandidatePath(normalizedLevel, path).ok` to pass before claiming a LIVE control. If it fails, mark the source invalid and stop without replacing it with a different hint.
+
+At every fixed prefix length shorter than that accepted path, replay through the native `getNeighbors/applyMove` code. Independently select the nearest two unvisited **normalized** MP, one nearest zero-visit MC (needs two future orthogonal ordinary entries), and one fully unused portal pair nearest to either MP, with packed-key tiebreaks. No objective or portal bit may be selected from future path information. If requirements are absent, mark source-ineligible. For every eligible state, trace its **entire remaining accepted suffix**, one literal packed-key step at a time, through the generic PG-J overpermissive 0/1 successor graph, not through a solver search. Verify all four chosen terminal events (MP0/MP1, MC-H/MC-V) occur and native counted remaining length matches.
+
+This is a **source-truth correctness** control rather than a route-oracle efficacy probe. Any rejected actual suffix falsifies the present generic graph on that source state and halts production advancement. For a valid relaxation, its shortest route cannot exceed the counted length of a real represented suffix; this does not itself verify the implementation's Dijkstra/terminal-DP minimum.
+
+## Frozen gate and limitations
+
+A positive requires at least **2 distinct published parents** with ≥1 applicable fully verified accepted suffix and zero incorrect transitions/length; all four chosen levels' first hint paths must referee-validate. A partial-source result is inconclusive, not a silent opportunity fix. Exact source hashes, tested prefix denominators and parent counts are retained, while one source parent with many correlated prefixes counts as one parent. This test is development-selected **published human** and does not substitute for independent *generated Corpus2* live soundness or the separate real descendant work investigation (#2214). No solver treatment, cold solve, hint ingestion, production prune or broad scheduled workflow will be created by this audit.
+
+## Completed source-valid published portal LIVE controls
+
+The [source-exact run 39209726864](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39209726864) **passed**, at immutable execution commit `f6e1b08389521189ab8773f0e722eb8b08076da2`. Artifact `12167186342`: ZIP SHA256 `0e23f152b41b45e5b37756016b71ed3ee6112bd31a80e490d5ee8744decb27b7`; raw `verdict.json` SHA256 `c32ea8014ee5255d58d8cc63f48620e9a86c77aff481309c2b404550769a3f4a`. Machine [four-parent source-and-path-hashed retained verdict](stress/pg-j-published-portal-live-witness-projection-20261019-001.json) provides exact identity and counts.
+
+| Published level | First stored path native-referee-valid | Fixed prefixes actually within source path | Complete applicable LIVE suffixes | Ineligible |
+| --- | --- | ---: | ---: | ---: |
+| P00118 | Yes | 6 | **3** | 3 |
+| P00134 | Yes | 10 | **3** | 7 |
+| P00143 | Yes | 11 | **6** | 5 |
+| P00146 | Yes | 13 | **8** | 5 |
+| **Total** | **4/4** | **40** | **20/20 preserved** | **20** |
+
+All 20 applicable accepted *full* suffixes mapped each move of the official source solution into the independent relaxation, encountered both chosen outstanding must-pass cells and both orthogonal selected must-cross arrival types, arrived at canonical goal and agreed with the original counted remaining length. **No** missing successor, required terminal, source-referee-valid path or counted-length alarm. The mechanistic coverage includes source-valid levels with multiple must-cross sites and flipping filters; these additional mechanics are intentionally forgotten in the overpermissive graph and therefore cannot make a real path disappear.
+
+**Selection and inference limits matter.** This published-human cohort was selected by raw source mechanics after the earlier R02108 no-portal opportunity failure. It **corrects the development control coverage**, but does **not** retroactively qualify #2215's failed two-generated-parent gate or establish statistically representative generated Corpus2 soundness. Multiple correlated prefix samples from a published level count as **one** source parent. This checks full witness inclusion in the relaxed *successor graph*, not exact Dijkstra/terminal-order implementation equality on all boards; zero falsifications across four levels does not replace a general mathematical soundness argument.
+
+The R02182 and R02801 relaxed-graph-empty source candidates remain **nominations**. Native descendant-work on those candidates is independently owned by #2214. A production consumer would still require source-local actual work saved greater than real derivation cost plus independent new generated-parent accepted LIVE controls. No source hint was ever fed into a solver invocation and no new cold solve or production hard-prune code was created.
+
+The temporary workflow is retired after evidence capture; the replayable correctness runner and this explicit positive/limited source verdict remain as durable repository evidence.

@@ -1,0 +1,112 @@
+{
+  "schema": "pathfinder.pg-j-coupled-obligation-route-retained-verdict/v1",
+  "runId": 39179175449,
+  "artifactId": 12155363564,
+  "sourceHead": "edad99330d13f1c472e5b402d41f392d9fdcd15b",
+  "zipSha256": "2af0b9d82a8de12f6795e7efcaaccda18eb8aedba6702a55db06f7093d1ec2a3",
+  "member": "verdict.json",
+  "memberSha256": "8545cad5b2f10c4afbfe6dcbf8becb7b2c06e3838238f9dbf5d615ad69f947b9",
+  "researchRole": "post-selected P00137 single-human-parent necessary bound development",
+  "provenance": "two P00137 opposite-fate pairs from three original/extension/replication CP-SAT source files, all four canonical replay-legal; independent exact LIVE witness stepwise projection",
+  "summary": {
+    "cases": 4,
+    "exactDead": 2,
+    "exactLive": 2,
+    "fullDeadDistinguished": 2,
+    "flipperFreeDeadDistinguished": 2,
+    "liveFalseNegatives": 0,
+    "sourceWitnessIncluded": 2,
+    "capHit": 0,
+    "sourceAlarms": 0
+  },
+  "mechanics": {
+    "retained": "immutable earlier consumed edge axes, combined mustPass and two-axis mustCross, first-visit cross straight-exit lock, zero-cost forced portals and portal endpoint single-use, goal termination",
+    "droppedInFlipperFree": "global flipping-filter order/straight travel; its deletion only enlarges abstract solution set",
+    "overPermissive": "forgets future edge-axis use outside mustCross, other future cell repeat limits, total allowed intersections and flipper restrictions"
+  },
+  "rows": [
+    {
+      "caseId": "P00137-w1-A2-B10-alternate",
+      "referenceLabel": "dead",
+      "depth": 10,
+      "remainingLength": 23,
+      "fullBound": 24,
+      "fullStates": 38861,
+      "fullTransitions": 102263,
+      "flipperFreeBound": 24,
+      "flipperFreeStates": 15873,
+      "flipperFreeTransitions": 45111,
+      "witnessAudit": null
+    },
+    {
+      "caseId": "P00137-w1-A2-B10-original",
+      "referenceLabel": "live",
+      "depth": 10,
+      "remainingLength": 23,
+      "fullBound": 20,
+      "fullStates": 36326,
+      "fullTransitions": 93354,
+      "flipperFreeBound": 20,
+      "flipperFreeStates": 15997,
+      "flipperFreeTransitions": 45475,
+      "witnessAudit": {
+        "refereeValid": true,
+        "abstractTransitionComplete": true,
+        "witnessRemainingLength": 23,
+        "witnessSuffixTransitions": 25
+      }
+    },
+    {
+      "caseId": "P00137-w1-A2-B9-alternate",
+      "referenceLabel": "dead",
+      "depth": 9,
+      "remainingLength": 24,
+      "fullBound": 25,
+      "fullStates": 48717,
+      "fullTransitions": 132121,
+      "flipperFreeBound": 25,
+      "flipperFreeStates": 17426,
+      "flipperFreeTransitions": 50531,
+      "witnessAudit": null
+    },
+    {
+      "caseId": "P00137-w1-A2-B9-original",
+      "referenceLabel": "live",
+      "depth": 9,
+      "remainingLength": 24,
+      "fullBound": 21,
+      "fullStates": 38929,
+      "fullTransitions": 100646,
+      "flipperFreeBound": 21,
+      "flipperFreeStates": 16327,
+      "flipperFreeTransitions": 46458,
+      "witnessAudit": {
+        "refereeValid": true,
+        "abstractTransitionComplete": true,
+        "witnessRemainingLength": 24,
+        "witnessSuffixTransitions": 26
+      }
+    }
+  ],
+  "staticOpportunityCensus": {
+    "source": "data/stress/stress-levels-random.json",
+    "gitBlob": "999db4c0e2be706a10a2c71915f6672344a05338",
+    "historicalSourceSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "stressRecords": 1700,
+    "withTwoPlusMP": 946,
+    "withAnyMC": 939,
+    "withAnyPortal": 954,
+    "coOccurringAtLeastTwoMPoneMConePortal": 303,
+    "exactTwoMPoneMC": 0,
+    "exactTwoMPoneMCthreePortal": 0,
+    "humanCorpus": "data/levels.json",
+    "humanRecords": 160,
+    "humanCoOccurrence": 6,
+    "humanExactTwoMPoneMCthreePortal": 1,
+    "humanExactMatchIds": [
+      "P00137"
+    ],
+    "selectionWarning": "Counts are structural opportunities only, no measured search exposure, independent transfer, solved-set effect or cost gain. Corpus2 positive MP counts are 5–8 and portal counts are 4–7; P00137 shaped variant has no exact match in this generated source."
+  },
+  "decision": "Bounded-positive exact reference discrimination on one selected human parent; no product action. The nonportable exact shape and 15k-17k reduced state searches block immediate hot path promotion."
+}

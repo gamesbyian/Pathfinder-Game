@@ -1,0 +1,55 @@
+{
+  "schema": "pathfinder.pg-j-stress-live-suffix-shadow-inclusion/v1",
+  "status": "inconclusive-independent-parent-coverage",
+  "sourceRun": 39208511586,
+  "sourceExecution": "18758baed70d81e3d0ff5e8a25892684168fc0e6",
+  "artifactId": 12165619883,
+  "artifactZipSha256": "38b2a86f61b7b54323a13607c1e7aa61da2f76fe851f92e95aca13edfa2d6743",
+  "member": "live-verdict.json",
+  "memberSha256": "c290c4fb587cb9e0e7d1d40aa7860513c4a773efc04347ddd09c4ff29bea41df",
+  "sourceWitnesses": "reports/stress/pg-i-early-equal-work-cold-solves-20261018.json",
+  "sampledPrefixLengths": [
+    1,
+    9,
+    17,
+    25,
+    33,
+    41,
+    49,
+    57,
+    65
+  ],
+  "parentUnit": "distinct parent ID",
+  "summary": {
+    "paths": 3,
+    "parentIds": [
+      "R03031",
+      "R02108"
+    ],
+    "totalFixedCells": 27,
+    "applicable": 15,
+    "ineligible": 12,
+    "eligibleParents": 1,
+    "missingShadowTransitions": 0,
+    "badTerminalEventCoverage": 0,
+    "badCountedLength": 0,
+    "officialRefereeWitnesses": 3,
+    "qualification": "independent-parent gate not met: only R03031 has portals and contributes applicable cells"
+  },
+  "parents": [
+    {
+      "parentId": "R03031",
+      "twoCorrelatedWinnerPaths": true,
+      "applicable": 15,
+      "ineligible": 3,
+      "ineligibleReason": "fewer-than-two-outstanding-MP near end of accepted paths"
+    },
+    {
+      "parentId": "R02108",
+      "applicable": 0,
+      "ineligible": 9,
+      "ineligibleReason": "no-unused-portal-pair: source level has zero portal pairs"
+    }
+  ],
+  "verdict": "15 complete genuine referee-LIVE continuation projections held through source-authentic relaxed successor graph, but all from one generated parent and cannot independently confirm transfer soundness. Do not loosen criteria or promote. A new outcome-blind portal-bearing accepted source population can separately test transfer."
+}

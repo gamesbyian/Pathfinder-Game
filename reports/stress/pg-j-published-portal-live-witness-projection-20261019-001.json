@@ -1,0 +1,59 @@
+{
+  "schema": "pathfinder.pg-j-published-portal-live-witness-projection-retained/v1",
+  "status": "qualified-source-live-soundness-controls",
+  "runId": 39209726864,
+  "artifactId": 12167186342,
+  "executionSha": "f6e1b08389521189ab8773f0e722eb8b08076da2",
+  "artifactZipSha256": "0e23f152b41b45e5b37756016b71ed3ee6112bd31a80e490d5ee8744decb27b7",
+  "member": "verdict.json",
+  "memberSha256": "c32ea8014ee5255d58d8cc63f48620e9a86c77aff481309c2b404550769a3f4a",
+  "selection": "P00118/P00134/P00143/P00146 in fixed order, first stored hint path unconditionally, prefix lengths 1,5,9,13,17,21,25,29,33,41,49,57,65",
+  "summary": {
+    "publishedParents": 4,
+    "officialRefereeAcceptedWholePaths": 4,
+    "potentialFixedCells": 52,
+    "actualPrefixCells": 40,
+    "structurallyIneligible": 20,
+    "eligibleFullSourceSuffixes": 20,
+    "independentParentsWithEligibleFullSuffixes": 4,
+    "missingShadowTransitions": 0,
+    "missingSelectedTerminalEvents": 0,
+    "countedMoveMismatches": 0
+  },
+  "parents": [
+    {
+      "id": "P00118",
+      "sourceBlob": "32b269a78023791c4a40d99da9b453a8a7f6db5e",
+      "sourceSha256": "4548cc10593d6c2e41c2f6ad6b728e3decb268cae16a4605976101f21ae716b5",
+      "firstPathSha256": "c488887096f40b03a435bc06408474265621a57982ddcd512db90de5c613e525",
+      "testCells": 6,
+      "eligible": 3
+    },
+    {
+      "id": "P00134",
+      "sourceBlob": "cb288a1c3fba5fcc2850c239535ac8e9edb899b6",
+      "sourceSha256": "8118fd171abfee22eab5450df16d33af8f45b907479d66c709a5c734b3157cc1",
+      "firstPathSha256": "b357be5afd1813865acfda0a74a358136469516edabc58ff621f50ce37d8e0d2",
+      "testCells": 10,
+      "eligible": 3
+    },
+    {
+      "id": "P00143",
+      "sourceBlob": "c047615a43b2e016d899285a440020edcea0739b",
+      "sourceSha256": "9e5dddd3a75546d9ca1f3369c83c75469bbe4dec25d1f309d3264abca87fddd8",
+      "firstPathSha256": "69a271fe9ab007258a9f47553b332cb4b2aab96eb46c2a467ac4d47d668ec4b9",
+      "testCells": 11,
+      "eligible": 6
+    },
+    {
+      "id": "P00146",
+      "sourceBlob": "d036bc37ca6cf200f29d28cf91e1002fb166ac08",
+      "sourceSha256": "70488940869c1147329cc21837ab8a04795ac382c8c2a1526c3854b0b48e5d45",
+      "firstPathSha256": "7e3e9a0fe91d8818618c002846ae093c34d13b1052621fbbda353a2c5a0f1c32",
+      "testCells": 13,
+      "eligible": 8
+    }
+  ],
+  "scope": "Published human source referee-valid controls, not independent generated Corpus2 proof; shadow graph path inclusion only; neither DP minimum equivalence nor actual work savings measured.",
+  "decision": "Qualified 4-parent positive LIVE full accepted suffix inclusion with 20/20 opportunity cells; production prune remains blocked on exact generated candidate soundness, real descendant-work economics and independent generated LIVE controls."
+}
