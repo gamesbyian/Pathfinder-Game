@@ -1,0 +1,187 @@
+{
+  "schema": "pathfinder.pg-i-winning-corridor-frontier-locus-retained/v1",
+  "evidenceRole": "selected-development",
+  "sourceRunId": 39177201496,
+  "sourceExecutionCommit": "2745a6e364d364ed8d73f35a4784eeee1285fc71",
+  "sourceArtifactId": 12154837248,
+  "sourceArtifactName": "pg-i-winning-corridor-checkpoint-evidence",
+  "sourceZipSha256": "a2ee719fbaf5625f417162c79c04c7738345a0e42a1aeb9849e367152bdf2dcd",
+  "sourceMember": "result.json",
+  "sourceMemberSha256": "413a3f6ad6236580f16540f588073101e21526a511785548832a06d29fe8700e",
+  "sourceWinnerEvidence": "reports/stress/pg-i-early-equal-work-cold-solves-20261018.json",
+  "sourceWinnerCommit": "704d7c7ec58c27650e7dd27ff3c2640f846df61e",
+  "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "method": "source isolated profile/5000-width/mechanic bucket flags, source-winning gate selected retrospectively, genuine cold beam execution with no hints and read-only post-hoc winner prefix labels",
+  "contract": {
+    "nominalWorkCap": 250000,
+    "nodeCap": 250000,
+    "phaseComplete": true,
+    "actualOverrunObserved": true,
+    "phaseCheckpoints": [
+      4,
+      8,
+      12,
+      16,
+      24,
+      32,
+      40,
+      48,
+      56,
+      64,
+      80,
+      104
+    ]
+  },
+  "summary": {
+    "independentParents": 2,
+    "cells": 3,
+    "sourceValidSolves": 0,
+    "winnerPrefixSeenAtAnyCheckpoint": 3,
+    "winnerPrefixSeenAtLastPreCapCheckpoint": 3,
+    "nonExactCapOvershootCells": 3
+  },
+  "rows": [
+    {
+      "parentId": "R03031",
+      "profile": "objectiveFirst",
+      "mechanicBuckets": false,
+      "sourceWinnerWork": 2203630,
+      "finalWork": 250599,
+      "lastBelowCap": {
+        "depth": 16,
+        "actualWork": 23568,
+        "nodes": 3561,
+        "frontier": 1842,
+        "winnerRetained": true,
+        "winnerScore": 1526.7300469483569,
+        "frontierMedian": 1048.2939749608768
+      },
+      "firstAboveCap": {
+        "depth": 24,
+        "actualWork": 250599,
+        "nodes": 36908,
+        "frontier": 5000,
+        "winnerRetained": true,
+        "winnerScore": 1850.653129890454,
+        "frontierMedian": 1596.6156103286387
+      },
+      "depths": [
+        4,
+        8,
+        12,
+        16,
+        24
+      ],
+      "works": [
+        24,
+        1501,
+        3752,
+        23568,
+        250599
+      ],
+      "winnerRetained": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "parentId": "R03031",
+      "profile": "intersectionHarvest",
+      "mechanicBuckets": true,
+      "sourceWinnerWork": 2309229,
+      "finalWork": 330175,
+      "lastBelowCap": {
+        "depth": 24,
+        "actualWork": 246692,
+        "nodes": 36908,
+        "frontier": 5000,
+        "winnerRetained": true,
+        "winnerScore": 1693.487949921753,
+        "frontierMedian": 1519.7500000000002
+      },
+      "firstAboveCap": {
+        "depth": 25,
+        "actualWork": 330175,
+        "nodes": 41908,
+        "frontier": 5000,
+        "winnerRetained": true,
+        "winnerScore": 1786.8072769953053,
+        "frontierMedian": 1580.6852112676056
+      },
+      "depths": [
+        4,
+        8,
+        12,
+        16,
+        24,
+        25
+      ],
+      "works": [
+        24,
+        1501,
+        3752,
+        23568,
+        246692,
+        330175
+      ],
+      "winnerRetained": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "parentId": "R02108",
+      "profile": "intersectionHarvest",
+      "mechanicBuckets": true,
+      "sourceWinnerWork": 3067681,
+      "finalWork": 253860,
+      "lastBelowCap": {
+        "depth": 16,
+        "actualWork": 207493,
+        "nodes": 21375,
+        "frontier": 3827,
+        "winnerRetained": true,
+        "winnerScore": 705.2202891717743,
+        "frontierMedian": 546.7172206506365
+      },
+      "firstAboveCap": {
+        "depth": 18,
+        "actualWork": 253860,
+        "nodes": 30202,
+        "frontier": 5000,
+        "winnerRetained": true,
+        "winnerScore": 814.8817853213892,
+        "frontierMedian": 678.3382327518466
+      },
+      "depths": [
+        4,
+        8,
+        12,
+        16,
+        18
+      ],
+      "works": [
+        165,
+        20487,
+        47125,
+        207493,
+        253860
+      ],
+      "winnerRetained": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    }
+  ],
+  "limitation": "Witness identity, gate and method selected ex post from 10M successful isolated cells. Retained exact historical prefix remains only a label, not a solve input. Phase boundary can exceed nominal 250k; over-cap checkpoints are excluded from any exact-250k inference. In-memory continuation avoids repeated work, but progress nodes on pause are in per-checkpoint cumulativeNodes; terminal prep._metrics is deferred and must not be taken as zero expansions."
+}

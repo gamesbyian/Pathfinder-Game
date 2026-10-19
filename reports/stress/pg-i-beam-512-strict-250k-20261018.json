@@ -1,0 +1,111 @@
+{
+  "schema": "pathfinder.pg-i-512-isolated-strict250k-retained/v1",
+  "evidenceRole": "post-outcome-development",
+  "sourceRunId": 39178092834,
+  "sourceExecutionCommit": "ac2bfc1a229a0b65bc6e77f7cdc294578e4aeacc",
+  "sourceArtifactId": 12154774395,
+  "sourceArtifactName": "pg-i-beam-512-250k-paired-result",
+  "sourceArtifactSha256": "860b0c7ae245bc362dd1c66919cdffe4f2d1dfacca1dd82087a9403ca7674c8a",
+  "sourceMember": "paired-result.json",
+  "sourceMemberSha256": "cc7ccfc87fed1d19798789569b96b43cee262c461d87be6ab2bae56021b05fdd",
+  "originalWitnessEvidence": "reports/stress/pg-i-early-equal-work-cold-solves-20261018.json",
+  "originalCorpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+  "contract": {
+    "workBudget": 250000,
+    "nodeBudget": 250000,
+    "timeBudgetMs": 600000,
+    "strictAtomicWorkCap": true,
+    "widths": [
+      5000,
+      512
+    ],
+    "otherwiseIdenticalSourceTechnique": true,
+    "hintsNotConsumedByBeam": true
+  },
+  "selection": "three source-winner-selected historical-parent/gate/scorer/mode configurations across R03031,R02108, retrospectively chosen, not an independent or unselected cold-product population",
+  "summary": {
+    "independentParents": 2,
+    "pairs": 3,
+    "cells": 6,
+    "validCells": 6,
+    "controlSolves": 0,
+    "narrowSolves": 0,
+    "gains": 0,
+    "losses": 0,
+    "actualWork": 1459717,
+    "errors": 0,
+    "maxWorkSpent": 250000
+  },
+  "rows": [
+    {
+      "parentId": "R03031",
+      "scoreProfile": "objectiveFirst",
+      "mechanicBucketRetention": false,
+      "control": {
+        "width": 5000,
+        "status": "strict-work-charge-refused",
+        "workSpent": 250000,
+        "nodesExpanded": null,
+        "refereeValid": null
+      },
+      "treatment": {
+        "width": 512,
+        "status": "exhausted",
+        "workSpent": 209739,
+        "nodesExpanded": 20612,
+        "refereeValid": null
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R03031",
+      "scoreProfile": "intersectionHarvest",
+      "mechanicBucketRetention": true,
+      "control": {
+        "width": 5000,
+        "status": "strict-work-charge-refused",
+        "workSpent": 249989,
+        "nodesExpanded": null,
+        "refereeValid": null
+      },
+      "treatment": {
+        "width": 512,
+        "status": "strict-work-charge-refused",
+        "workSpent": 249989,
+        "nodesExpanded": null,
+        "refereeValid": null
+      },
+      "gain": false,
+      "loss": false
+    },
+    {
+      "parentId": "R02108",
+      "scoreProfile": "intersectionHarvest",
+      "mechanicBucketRetention": true,
+      "control": {
+        "width": 5000,
+        "status": "strict-work-charge-refused",
+        "workSpent": 250000,
+        "nodesExpanded": null,
+        "refereeValid": null
+      },
+      "treatment": {
+        "width": 512,
+        "status": "strict-work-charge-refused",
+        "workSpent": 250000,
+        "nodesExpanded": null,
+        "refereeValid": null
+      },
+      "gain": false,
+      "loss": false
+    }
+  ],
+  "verdict": "Complete fixed-width 512 treatment form closed negative on selected development parents; widening to more fixed widths without a new state-based mechanism is not justified.",
+  "caveats": [
+    "Method/gate cells nominated post hoc by historic 10M winners, not eligible for unattended production routing.",
+    "Remaining 11 units after 249989 are not chargeable as 12-unit connectivity and classify as strict budget censor.",
+    "Null nodesExpanded under mid-parent strict interruption is unknown, not zero.",
+    "Zero solution does not mean UNSAT."
+  ]
+}
