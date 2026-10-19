@@ -114,7 +114,7 @@ function initialAbstractNode(state){
  * New future edge-axis uses at ordinary cells, visits, and total intersection
  * limits are purposefully omitted (relaxed), never guessed from oracle labels.
  */
-function abstractSuccessors(node,originalState,prep){
+function abstractSuccessors(node,originalState,prep,{dropFlippers=false}={}){
  const [pos,entryAxis,arrivedPortal,mpMask,mcAxes,flipperUsed,usedPortals]=node;
  if(pos===level.goalKey)return [];
  const portal=level.portalMap.get(pos);
@@ -130,10 +130,10 @@ function abstractSuccessors(node,originalState,prep){
   if(entryAxis&&axis!==entryAxis&&(originalState.edgeUsage[pos]&axis))continue;
   // The first crossing must exit on its entry axis to keep the other axis free.
   if(pos===cross&&(mcAxes===1||mcAxes===2)&&axis!==entryAxis)continue;
-  if(level.flippingFilterMap.has(pos)&&entryAxis&&axis!==entryAxis)continue;
+  if(!dropFlippers&&level.flippingFilterMap.has(pos)&&entryAxis&&axis!==entryAxis)continue;
   const fi=prep.flipperIndexMap[next]-1;
   let nextFlip=flipperUsed;
-  if(fi>=0){
+  if(!dropFlippers&&fi>=0){
    if(flipperUsed&(1<<fi))continue;
    const original=prep.flipperInitAxes[fi];
    const currently=(popcount(flipperUsed)&1)?3-original:original;
@@ -173,7 +173,7 @@ function witnessIncluded(row,originalState,prep,remaining){
  return {refereeValid:true,abstractTransitionComplete:true,
   witnessRemainingLength:cost,witnessSuffixTransitions:keys.length-prefix.length};
 }
-function lowerBound(state,prep,remaining){
+function lowerBound(state,prep,remaining,options={}){
  const seed=initialAbstractNode(state),heap=[],dist=new Map([[recordKey(seed),0]]);
  push(heap,[0,seed]);let transitions=0;
  const relax=(node,cost)=>{
@@ -190,7 +190,7 @@ function lowerBound(state,prep,remaining){
   if(completeAbstract(node))
    return {minimumRequiredLength:cost,abstractStates:dist.size,transitions,capHit:false,
     comparedRemainingLength:remaining,possibleAtBudget:cost<=remaining};
-  for(const [next,stepCost] of abstractSuccessors(node,state,prep)){
+  for(const [next,stepCost] of abstractSuccessors(node,state,prep,options)){
    relax(next,cost+stepCost);transitions++;
   }
   if(dist.size>maxAbstractStates)
@@ -221,10 +221,14 @@ for(const row of cases){
    &&state.flipperUsedMask===0&&state.portalJumps===0,'unexpected P00137 prefix resource history');
  const remaining=level.requiredLength-api.getRealLengthFromState(state);
  const observed=lowerBound(state,prep,remaining);
+ // Post-positive cost simplification: dropping every flipper restriction
+ // makes the product strictly more permissive. Never use these numbers
+ // to nominate a production prune without an independent economics gate.
+ const noFlippers=lowerBound(state,prep,remaining,{dropFlippers:true});
  const witnessAudit=row.referenceLabel==='live'
   ?witnessIncluded(row,state,prep,remaining):null;
  results.push({caseId:row.caseId,referenceLabel:row.referenceLabel,depth:row.depth,
-   remainingLength:remaining,...observed,witnessAudit});
+   remainingLength:remaining,...observed,noFlippers,witnessAudit});
  console.log('PG-J COUPLED ROUTE '+JSON.stringify(results.at(-1)));
 }
 const unsafe=results.filter(r=>r.referenceLabel==='live'&&(r.possibleAtBudget===false||r.capHit));
@@ -237,7 +241,10 @@ const report={
  abstraction:'joint MP+two-axis-MC terminal, immutable consumed axes, forced 0-length portal jumps and future portal single-use, first-MC-visit axis lock, global flipping-filter orientation order; forgets future edge-axis use except MC, other future cell revisits and intersection ceilings',
  assertScope:'A sound necessary infeasibility signal only if ALL canonical source continuations are represented; four-case witness validation does not independently prove that claim',
  summary:{cases:4,liveWitnesses:2,deadOracle:2,liveFalseNegatives:unsafe.length,
-  deadDistinguished:newlyDiscriminated.length,maxAbstractStates:maxAbstractStates,
+  deadDistinguished:newlyDiscriminated.length,
+  noFlipperDeadDistinguished:results.filter(r=>r.referenceLabel==='dead'&&!r.noFlippers.capHit&&!r.noFlippers.possibleAtBudget).length,
+  noFlipperLiveFalseNegatives:results.filter(r=>r.referenceLabel==='live'&&!r.noFlippers.possibleAtBudget).length,
+  maxAbstractStates:maxAbstractStates,
   noSourceAlarms:true},rows:results,
  decision:'Read-only preliminary logic gate. Even positive exact-DEAD separation does NOT earn a production prune or new cold solve without independent soundness, economical real-search participation and referrer checks.',
 };
@@ -245,4 +252,5 @@ const target=path.resolve(out);mkdirSync(path.dirname(target),{recursive:true});
 writeFileSync(target,JSON.stringify(report,null,2)+'\n');
 console.log('PG-J COUPLED ROUTE VERDICT '+JSON.stringify(report.summary));
 assert(!unsafe.length,'Known source LIVE witness excluded or capped');
-assert(results.every(x=>!x.capHit),'Abstraction cardinality cap reached');
+assert(results.every(x=>!x.capHit&&!x.noFlippers.capHit),'Abstraction cardinality cap reached');
+assert(!report.summary.noFlipperLiveFalseNegatives,'Flipper-free superset unexpectedly excludes LIVE');
