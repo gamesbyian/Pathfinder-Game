@@ -99,78 +99,109 @@ function pop(heap){
 }
 const recordKey=a=>a.join(',');
 const maxAbstractStates=350000;
-function lowerBound(state,prep,remaining){
- const final=state.path.at(-1),lastWasPortal=state.lastWasPortalJump;
- const prev=state.path.at(-2);
- const initialAxis=prev===undefined||lastWasPortal?0:
-   (((prev>>>16)&65535)===((final>>>16)&65535)?1:2);
- const initialMP=state.mpVisitedMask;
- const initialMC=state.edgeUsage[cross]&3;
+function initialAbstractNode(state){
+ const final=state.path.at(-1),lastPortal=state.lastWasPortalJump,prev=state.path.at(-2);
+ const incoming=prev===undefined||lastPortal?0:
+  (((prev>>>16)&65535)===((final>>>16)&65535)?1:2);
  let portalMask=0;
  for(const p of keysPort)if(state.visited[p]>0)portalMask|=(1<<portalIdx.get(p));
- const seed=[final,initialAxis,lastWasPortal?1:0,initialMP,initialMC,state.flipperUsedMask,portalMask];
- const heap=[];push(heap,[0,seed]);const dist=new Map([[recordKey(seed),0]]);
- let transitions=0;
+ return [final,incoming,lastPortal?1:0,state.mpVisitedMask,
+  state.edgeUsage[cross]&3,state.flipperUsedMask,portalMask];
+}
+/**
+ * Every canonical continuation step has an abstract successor here.
+ * The ONLY mutable resources kept are MP, MC entry axes, portal and flipper masks.
+ * New future edge-axis uses at ordinary cells, visits, and total intersection
+ * limits are purposefully omitted (relaxed), never guessed from oracle labels.
+ */
+function abstractSuccessors(node,originalState,prep){
+ const [pos,entryAxis,arrivedPortal,mpMask,mcAxes,flipperUsed,usedPortals]=node;
+ if(pos===level.goalKey)return [];
+ const portal=level.portalMap.get(pos);
+ if(portal&&!arrivedPortal){
+  assert(portalIdx.has(pos)&&portalIdx.has(portal.dest),'portal map inconsistency');
+  const mask=usedPortals|(1<<portalIdx.get(pos))|(1<<portalIdx.get(portal.dest));
+  return [[[portal.dest,0,1,mpMask,mcAxes,flipperUsed,mask],0]];
+ }
+ const successors=[];
+ for(const [next,axis] of adj(pos,prep)){
+  // Once an axis is consumed on the original prefix it is never available again.
+  if(originalState.edgeUsage[next]&axis)continue;
+  if(entryAxis&&axis!==entryAxis&&(originalState.edgeUsage[pos]&axis))continue;
+  // The first crossing must exit on its entry axis to keep the other axis free.
+  if(pos===cross&&(mcAxes===1||mcAxes===2)&&axis!==entryAxis)continue;
+  if(level.flippingFilterMap.has(pos)&&entryAxis&&axis!==entryAxis)continue;
+  const fi=prep.flipperIndexMap[next]-1;
+  let nextFlip=flipperUsed;
+  if(fi>=0){
+   if(flipperUsed&(1<<fi))continue;
+   const original=prep.flipperInitAxes[fi];
+   const currently=(popcount(flipperUsed)&1)?3-original:original;
+   if(axis!==currently)continue;
+   nextFlip|=1<<fi;
+  }
+  if(portalIdx.has(next)&&(usedPortals&(1<<portalIdx.get(next))))continue;
+  let nextMP=mpMask;
+  const oi=obligations.indexOf(next);
+  if(oi!==-1)nextMP|=1<<oi;
+  if(next===cross&&(mcAxes&axis))continue;
+  const nextMC=next===cross?mcAxes|axis:mcAxes;
+  successors.push([[next,axis,0,nextMP,nextMC,nextFlip,usedPortals],1]);
+ }
+ return successors;
+}
+function completeAbstract(node){
+ return node[0]===level.goalKey&&node[3]===3&&node[4]===3;
+}
+function witnessIncluded(row,originalState,prep,remaining){
+ const witness=row.emittedPath;
+ assert(Array.isArray(witness)&&row.refereeValid===true,'missing accepted source LIVE witness');
+ const keys=witness.map(([x,y])=>id(x,y));
+ const prefix=originalState.path;
+ assert(keys.length>prefix.length,'LIVE witness has no continuation');
+ assert(prefix.every((p,i)=>p===keys[i]),'LIVE emitted path does not extend chosen prefix');
+ const referee=solver.validateCandidatePath(level,witness);
+ assert(referee.ok===true,'source LIVE witness failed current referee');
+ let node=initialAbstractNode(originalState),cost=0;
+ for(const next of keys.slice(prefix.length)){
+  const candidates=abstractSuccessors(node,originalState,prep).filter(([candidate])=>candidate[0]===next);
+  assert(candidates.length===1,'accepted source LIVE suffix has no unique abstract successor');
+  [node]=candidates[0];cost+=candidates[0][1];
+ }
+ assert(completeAbstract(node),'accepted LIVE witness fails abstract final obligations');
+ assert(cost===remaining,'LIVE witness has incorrect remaining real counted length');
+ return {refereeValid:true,abstractTransitionComplete:true,
+  witnessRemainingLength:cost,witnessSuffixTransitions:keys.length-prefix.length};
+}
+function lowerBound(state,prep,remaining){
+ const seed=initialAbstractNode(state),heap=[],dist=new Map([[recordKey(seed),0]]);
+ push(heap,[0,seed]);let transitions=0;
  const relax=(node,cost)=>{
-   if(cost>remaining+6)return;
-   const skey=recordKey(node),prior=dist.get(skey);
-   if(prior===undefined||cost<prior){
-     dist.set(skey,cost);push(heap,[cost,node]);
-   }
+  if(cost>remaining+6)return;
+  const skey=recordKey(node),prior=dist.get(skey);
+  if(prior===undefined||cost<prior){
+   dist.set(skey,cost);push(heap,[cost,node]);
+  }
  };
  while(heap.length){
-  const [cost,node]=pop(heap),[pos,entryAxis,arrivedViaPortal,mpMask,mcAxes,flipperUsed,usedPortals]=node;
+  const [cost,node]=pop(heap);
   if(cost!==dist.get(recordKey(node)))continue;
   if(cost>remaining+6)break;
-  if(pos===level.goalKey&&mpMask===3&&mcAxes===3)
-    return {minimumRequiredLength:cost,abstractStates:dist.size,transitions,capHit:false,
-      comparedRemainingLength:remaining,possibleAtBudget:cost<=remaining};
-  if(pos===level.goalKey)continue;
-  const portal=level.portalMap.get(pos);
-  if(portal&&!arrivedViaPortal){
-   const dest=portal.dest;
-   assert(portalIdx.has(pos)&&portalIdx.has(dest),'portal map inconsistency');
-   // Forced jump costs zero. Future visits to endpoints were excluded on entry.
-   const mask=usedPortals|(1<<portalIdx.get(pos))|(1<<portalIdx.get(dest));
-   relax([dest,0,1,mpMask,mcAxes,flipperUsed,mask],cost);transitions++;
-   continue;
-  }
-  for(const [next,axis] of adj(pos,prep)){
-   // Immutable prior prefix edge-axis consumption: sound necessary exclusion.
-   if(state.edgeUsage[next]&axis)continue;
-   if(entryAxis!==0&&axis!==entryAxis&&(state.edgeUsage[pos]&axis))continue;
-   // First crossing must leave straight so the other axis remains available.
-   if(pos===cross&&(mcAxes===1||mcAxes===2)&&axis!==entryAxis)continue;
-   // Existing source flipper always exits straight after ordinary entry.
-   if(level.flippingFilterMap.has(pos)&&entryAxis&&axis!==entryAxis)continue;
-   const fi=prep.flipperIndexMap[next]-1;
-   let newFlip=flipperUsed;
-   if(fi>=0){
-    if(flipperUsed&(1<<fi))continue;
-    const original=prep.flipperInitAxes[fi];
-    const current=(popcount(flipperUsed)&1)?3-original:original;
-    if(axis!==current)continue;
-    newFlip|=1<<fi;
-   }
-   if(portalIdx.has(next)&&(usedPortals&(1<<portalIdx.get(next))))continue;
-   let nextMP=mpMask;
-   const oi=obligations.indexOf(next);
-   if(oi!==-1)nextMP|=1<<oi;
-   // Canonical edge-axis reuse makes each must-cross entrance orthogonal.
-   if(next===cross&&(mcAxes&axis))continue;
-   const nextMC=next===cross?mcAxes|axis:mcAxes;
-   relax([next,axis,0,nextMP,nextMC,newFlip,usedPortals],cost+1);
-   transitions++;
+  if(completeAbstract(node))
+   return {minimumRequiredLength:cost,abstractStates:dist.size,transitions,capHit:false,
+    comparedRemainingLength:remaining,possibleAtBudget:cost<=remaining};
+  for(const [next,stepCost] of abstractSuccessors(node,state,prep)){
+   relax(next,cost+stepCost);transitions++;
   }
   if(dist.size>maxAbstractStates)
    return {minimumRequiredLength:null,abstractStates:dist.size,transitions,
     capHit:true,comparedRemainingLength:remaining,possibleAtBudget:null};
  }
- // Exhaustive nonnegative-length search to remaining+6; if no terminal
- // found, any valid completion requires > remaining+6 or is absent.
+ // If no terminal found even after searching beyond remaining length,
+ // every legal completion is longer than the allowed budget or absent.
  return {minimumRequiredLength:remaining+7,abstractStates:dist.size,transitions,
-   capHit:false,comparedRemainingLength:remaining,possibleAtBudget:false,
-   lowerBoundIsThreshold:true};
+  capHit:false,comparedRemainingLength:remaining,possibleAtBudget:false,
+  lowerBoundIsThreshold:true};
 }
 const results=[];
 for(const row of cases){
@@ -190,8 +221,10 @@ for(const row of cases){
    &&state.flipperUsedMask===0&&state.portalJumps===0,'unexpected P00137 prefix resource history');
  const remaining=level.requiredLength-api.getRealLengthFromState(state);
  const observed=lowerBound(state,prep,remaining);
+ const witnessAudit=row.referenceLabel==='live'
+  ?witnessIncluded(row,state,prep,remaining):null;
  results.push({caseId:row.caseId,referenceLabel:row.referenceLabel,depth:row.depth,
-   remainingLength:remaining,...observed});
+   remainingLength:remaining,...observed,witnessAudit});
  console.log('PG-J COUPLED ROUTE '+JSON.stringify(results.at(-1)));
 }
 const unsafe=results.filter(r=>r.referenceLabel==='live'&&(r.possibleAtBudget===false||r.capHit));
