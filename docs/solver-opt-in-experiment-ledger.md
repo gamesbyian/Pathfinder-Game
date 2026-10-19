@@ -14,6 +14,10 @@ Git is the archive. Closed default-OFF code should remain only when it provides 
 
 Likewise, default-ON retries/reserves have no permanent budget entitlement. Scheduler work may reprice, shrink, reorder, condition, decompose, or remove them under a fixed aggregate `workSpent` envelope.
 
+## Closed offline-only direct research option (not an ablation flag)
+
+`SolveOpts.experimentalConnectivityReplay` (`neutral` / `saving`) is **absent by default** and is explicitly usable only in direct offline research, not through browser/worker/raced product transports. Retained as a *bounded, source-reproducible counterfactual* for the solver's exact 12-unit connectivity cost and complete reachability scratch, **not** as a production technique. The original 2-parent post-selected canary achieved 2/2 exact whole-solve neutral parity and 37,332 charged units displaced with 0 added 250k solves. Its separately source-frozen **24-parent independent** strict-total-250k paired test achieved **24/24** exact neutral parity, 6/24 actual participation, 3,203 same-state later-call replays, 38,436 charges displaced, and **0 new / 0 lost solves**. The tested full-serialized-path/cache-key form is **CLOSED for near-typical cold solve-rate promotion**; theoretical work savings do not establish CPU or memory benefit. See [development](../reports/2026-10-19-pg-l-complete-flood-replay-development-ab-preflight-001.md) and [independent confirmation](../reports/2026-10-19-pg-l-prospective-independent-flood-replay-preflight-001.md). Reopen only on a distinct cheap, sound state/fact or actual net end-to-end performance benefit with independent solver outcome evidence. Do not add it to `OPT_IN_FEATURES` (it is not an ablation config flag) or silently feed historical level identities into the cache.
+
 ## Current production-default-OFF flags
 
 | Flag | Promotion state | Question ref | Disposition / reopen condition |
