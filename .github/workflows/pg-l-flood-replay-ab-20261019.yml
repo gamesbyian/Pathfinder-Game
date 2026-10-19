@@ -1,0 +1,64 @@
+# One-shot research only: real native source parity and credited flood replay.
+name: PG-L complete reach flood replay canary
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/pg-l-flood-replay-ab-20261019.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pg-l-complete-flood-replay-20261019
+  cancel-in-progress: false
+jobs:
+  experiment:
+    name: Two frozen strict-total-250k neutral and saving replay comparisons
+    runs-on: ubuntu-latest
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Pure offline reporting contract
+        run: node scripts/stress/pg-l-flood-replay-ab.mjs --self-test
+      - name: Actual native 250k baseline, neutral and saving source canary
+        id: experiment
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs/pg-l-flood-replay
+          timeout -k 20s --preserve-status 26m \
+            node scripts/run-bundled.mjs scripts/stress/pg-l-flood-replay-ab.mjs -- \
+            --out=logs/pg-l-flood-replay/verdict.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-l-complete-flood-replay-20261019
+          path: logs/pg-l-flood-replay/verdict.json
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Enforce source correctness; never require a solve gain
+        if: always()
+        env:
+          RESULT: ${{ steps.experiment.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RESULT" = success
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const v=JSON.parse(readFileSync('logs/pg-l-flood-replay/verdict.json','utf8'));
+          if(v.executionSha!==process.env.GITHUB_SHA
+            ||v.summary.parents!==2||v.summary.neutralParityPasses!==2
+            ||v.summary.anyStorageCensoring||!v.summary.allSavingResultsRefereeValid)
+            throw Error('PG-L neutral scratch semantics or source identity invalid');
+          console.log('PG-L FLOOD REPLAY '+JSON.stringify(v.summary));
+          NODE
