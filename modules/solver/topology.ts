@@ -77,6 +77,33 @@ export function connectivityReachRowsForResearch(level: NormalizedLevel): number
 }
 
 
+/**
+ * PG-L OFF-by-default experimental scratch replay. Recreate the EXACT common
+ * _reached(packedKey) relation for the most recent connectivity flood, whether
+ * originally computed by BFS generation tags or bit-parallel rows. The next
+ * native flood resets its own scratch normally. No other algorithm state is
+ * changed, and strict work charges belong to the caller (not this function).
+ */
+export function restoreConnectivityReachRowsForExperiment(
+    level: NormalizedLevel, rows: readonly number[],
+): void {
+    const { w, h } = level.grid;
+    if (w > 30 || h > 30 || rows.length !== h) {
+        throw new Error('PG-L reach-row scratch restore dimension mismatch');
+    }
+    const validMask = (1 << w) - 1;
+    for (let y = 0; y < h; y++) {
+        const bits = rows[y];
+        if (!Number.isInteger(bits) || bits < 0 || (bits & ~validMask) !== 0) {
+            throw new Error('PG-L reach-row scratch restore invalid bits');
+        }
+    }
+    _rowReached.fill(0);
+    for (let y = 0; y < h; y++) _rowReached[y] = rows[y] >>> 0;
+    _reachMode = 1;
+}
+
+
 // Shared BFS-neighbor admissibility check for isConnected/isConnectedForFalseGoalTriggerSearch. Pulled out to a
 // plain module-level function (no captured variables) rather than a per-call closure: this is
 // the hottest inner loop in the solver (isConnected runs 10^5-10^6 times on beam-heavy levels),
