@@ -665,6 +665,19 @@
         "raced": "unsupported"
       },
       "identityLayer": "level-specific-history-derived"
+    },
+    {
+      "field": "experimentalConnectivityReplay",
+      "semanticClass": "solver-search-policy",
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "absent/undefined. Explicit offline-only mode neutral replays typed connectivity and charges original 12 units; saving mode replays and skips exact matched flood charge. Never set by product or workers.",
+      "identityParticipation": "present only in explicit direct research request; mode is part of solver-semantic request identity; no hint or source ID routing",
+      "backendSupport": {
+        "direct": "experimental-offline-only",
+        "webWorker": "unsupported",
+        "raced": "unsupported"
+      },
+      "identityLayer": "solver-semantic"
     }
   ],
   "backendRequests": {
