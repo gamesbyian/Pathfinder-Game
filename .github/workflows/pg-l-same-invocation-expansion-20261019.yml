@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - '.github/workflows/pg-l-same-invocation-expansion-20261019.yml'
+      - 'scripts/stress/pg-l-same-invocation-expansion-shadow.mjs'
   workflow_dispatch:
 permissions:
   contents: read
