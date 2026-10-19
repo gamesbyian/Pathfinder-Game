@@ -75,13 +75,23 @@ for(const [index,item] of freeze.rows.entries()){
  const prep=api.prepLevel(level),replayPrep=api.prepLevel(level);
  prep._cfg=null;prep._metrics={nodesExpanded:0};prep._workCap=WORK_CAP;
  const gate=level.gateKeys[0],pairs=portalPairs(raw);
- assert(pairs.length===item.portals&&level.mustPassKeys.length===item.mustPass
+ // The immutable roster recorded RAW MP count. Normalization also makes
+ // mustTurn/mustPass landmarks mandatory visits; comparing directly with raw
+ // mustPass is a false identity alarm (observed on source R00565).
+ const sourceRequiredMP=new Set((raw.mustPass??[]).map(p=>pack(p.x,p.y)));
+ for(const landmark of raw.landmarks??[]){
+  const role=landmark.role??'';
+  if(role==='mustPass'||role==='mustTurn'||role==='mustTurnCw'||role==='mustTurnCcw')
+    sourceRequiredMP.add(pack(landmark.x,landmark.y));
+ }
+ assert((raw.mustPass?.length??0)===item.mustPass&&(raw.mustCross?.length??0)===item.mustCross
+  &&pairs.length===item.portals
+  &&level.mustPassKeys.length===sourceRequiredMP.size
   &&level.mustCrossKeys.length===item.mustCross,
   'board mechanics changed: '+JSON.stringify({
-    id:item.parentId,expected:{pairs:item.portals,mp:item.mustPass,mc:item.mustCross},
-    actual:{pairs:pairs.length,mp:level.mustPassKeys.length,mc:level.mustCrossKeys.length},
-    keys:{rawMustPass:raw.mustPass?.length,rawMustCross:raw.mustCross?.length,rawPortals:raw.portals?.length},
-    firstGate:gate,
+    id:item.parentId,rawMP:item.mustPass,normalizedMP:level.mustPassKeys.length,
+    derivedSourceMP:sourceRequiredMP.size,mc:level.mustCrossKeys.length,
+    expectedMC:item.mustCross,pairs:pairs.length,expectedPairs:item.portals,
   }));
  const startTime=Date.now(),checkpoints=[];
  let continuation=undefined,resultPath=null,status='checkpoints-complete';
