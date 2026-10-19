@@ -63,7 +63,9 @@ jobs:
           import {readFileSync} from 'node:fs';
           const r=JSON.parse(readFileSync('logs/pg-j-coupled-route/verdict.json','utf8'));
           if(r.sourceHead!==process.env.GITHUB_SHA||r.summary.cases!==4
-            ||r.summary.liveFalseNegatives!==0||r.rows.some(x=>x.capHit))
-            throw Error('source/semantic/cap qualification failed');
+            ||r.summary.liveFalseNegatives!==0||r.rows.some(x=>x.capHit)
+            ||r.rows.filter(x=>x.referenceLabel==='live').some(x=>
+                !x.witnessAudit?.refereeValid||!x.witnessAudit?.abstractTransitionComplete))
+            throw Error('source/semantic/cap/LIVE-witness qualification failed');
           console.log(JSON.stringify(r.summary));
           NODE
