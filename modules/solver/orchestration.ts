@@ -104,6 +104,25 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         prep._beamResearchObserver = opts.beamResearchObserver;
         prep._beamResearchAttemptOrdinal = 0;
     }
+    // PG-L offline only; separate treatment from decision-inert beam observers.
+    // One fresh map per solveLevel invocation, never a module-global shared cache.
+    if (opts.experimentalConnectivityReplay) {
+        if (opts.beamResearchObserver || opts.connectivityRejectionObserver ||
+            opts.connectivityCertificateShadowObserver || opts.parityCapacityObserver) {
+            throw new Error('PG-L replay is incompatible with flood-dependent research observers');
+        }
+        const stats = opts.experimentalConnectivityReplay.stats;
+        Object.assign(stats, {
+            lookups: 0, misses: 0, chronologicalHits: 0, trueHits: 0, falseHits: 0,
+            nativeWorkDisplaced: 0, storedKeys: 0, serializedKeyCharacters: 0,
+            rawReachRowBytes: 0, storageCensored: false,
+        });
+        prep._experimentalConnectivityReplay = {
+            mode: opts.experimentalConnectivityReplay.mode,
+            stats, cache: new Map(), maxKeys: 80000, maxChars: 16000000,
+        };
+        prep._beamResearchAttemptOrdinal = 0;
+    }
     if (opts.beamFlowCounters) prep._beamFlowCounters = opts.beamFlowCounters;
     if (opts.pruneDiagnostics) prep._pruneDiagnostics = opts.pruneDiagnostics;
     if (opts.failureProgressObserver) prep._failureProgressObserver = opts.failureProgressObserver;
