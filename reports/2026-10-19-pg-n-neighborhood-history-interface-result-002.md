@@ -8,7 +8,7 @@
 > **Premise refs:** `P198`, `P204`
 > **Evidence role:** forensic
 > **Selection:** Same 25 exact states used by PG-N 001, previously selected for topology-fork diagnostics. The broader exploratory screen considered 11 inexpensive local/aggregate feature forms **after** older collision outcomes were known; the three retained results are representative, not preregistered or held out.
-> **Population identity:** complete three frozen [oracle-reference source tables](2026-10-17-pg-n-retained-exact-fate-interface-collision-001.md) (source SHA-256 values in machine result), 28 source rows, three literal aliases, 25 distinct paths, 17 LIVE / 8 DEAD across seven published parents
+> **Population identity:** All 28 rows from three source-hash-pinned 2026-09-16/17 topology-fork exact-reference tables; 25 distinct prefixes and seven published parents
 > **Selection history:** Prior topology-fork witnesses and oracle labels were already known; candidate family and this report's narrowed presentation followed those facts, so zero mixed groups does **not** estimate unseen safety.
 > **Inference scope:** exact selected-prefix collision/refinement and within-sample repeated-key counts; no production policy, general equivalence, independent prevalence, measured work savings or new cold solves.
 > **Production effect:** none
