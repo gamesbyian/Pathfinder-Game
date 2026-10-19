@@ -91,7 +91,7 @@ for(const [ordinal,c] of CASES.entries()){
  }));
  rows.push({ordinal:ordinal+1,parentId:c.id,profile:c.profile,buckets:c.buckets,
   taperAfterPhase:c.depth,sourceHistoricalPathDigest:hash(JSON.stringify(label.path)),
-  sourceWorkExactParity:true,work,status,atPause,
+  sourceWorkExactParity:true,work,status,error,atPause,
   firstSupportLoss:record.firstSupportLoss,
   finalSupportLoss:record.finalSupportLoss,
   lastSupportedDepth:record.lastSupportDepth,
