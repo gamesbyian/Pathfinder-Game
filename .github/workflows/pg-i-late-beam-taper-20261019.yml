@@ -48,7 +48,7 @@ jobs:
       - name: Enforce source identity, budget and referee, never require a new solve
         if: always()
         env:
-          RESEARCH_OUTCOME: OUTCOME
+          RESEARCH_OUTCOME: ${{ steps.probe.outcome }}
         shell: bash
         run: |
           set -euo pipefail
