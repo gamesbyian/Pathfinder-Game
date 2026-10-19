@@ -1,0 +1,71 @@
+# Disposable actual same-solve production beam parent-expansion chronology.
+name: PG-L actual same-invocation expansion reuse canary
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/pg-l-same-invocation-expansion-20261019.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pg-l-same-invocation-expansion-20261019
+  cancel-in-progress: false
+jobs:
+  observe:
+    name: Source-authentic two-parent same-invocation read-only canary
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - name: Checkout frozen source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - name: Setup Node 22.23.2
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Install source-locked dependencies
+        run: npm ci
+      - name: Validate ordinal and same-source overlap fixture
+        run: node scripts/stress/pg-l-same-invocation-expansion-shadow.mjs --self-test
+      - name: Two frozen native 250k control/observer pairs
+        id: experiment
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs/pg-l-same-invocation
+          timeout -k 15s --preserve-status 18m \
+            node scripts/run-bundled.mjs scripts/stress/pg-l-same-invocation-expansion-shadow.mjs -- \
+            --out=logs/pg-l-same-invocation/verdict.json
+      - name: Preserve source-exact result or partial evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-l-same-invocation-expansion-20261019
+          path: logs/pg-l-same-invocation/verdict.json
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Enforce source-complete neutral observation, not a positive outcome
+        if: always()
+        env:
+          RESULT_OUTCOME: ${{ steps.experiment.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RESULT_OUTCOME" = success
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const v=JSON.parse(readFileSync('logs/pg-l-same-invocation/verdict.json','utf8'));
+          if(v.sourceExecutionSha!==process.env.GITHUB_SHA
+            ||v.summary.frozenIndependentParents!==2
+            ||v.summary.completedParents!==2
+            ||v.summary.observerParityPasses!==2
+            ||v.summary.anyObserverCensoring!==false
+            ||v.rows.some(r=>r.observerParityPassed!==true))
+            throw Error('PG-L same-invocation source/coverage/observer parity failure');
+          console.log('PG-L SAME INVOCATION VERIFIED '+JSON.stringify(v.summary));
+          NODE
