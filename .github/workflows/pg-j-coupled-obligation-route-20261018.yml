@@ -65,7 +65,10 @@ jobs:
           if(r.sourceHead!==process.env.GITHUB_SHA||r.summary.cases!==4
             ||r.summary.liveFalseNegatives!==0||r.rows.some(x=>x.capHit)
             ||r.rows.filter(x=>x.referenceLabel==='live').some(x=>
-                !x.witnessAudit?.refereeValid||!x.witnessAudit?.abstractTransitionComplete))
+                !x.witnessAudit?.refereeValid||!x.witnessAudit?.abstractTransitionComplete)
+            ||r.summary.noFlipperLiveFalseNegatives!==0
+            ||r.rows.some(x=>x.noFlippers.capHit
+                ||x.noFlippers.minimumRequiredLength>x.minimumRequiredLength))
             throw Error('source/semantic/cap/LIVE-witness qualification failed');
           console.log(JSON.stringify(r.summary));
           NODE
