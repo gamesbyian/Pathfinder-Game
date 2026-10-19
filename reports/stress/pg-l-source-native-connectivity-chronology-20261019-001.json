@@ -1,0 +1,110 @@
+{
+  "schema": "pathfinder.pg-l-scheduled-connectivity-chronology-retained/v1",
+  "status": "concluded-positive-opportunity-no-cache",
+  "evidenceRole": "development-selected-native-scheduled-work-attribution",
+  "source": {
+    "runId": 39306253534,
+    "executionSha": "fa84c3ff7de80b8513c9a0d2a5b6864abea7d396",
+    "artifactId": 12213049051,
+    "artifactName": "pg-l-scheduled-connectivity-20261019",
+    "artifactZipSha256": "8867d95b383d6206d18fea61dc9380d95acc23b20cbd62a7feb72bff85263e18",
+    "artifactMember": "verdict.json",
+    "artifactMemberSha256": "d8bc0fb88f4d585822150f10b550d2c6cc9d701edfa673d2d13d091fc9c7e69b",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "sourceSelection": "reports/stress/pg-l-independent-dispatch-24-20261018-001.json"
+  },
+  "protocol": {
+    "sourceParents": [
+      "R00720",
+      "R01584"
+    ],
+    "independentParentCount": 2,
+    "sourceSelection": "postselected from prior same-gate width5000 source-positive co-dispatch",
+    "baseWorkBudget": 250000,
+    "nodeBudget": 250000,
+    "timeBudgetMs": 600000,
+    "strictTotalWorkBudget": true,
+    "controls": "one uninstrumented and one observer-attached actual solveLevel invocation per source parent",
+    "nativeConnectivityCharge": 12,
+    "context": "real sequential width5000 objectiveFirst and intersectionHarvest source gate",
+    "keyIdentity": "full packed path, visited counts and used axis on every visited path cell, remaining mechanic scalars, sorted full effective ablation config; exact serialized key stored, SHA only evidence",
+    "storageBound": {
+      "maxKeys": 80000,
+      "maxCharacters": 16000000
+    }
+  },
+  "summary": {
+    "parents": 2,
+    "exactOffOnParityPasses": 2,
+    "sourcePositiveCoDispatch": 2,
+    "matchedCrossScorerConnectivityCalls": 3111,
+    "laterNativeWork": 37332,
+    "matchedReturnsTrue": 3085,
+    "matchedReturnsFalse": 26,
+    "matchedTrueWork": 37020,
+    "matchedFalseWork": 312,
+    "allEligibleScheduledCalls": 6330,
+    "contradictions": 0,
+    "sourceCensored": false,
+    "neitherParentSolved": true
+  },
+  "parents": [
+    {
+      "id": "R00720",
+      "gateKey": 131077,
+      "controlStatus": "node-budget-reached",
+      "work": 250000,
+      "nodes": 187670,
+      "allScheduledConnectivityCalls": 5275,
+      "qualifiedWidth5000TargetCalls": 2000,
+      "otherWidthTargetCalls": 225,
+      "producer": "objectiveFirst",
+      "producerOrdinal": 9,
+      "consumer": "intersectionHarvest",
+      "consumerOrdinal": 10,
+      "producerUniqueFullKeys": 1000,
+      "consumerUniqueFullKeys": 1000,
+      "laterCrossScorerCalls": 1000,
+      "laterConnectivityWork": 12000,
+      "laterTrue": 988,
+      "laterFalse": 12,
+      "matchedMinimumNativeWork": 12000,
+      "fullStateKeyRecordCount": 2000,
+      "fullStateSerializedCharacters": 490978,
+      "maxObservedPathDepth": 12,
+      "parity": true
+    },
+    {
+      "id": "R01584",
+      "gateKey": 327689,
+      "controlStatus": "work-budget-reached",
+      "work": 250000,
+      "nodes": 176575,
+      "allScheduledConnectivityCalls": 10508,
+      "qualifiedWidth5000TargetCalls": 4330,
+      "otherWidthTargetCalls": 3020,
+      "producer": "intersectionHarvest",
+      "producerOrdinal": 9,
+      "consumer": "objectiveFirst",
+      "consumerOrdinal": 10,
+      "producerUniqueFullKeys": 2111,
+      "consumerUniqueFullKeys": 2219,
+      "laterCrossScorerCalls": 2111,
+      "laterConnectivityWork": 25332,
+      "laterTrue": 2097,
+      "laterFalse": 14,
+      "matchedMinimumNativeWork": 25332,
+      "fullStateKeyRecordCount": 4330,
+      "fullStateSerializedCharacters": 1090490,
+      "maxObservedPathDepth": 11,
+      "parity": true
+    }
+  ],
+  "caveats": [
+    "The exact 250k control and observer shared puzzle source; no historical hint or winner was read by cold invocation.",
+    "Matching exact keys and agreeing bools demonstrate descriptive repeat fact opportunity on these two postselected sources; no runtime reuse, saved work, population gain or general soundness proof.",
+    "Non-canonical serialization/lookup/memory costs not charged to solver canonical work; 312 is a gross ceiling on immediately plausible negative-only reuse, not net savings.",
+    "For true results, downstream code may depend on the just-produced mutable reachability flood scratch; a Boolean-only cache is not a safe general substitute.",
+    "A source-only independent larger-cohort and strict-total budget A/B are still required prior to any production promotion."
+  ]
+}
