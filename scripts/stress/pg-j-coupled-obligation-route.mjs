@@ -98,6 +98,22 @@ function pop(heap){
  return first;
 }
 const recordKey=a=>a.join(',');
+function selectNearestOutstandingMustPassPortalPair(state){
+ const outstanding=obligations.filter((_,i)=>(state.mpVisitedMask&(1<<i))===0);
+ const dist=(a,b)=>Math.abs((a&65535)-(b&65535))+
+   Math.abs(((a>>>16)&65535)-((b>>>16)&65535));
+ const pairs=[];
+ for(const portal of raw.portals){
+  const a=id(portal.x1,portal.y1),b=id(portal.x2,portal.y2);
+  const pair=[Math.min(a,b),Math.max(a,b)];
+  const nearest=outstanding.length?Math.min(...outstanding.flatMap(k=>pair.map(p=>dist(k,p)))):Infinity;
+  pairs.push({pair,nearest});
+ }
+ pairs.sort((a,b)=>a.nearest-b.nearest||a.pair[0]-b.pair[0]||a.pair[1]-b.pair[1]);
+ assert(pairs.length>0,'source has no portal pairs');
+ return {trackedPortalKeys:new Set(pairs[0].pair),portalPairKeys:pairs[0].pair,
+  nearestOutstandingMustPassManhattan:pairs[0].nearest};
+}
 const maxAbstractStates=350000;
 function initialAbstractNode(state){
  const final=state.path.at(-1),lastPortal=state.lastWasPortalJump,prev=state.path.at(-2);
@@ -114,13 +130,16 @@ function initialAbstractNode(state){
  * New future edge-axis uses at ordinary cells, visits, and total intersection
  * limits are purposefully omitted (relaxed), never guessed from oracle labels.
  */
-function abstractSuccessors(node,originalState,prep,{dropFlippers=false}={}){
+function abstractSuccessors(node,originalState,prep,{dropFlippers=false,trackedPortalKeys=null}={}){
  const [pos,entryAxis,arrivedPortal,mpMask,mcAxes,flipperUsed,usedPortals]=node;
  if(pos===level.goalKey)return [];
  const portal=level.portalMap.get(pos);
  if(portal&&!arrivedPortal){
   assert(portalIdx.has(pos)&&portalIdx.has(portal.dest),'portal map inconsistency');
-  const mask=usedPortals|(1<<portalIdx.get(pos))|(1<<portalIdx.get(portal.dest));
+  const trackPair=trackedPortalKeys===null||trackedPortalKeys.has(pos);
+  const mask=trackPair
+   ?usedPortals|(1<<portalIdx.get(pos))|(1<<portalIdx.get(portal.dest))
+   :usedPortals;
   return [[[portal.dest,0,1,mpMask,mcAxes,flipperUsed,mask],0]];
  }
  const successors=[];
@@ -140,7 +159,9 @@ function abstractSuccessors(node,originalState,prep,{dropFlippers=false}={}){
    if(axis!==currently)continue;
    nextFlip|=1<<fi;
   }
-  if(portalIdx.has(next)&&(usedPortals&(1<<portalIdx.get(next))))continue;
+  if(portalIdx.has(next)
+   &&(trackedPortalKeys===null||trackedPortalKeys.has(next))
+   &&(usedPortals&(1<<portalIdx.get(next))))continue;
   let nextMP=mpMask;
   const oi=obligations.indexOf(next);
   if(oi!==-1)nextMP|=1<<oi;
@@ -225,10 +246,16 @@ for(const row of cases){
  // makes the product strictly more permissive. Never use these numbers
  // to nominate a production prune without an independent economics gate.
  const noFlippers=lowerBound(state,prep,remaining,{dropFlippers:true});
+ const chosen=selectNearestOutstandingMustPassPortalPair(state);
+ const selectedPair=lowerBound(state,prep,remaining,
+   {dropFlippers:true,trackedPortalKeys:chosen.trackedPortalKeys});
  const witnessAudit=row.referenceLabel==='live'
   ?witnessIncluded(row,state,prep,remaining):null;
  results.push({caseId:row.caseId,referenceLabel:row.referenceLabel,depth:row.depth,
-   remainingLength:remaining,...observed,noFlippers,witnessAudit});
+   remainingLength:remaining,...observed,noFlippers,
+   selectedPortalPairKeys:chosen.portalPairKeys,
+   nearestOutstandingMustPassManhattan:chosen.nearestOutstandingMustPassManhattan,
+   selectedPair,witnessAudit});
  console.log('PG-J COUPLED ROUTE '+JSON.stringify(results.at(-1)));
 }
 const unsafe=results.filter(r=>r.referenceLabel==='live'&&(r.possibleAtBudget===false||r.capHit));
@@ -244,6 +271,8 @@ const report={
   deadDistinguished:newlyDiscriminated.length,
   noFlipperDeadDistinguished:results.filter(r=>r.referenceLabel==='dead'&&!r.noFlippers.capHit&&!r.noFlippers.possibleAtBudget).length,
   noFlipperLiveFalseNegatives:results.filter(r=>r.referenceLabel==='live'&&!r.noFlippers.possibleAtBudget).length,
+  selectedPairDeadDistinguished:results.filter(r=>r.referenceLabel==='dead'&&!r.selectedPair.capHit&&!r.selectedPair.possibleAtBudget).length,
+  selectedPairLiveFalseNegatives:results.filter(r=>r.referenceLabel==='live'&&!r.selectedPair.possibleAtBudget).length,
   maxAbstractStates:maxAbstractStates,
   noSourceAlarms:true},rows:results,
  decision:'Read-only preliminary logic gate. Even positive exact-DEAD separation does NOT earn a production prune or new cold solve without independent soundness, economical real-search participation and referrer checks.',
@@ -254,3 +283,6 @@ console.log('PG-J COUPLED ROUTE VERDICT '+JSON.stringify(report.summary));
 assert(!unsafe.length,'Known source LIVE witness excluded or capped');
 assert(results.every(x=>!x.capHit&&!x.noFlippers.capHit),'Abstraction cardinality cap reached');
 assert(!report.summary.noFlipperLiveFalseNegatives,'Flipper-free superset unexpectedly excludes LIVE');
+assert(!report.summary.selectedPairLiveFalseNegatives,'Single-pair superset unexpectedly excludes LIVE');
+assert(results.every(r=>!r.selectedPair.capHit&&r.selectedPair.minimumRequiredLength<=r.noFlippers.minimumRequiredLength),
+ 'Single-pair superset violated resource cap or relaxed lower bound');
