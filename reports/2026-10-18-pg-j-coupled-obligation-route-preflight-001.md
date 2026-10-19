@@ -7,7 +7,7 @@
 > **Research question:** `WS2-TOPOLOGY-COMPLETION-REGIME-SUCCESSOR`
 > **Evidence role:** discovery
 > **Selection:** all four pre-existing P00137 CP-SAT-proven opposite-fate prefixes at raw depths 9/10; a selected, dependent single human parent, **not** a cold population
-> **Population identity:** 4 immutable source prefixes in `reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json`; human level P00137 from `data/levels.json`
+> **Population identity:** P00137 exact 4-case source cohort from three frozen topology-fork oracle reference reports
 > **Selection history:** exact reference fates and existing-prune non-rejections inspected before this design; any positive is a retrospective development finding
 > **Inference scope:** exact necessary-condition discrimination of those four prefixes if mechanics are sound; not solve-set performance, prevalence, or a near-typical-budget improvement
 
