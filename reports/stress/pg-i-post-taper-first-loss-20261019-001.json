@@ -1,0 +1,97 @@
+{
+  "schema": "pathfinder.pg-i-post-taper-first-loss-retained/v1",
+  "status": "concluded-positive-mechanistic",
+  "evidenceRole": "post-outcome-development-native-decision-stage-forensic",
+  "source": {
+    "runId": 39323267917,
+    "executionSha": "261e753c66ad0c7b5a34169745fde52bd7d1f7ff",
+    "artifactId": 12220627258,
+    "artifactName": "pg-i-post-taper-first-loss-20261019",
+    "artifactZipSha256": "42a5aaf9c23600288b20642c07485e0a1edb9be1b18f8db55fb0d37075535435",
+    "artifactMember": "result.json",
+    "artifactMemberSha256": "b13840a5973cf4bcce1213d78a179489842d5d53419d789651ba1bf32217cb3b",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "historicalWinnerEvidence": "reports/stress/pg-i-early-equal-work-cold-solves-20261018.json",
+    "priorUnobservedTaper": "reports/stress/pg-i-late-beam-taper-250k-20261019-001.json"
+  },
+  "contract": {
+    "sources": [
+      "R03031 objectiveFirst plain depth16→512",
+      "R02108 intersectionHarvest mechanic-buckets depth8→512"
+    ],
+    "sourceSelected": true,
+    "workCap": 250000,
+    "nodeCap": 250000,
+    "strictAtomic": true,
+    "winnerReadOnlyObserverOnly": true,
+    "scorerDecisionInert": true,
+    "fullStageEvidenceInArtifact": true
+  },
+  "summary": {
+    "parentUnits": 2,
+    "sourceReplays": 2,
+    "sourceExactWorkAndStatusParity": 2,
+    "correctnessAlarms": 0,
+    "documentedFirstPostTaperKnownWinnerLosses": 2,
+    "stageRecords": 924,
+    "newNear250kSolves": 0
+  },
+  "rows": [
+    {
+      "parentId": "R03031",
+      "profile": "objectiveFirst",
+      "buckets": false,
+      "originalWidth": 5000,
+      "taperAfterDepth": 16,
+      "taperWidth": 512,
+      "sourceResult": "exhausted",
+      "actualWork": 239505,
+      "firstWitnessLoss": {
+        "stage": "post-score-width-cull",
+        "reason": "score-width-culled",
+        "depth": 19,
+        "workAtLoss": 61752,
+        "candidatePoolRankOfHistoricalWinner": 526,
+        "nominalRetainedWidth": 512,
+        "rankDistanceOutsideWidth": 14,
+        "survivedHardPrune": true,
+        "postCulledSupportedCandidates": 0
+      },
+      "lastSupportedDepth": 19,
+      "workAfterLastSupportedBoundary": 177753,
+      "hardPruneCorrectnessAlarms": 0
+    },
+    {
+      "parentId": "R02108",
+      "profile": "intersectionHarvest",
+      "buckets": true,
+      "originalWidth": 5000,
+      "taperAfterDepth": 8,
+      "taperWidth": 512,
+      "sourceResult": "strict-work-charge-refused",
+      "actualWork": 249995,
+      "firstWitnessLoss": {
+        "stage": "post-mechanic-bucket-selection",
+        "reason": "mechanic-bucket-culled",
+        "depth": 29,
+        "workAtLoss": 106677,
+        "candidatePoolRankOfHistoricalWinner": 329,
+        "nominalRetainedWidth": 512,
+        "rankDistanceOutsideWidth": -183,
+        "survivedHardPrune": true,
+        "postCulledSupportedCandidates": 0
+      },
+      "lastSupportedDepth": 29,
+      "workAfterLastSupportedBoundary": 138032,
+      "hardPruneCorrectnessAlarms": 0
+    }
+  ],
+  "limitations": [
+    "Known 10M-valid paths, parent/method/gate and specific failed taper protocol were selected retrospectively; this is forensic source evidence, not unbiased cold efficacy.",
+    "Witness rank 526 is only 14 beyond the width512 score cutoff in that exact source phase. A 544 or greater beam at that phase may avoid this exact cull, but later survival/new solve is untested.",
+    "Witness rank329 is better than 512th by score, but mechanic-bucket selection rejected it. Turning off bucket retention or changing quotas at that phase may preserve it, but no current-input gate or independent gain has been established.",
+    "Hard-prune soundness alarms zero is a scoped observation; it is not a universal proof.",
+    "Reported work after last known support is native work spent while the specific known path was no longer supported; it is not necessarily avoidable downstream work without an admissible selector.",
+    "Full 277853-byte stage-event record remains in source artifact; this tracked mirror intentionally retains only decision-bearing events."
+  ]
+}
