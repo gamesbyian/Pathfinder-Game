@@ -22,6 +22,18 @@
 
 The existing `connectivityRejectionObserver` sees only negative results. Existing `beamResearchObserver.includeParentExpansionWork` records work **after expansion** and cannot separate `applyMove` units from the 12-unit flood operations, nor distinguish changes in scheduled timing. Accordingly the measured 48,066 units cannot currently be called 48,066 units of savable connectivity work. Dividing by twelve would only yield an impossible-to-justify upper envelope of at most 4,005 floods, not an empirical hit rate.
 
+## Implementation-ready frozen native canary
+
+The script [`pg-l-scheduled-connectivity-chronology.mjs`](../scripts/stress/pg-l-scheduled-connectivity-chronology.mjs) and a new **opt-in** `BeamResearchObserver.observeScheduledConnectivity` callback now implement the smallest source-native diagnostic: the *existing* `evaluatePrunedMove` calls the original `isConnected` in either observer arm, and invokes the callback only after that call has charged its native 12 work units. It does not bypass the flood or modify prune outcomes. Without the callback the original branch remains unchanged.
+
+**Frozen before execution:** exactly R00720 and R01584, the two prior co-dispatch parents from [PG-L 006](2026-10-19-pg-l-same-invocation-expansion-canary-preflight-001.md), no additions/substitutions; real source gate, positive width5000 target scorer attempts only, 250,000 strict-total work and 250,000 nodes per product call, with 600s wall safety. One observer-OFF control and one observer-ON call per puzzle. Compare the entire attempt identity/work/status sequence, solution, total work and nodes exactly.
+
+**Identity is deliberately conservative:** full packed-key path; all nonzero visited-path per-cell `visited/edgeUsage`; every mechanics scalar/cross-count/surround-neighbor bitmask; the call position, source gate and sorted entire ablation config. Only inside the *same solve* may exact serialized keys recur across scorers. The callback observes both PASS/REJECT Boolean returns and asserts source-native 12-unit charges. The bounded store is capped at 80k key occurrences and 16m key characters, with any overflow a failed/censored result, not hidden truncation. No hash-only equivalence is accepted: SHA-256 is used only in emitted example identities, while the equality map stores full serialized keys.
+
+**Precommitted interpretation:** Require 0 parity alarms, 0 equal-key Boolean disagreements, and >=1,200 canonical charged later repeated scheduled connectivity work on at least one truly co-dispatched source parent (100 actual calls). A positive result is an *opportunity census*, **not** a correct cache or saved work; scorer-specific ordering must still run and downstream `_reached` scratch may prevent skipping the flood entirely. A negative closes this specific selected source form without expanding the cohort after viewing outcomes.
+
+The one-shot Actions workflow is temporary: retire it when the complete source-hashed result is retained, update this result and the queue with actual measured facts, then revalidate.
+
 ## Minimal observer design, before any cached read
 
 1. Add a research-only optional `observeConnectivityCall` hook at the actual scheduled `isConnected` entry/return seam, counting calls by real attempt ordinal/scorer and exact work charge. Instrument both Boolean outcomes, including early rejections, with the same decision and charged work as the uninstrumented control. Allow no recursion, mutation of the flood, scoring or extra meter writes. Do not attach this hook to unrelated unscheduled false-goal connectivity.
