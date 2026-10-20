@@ -3,6 +3,7 @@ import { KEY_SPACE } from './encoding.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
+import { scoreProtectedBucketOverlay } from './score-protected-bucket-overlay.js';
 import { observeMechanicBucketDebt } from './mechanic-bucket-debt-observer.js';
 import type { PruneDiagnostics } from './hard-prune-pipeline.js';
 import { observeBc1ShadowCandidate, bc1FreshConnectivityPrunes, bc1WithVolumePrunes } from './bc1-beam-shadow.js';
@@ -563,29 +564,6 @@ function _bucketSelectByKey(sorted: BeamNode[], beamWidth: number, keyFn: (c: Be
     return result;
 }
 
-// Mechanic-bucket retention selection: guarantee each (flipperUsedMask, mustCrossMask) bucket
-// retains at least floor(beamWidth/numBuckets) candidates. The remaining slots
-// are filled from the global top of the score-sorted list.
-// `sorted` must already be sorted descending by score; bucketed by a numeric stateKey
-// (`mustCrossMask * flipperBase + flipperUsedMask`, `flipperBase` the caller's precomputed
-// `2 ** flipperCount` — always strictly larger than any real UNSIGNED `flipperUsedMask`, so this is
-// an exact, always-collision-free positional encoding, same reasoning as beamNumericCoarseStateKey's
-// own comment; both the base and the composed `flipperUsedMask` need `>>> 0` normalization at the
-// call site below, since `validateRawLevel` permits up to 32 flipping filters and a real 32-filter
-// level's mask legitimately sets bit 31). Used to be `(flipperUsedMask << 4) | (mustCrossMask & 0xF)` — a narrower defect than
-// the coarse-state key's old bug (mustCrossMask's `&0xF` mask sits below flipperUsedMask's shifted
-// range, so it can't corrupt flipperUsedMask's bits the way the old coarse-state key's fields corrupted
-// each other), but still the same root cause: mustCrossMask silently ALIASES (bits above the 4th
-// discarded, not shifted anywhere) on any level with more than 4 must-cross cells (stress-corpus-2
-// raises the cap to 8) — e.g. mustCrossMask=1 and mustCrossMask=17 (a 5th must-cross cell pending)
-// both truncated to the same bucket. Same class of bug, just feeding a soft diversity heuristic
-// rather than a hard merge/discard decision, so it degraded bucketing precision rather than
-// costing solves outright. Fixed alongside the coarse-state key, 2026-08-06 — see
-// reports/2026-08-06-beam-state-dedup-sound-signature-audit.md. `mustCrossMask` is always small
-// (well under 2^16 even at stress-corpus-2's raised 8-cell caps) and `flipperBase` stays a safe
-// integer through the schema's full 32-filter cap (`2 ** 32` is exact as an ordinary float), so
-// unlike the coarse-state key this needs no per-level overflow fallback — only the sign
-// normalization above.
 function _mechanicBucketSelect(sorted: BeamNode[], beamWidth: number, flipperBase: number): BeamNode[] {
     // c.flipperUsedMask >>> 0: same unsigned-normalization reason as beamNumericCoarseStateKey's
     // own comment — a real 32-flipper-filter level can set bit 31, making the raw int32 negative.
@@ -714,7 +692,7 @@ export const __composeBeamNumericCoarseStateKeyForTests = _composeBeamNumericCoa
 // own production-width equivalence test for the measured overshoot magnitude on a real fixture.
 // True mid-phase-exact capture (preserving the partial `cands`/walk-position state) remains a
 // materially larger, correctness-sensitive change, deliberately not attempted here.
-export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number; pausedContinuation?: BeamContinuation } | null = null, nodeBudget = Infinity, resumeFrom?: BeamContinuation, pauseAfterPhases?: number, captureContinuationOnBudgetExit?: boolean, intsBucketRetention?: boolean): Promise<number[] | null> {
+export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number; pausedContinuation?: BeamContinuation } | null = null, nodeBudget = Infinity, resumeFrom?: BeamContinuation, pauseAfterPhases?: number, captureContinuationOnBudgetExit?: boolean, intsBucketRetention?: boolean, researchProtectTop75MechanicBucket?: boolean): Promise<number[] | null> {
     if (resumeFrom) assertBeamContinuationOwnership(resumeFrom, startKey, level, prep);
     // intsBucketRetention (2026-09-12, research-only — see docs/solver-optimization-workstreams.md
     // WS2/WS4): trailing opt-in param, default undefined/false, so every existing positional caller
@@ -722,6 +700,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // same frontier slot) rather than silently letting one win, matching this module's existing
     // mutual-exclusivity discipline (attempt-dispatch.ts's AttemptConfig families check).
     if (mechanicBucketRetention && intsBucketRetention) throw new Error('beamSearchFromGate: mechanicBucketRetention and intsBucketRetention are mutually exclusive.');
+    if (researchProtectTop75MechanicBucket && !mechanicBucketRetention) throw new Error('PG-I top75 requires mechanic buckets');
     const ws = resumeFrom ? resumeFrom.ws : createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     const research = prep._beamResearchObserver;
@@ -1268,6 +1247,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             frontier = effectiveMechanicBucketRetention ? _mechanicBucketSelect(pool, beamWidth, _flipperBase)
                 : effectiveIntsBucketRetention ? _intsBucketSelect(pool, beamWidth)
                 : widthSelected;
+            // Research-only protected score prefix, never a production default.
+            if (researchProtectTop75MechanicBucket && effectiveMechanicBucketRetention)
+                frontier = scoreProtectedBucketOverlay(pool, frontier, beamWidth, Math.floor(beamWidth * 0.75));
             if (prep._mechanicBucketOpportunityObserver && effectiveMechanicBucketRetention)
                 observeMechanicBucketDebt(pool, frontier, widthSelected, beamWidth, _flipperBase,
                     phasesCompleted, prep._workMeter.units, prep._mechanicBucketOpportunityObserver);
