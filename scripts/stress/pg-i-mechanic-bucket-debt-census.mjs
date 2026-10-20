@@ -58,7 +58,7 @@ function collector(width){
   width,totalBucketDecisions:totalDecisions,withDisplacement:displacingDecisions,
   heavy10PercentDecisions:heavyDecisions,heavyWith10kFutureBudget:budgetRemainingHeavy,
   globalTopKDisplaced:totalDisplaced,outsideTopKPromoted:totalPromoted,
-  upperHalfDisplaced:topHalfRemoved,topQuarterDisplaced,
+  upperHalfDisplaced:topHalfRemoved,topQuarterDisplaced:topQuarterRemoved,
   sumScoreDebt:scoreDebt,maxBucketCount:largestActiveBuckets,nonFiniteScoreRecords:nonFinite,
   firstHeavy,retainedRecords,sourceCensored,events
  })};
