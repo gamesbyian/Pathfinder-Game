@@ -1,7 +1,7 @@
 # PG-I generic mechanic-bucket quota displacement census, cold strict 250k (2026-10-19)
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-10-19 source run [39345423165](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39345423165), complete artifact 12231390774 and [retained source ledger](stress/pg-i-mechanic-bucket-debt-census-20261019-001.json)
+> **Last evidence:** 2026-10-19 — source run [39345423165](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/39345423165), complete artifact 12231390774 and [retained source ledger](stress/pg-i-mechanic-bucket-debt-census-20261019-001.json)
 > **Decision:** Source-only native quota-debt screen QUALIFIES a distinct treatment premise: 24/24 exact status/work/nodes/path parity, 7/12 frozen independent parents with >=3 width512 heavy topK displacements while >=10k work remained, 33,967 globally top512 candidate instances displaced across 543 phases. Width5000 had 8,612 across 70 phases. No new solve from the read-only observer.
 > **Remaining gate:** On the pre-frozen first12 development parents, test exactly one current-input, phase-independent 75% global topK protection with remaining 25% of slots filled by original mechanic-bucket selection, full strict250k original solver and referee. Promote to the untouched second12 holdout only if >=1 genuinely new referee-valid cold isolated solve and zero lost solves; otherwise close the tested fraction without dose fishing.
 > **Research question:** `WS2-VARIANT-RESPONSE-HARDNESS`
