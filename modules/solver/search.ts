@@ -3,6 +3,7 @@ import { KEY_SPACE } from './encoding.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
+import { observeMechanicBucketDebt } from './mechanic-bucket-debt-observer.js';
 import type { PruneDiagnostics } from './hard-prune-pipeline.js';
 import { observeBc1ShadowCandidate, bc1FreshConnectivityPrunes, bc1WithVolumePrunes } from './bc1-beam-shadow.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -1267,10 +1268,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             frontier = effectiveMechanicBucketRetention ? _mechanicBucketSelect(pool, beamWidth, _flipperBase)
                 : effectiveIntsBucketRetention ? _intsBucketSelect(pool, beamWidth)
                 : widthSelected;
-            // Bucketed selection (mechanic- or ints-keyed) is the retention decision, not a
-            // score-width cull followed by a second chance. Report only candidates absent from the
-            // actual result; otherwise support would falsely disappear at the provisional slice and
-            // reappear.
+            if (prep._mechanicBucketOpportunityObserver && effectiveMechanicBucketRetention)
+                observeMechanicBucketDebt(pool, frontier, widthSelected, beamWidth, _flipperBase,
+                    phasesCompleted, prep._workMeter.units, prep._mechanicBucketOpportunityObserver);
+            // Report removal from the actual bucket-selected frontier, never provisional top-K.
             const bucketed = effectiveMechanicBucketRetention || effectiveIntsBucketRetention;
             const retained = research && bucketed ? new Set(frontier) : null;
             const actuallyCulled = research && pool.length > beamWidth
