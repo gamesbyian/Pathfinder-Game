@@ -3,6 +3,7 @@ import { KEY_SPACE } from './encoding.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
+import { observeMechanicBucketDebt } from './mechanic-bucket-debt-observer.js';
 import type { PruneDiagnostics } from './hard-prune-pipeline.js';
 import { observeBc1ShadowCandidate, bc1FreshConnectivityPrunes, bc1WithVolumePrunes } from './bc1-beam-shadow.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -1267,62 +1268,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             frontier = effectiveMechanicBucketRetention ? _mechanicBucketSelect(pool, beamWidth, _flipperBase)
                 : effectiveIntsBucketRetention ? _intsBucketSelect(pool, beamWidth)
                 : widthSelected;
-            // PG-I source-only opportunity census. It observes the EXACT same
-            // sorted pool and selected frontier, after retention has already
-            // decided. Unlike the full-path research hook this builds NO paths,
-            // calls no solver primitives and charges no work. Absent in product.
-            const bucketDebtObserver = prep._mechanicBucketOpportunityObserver;
-            if (bucketDebtObserver && effectiveMechanicBucketRetention) {
-                const retainedNodes = new Set(frontier);
-                const globalTopNodes = new Set(widthSelected);
-                let displaced = 0, topHalf = 0, topQuarter = 0;
-                let firstRank: number | null = null;
-                let bestSum = 0, selectedSum = 0;
-                for (let idx = 0; idx < widthSelected.length; idx++) {
-                    const candidate = widthSelected[idx];
-                    bestSum += candidate.score;
-                    if (!retainedNodes.has(candidate)) {
-                        displaced++;
-                        if (firstRank === null) firstRank = idx + 1;
-                        if (idx < Math.ceil(beamWidth / 2)) topHalf++;
-                        if (idx < Math.ceil(beamWidth / 4)) topQuarter++;
-                    }
-                }
-                let promoted = 0;
-                for (const candidate of frontier) {
-                    selectedSum += candidate.score;
-                    if (!globalTopNodes.has(candidate)) promoted++;
-                }
-                // Building an index only when the callback is explicitly set;
-                // O(pool) rather than O(pool*width) ranking work.
-                let lastPromotedRank: number | null = null;
-                if (promoted) {
-                    for (let idx = beamWidth; idx < pool.length; idx++) {
-                        if (retainedNodes.has(pool[idx])) lastPromotedRank = idx + 1;
-                    }
-                }
-                const buckets = new Set<number>();
-                for (const candidate of pool) {
-                    buckets.add(candidate.mustCrossMask * _flipperBase + (candidate.flipperUsedMask >>> 0));
-                }
-                const debt = frontier.length === widthSelected.length
-                    ? Math.max(0, bestSum - selectedSum) : 0;
-                bucketDebtObserver.observe({
-                    phaseDepth: phasesCompleted, workSpent: prep._workMeter.units,
-                    width: beamWidth, rankedPoolSize: pool.length,
-                    bucketCount: buckets.size, actualSelected: frontier.length,
-                    globallyTopKDisplaced: displaced, topHalfDisplaced: topHalf,
-                    topQuarterDisplaced: topQuarter, minimumDisplacedGlobalRank: firstRank,
-                    outsideTopKPromoted: promoted, largestPromotedGlobalRank: lastPromotedRank,
-                    totalScoreDebt: debt,
-                    relativeScoreDebt: debt / Math.max(1, Math.abs(bestSum)),
-                    effectiveMechanicBuckets: true,
-                });
-            }
-            // Bucketed selection (mechanic- or ints-keyed) is the retention decision, not a
-            // score-width cull followed by a second chance. Report only candidates absent from the
-            // actual result; otherwise support would falsely disappear at the provisional slice and
-            // reappear.
+            if (prep._mechanicBucketOpportunityObserver && effectiveMechanicBucketRetention)
+                observeMechanicBucketDebt(pool, frontier, widthSelected, beamWidth, _flipperBase,
+                    phasesCompleted, prep._workMeter.units, prep._mechanicBucketOpportunityObserver);
+            // Report removal from the actual bucket-selected frontier, never provisional top-K.
             const bucketed = effectiveMechanicBucketRetention || effectiveIntsBucketRetention;
             const retained = research && bucketed ? new Set(frontier) : null;
             const actuallyCulled = research && pool.length > beamWidth
