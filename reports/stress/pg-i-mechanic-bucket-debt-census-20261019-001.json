@@ -1,0 +1,242 @@
+{
+  "schema": "pathfinder.pg-i-bucket-debt-12-source-native-census-retained/v1",
+  "status": "concluded-positive-opportunity-only",
+  "evidenceRole": "independent-source-readonly-native-scored-frontier",
+  "source": {
+    "runId": 39345423165,
+    "executionSha": "f96b7ba852ff0933c76882f4c7cd94812563284a",
+    "artifactId": 12231390774,
+    "artifactName": "pg-i-mechanic-bucket-debt-20261019",
+    "archiveSha256": "c54c982a1301540dd0aefacf29b1eead02ddcecb17432d4082e0a240d8833d2f",
+    "member": "verdict.json",
+    "memberSha256": "e7f4fc490e98a24a985f5c53a097b9269f01c2f5a119da33149d98f1a1607717",
+    "corpusSha256": "d15ed3b626b98c3bb8898f4a49079cc8a920f9e237412966b7eeedd0a27c7ffb",
+    "manifest": "reports/stress/pg-l-flood-replay-independent-24-source-freeze-20261019-001.json"
+  },
+  "contract": {
+    "sourceOnlyFrozenFirst12": true,
+    "originalManifestRetainedSecond12ForIndependentConfirmation": true,
+    "sourceIndependentUnit": "parent",
+    "sourceGateFirst": true,
+    "scorer": "intersectionHarvest",
+    "mechanicBucketRetention": true,
+    "widths": [
+      512,
+      5000
+    ],
+    "strictAtomicWorkCap": 250000,
+    "nodeBudget": 250000,
+    "readOnlyHookNoHistory": true,
+    "unmodifiedControlEachWidth": true
+  },
+  "summary": {
+    "parents": 12,
+    "arms": 48,
+    "sourcePairs": 24,
+    "exactBaselineVsObserverParity": 24,
+    "nonFiniteRecords": 0,
+    "width512": {
+      "bucketDecisions": 543,
+      "parentsWithDisplacement": 7,
+      "parentsPassingPrecommittedHeavyScreen": 7,
+      "topKDisplacedInstances": 33967
+    },
+    "width5000": {
+      "bucketDecisions": 70,
+      "parentsWithDisplacement": 7,
+      "topKDisplacedInstances": 8612
+    },
+    "alreadyBaselineSolvedIndependentParents": 1,
+    "newColdSolvesFromObserver": 0,
+    "sourceCensored": false,
+    "populationGateMet": true
+  },
+  "rows": [
+    {
+      "sourceOrdinal": 1,
+      "parentId": "R01706",
+      "width512": {
+        "bucketDecisions": 48,
+        "heavy10PercentDecisions": 31,
+        "topKDisplacedInstances": 4521,
+        "heavyWith10kRemaining": 28,
+        "refereeValidBaselineSolve": false
+      },
+      "width5000": {
+        "bucketDecisions": 6,
+        "topKDisplacedInstances": 46
+      }
+    },
+    {
+      "sourceOrdinal": 2,
+      "parentId": "R02088",
+      "width512": {
+        "bucketDecisions": 47,
+        "heavy10PercentDecisions": 32,
+        "topKDisplacedInstances": 3556,
+        "heavyWith10kRemaining": 32,
+        "refereeValidBaselineSolve": false
+      },
+      "width5000": {
+        "bucketDecisions": 6,
+        "topKDisplacedInstances": 3
+      }
+    },
+    {
+      "sourceOrdinal": 3,
+      "parentId": "R02225",
+      "width512": {
+        "bucketDecisions": 51,
+        "heavy10PercentDecisions": 0,
+        "topKDisplacedInstances": 0,
+        "heavyWith10kRemaining": 0,
+        "refereeValidBaselineSolve": false
+      },
+      "width5000": {
+        "bucketDecisions": 6,
+        "topKDisplacedInstances": 0
+      }
+    },
+    {
+      "sourceOrdinal": 4,
+      "parentId": "R02362",
+      "width512": {
+        "bucketDecisions": 34,
+        "heavy10PercentDecisions": 0,
+        "topKDisplacedInstances": 0,
+        "heavyWith10kRemaining": 0,
+        "refereeValidBaselineSolve": true
+      },
+      "width5000": {
+        "bucketDecisions": 7,
+        "topKDisplacedInstances": 0
+      }
+    },
+    {
+      "sourceOrdinal": 5,
+      "parentId": "R02499",
+      "width512": {
+        "bucketDecisions": 46,
+        "heavy10PercentDecisions": 40,
+        "topKDisplacedInstances": 4821,
+        "heavyWith10kRemaining": 40,
+        "refereeValidBaselineSolve": false
+      },
+      "width5000": {
+        "bucketDecisions": 5,
+        "topKDisplacedInstances": 2380
+      }
+    },
+    {
+      "sourceOrdinal": 6,
+      "parentId": "R02636",
+      "width512": {
+        "bucketDecisions": 40,
+        "heavy10PercentDecisions": 24,
+        "topKDisplacedInstances": 2655,
+        "heavyWith10kRemaining": 24,
+        "refereeValidBaselineSolve": false
+      },
+      "width5000": {
+        "bucketDecisions": 5,
+        "topKDisplacedInstances": 169
+      }
+    },
+    {
+      "sourceOrdinal": 7,
+      "parentId": "R02773",
+      "width512": {
+        "bucketDecisions": 41,
+        "heavy10PercentDecisions": 0,
+        "topKDisplacedInstances": 0,
+        "heavyWith10kRemaining": 0,
+        "refereeValidBaselineSolve": false
+      },
+      "width5000": {
+        "bucketDecisions": 5,
+        "topKDisplacedInstances": 0
+      }
+    },
+    {
+      "sourceOrdinal": 8,
+      "parentId": "R02910",
+      "width512": {
+        "bucketDecisions": 50,
+        "heavy10PercentDecisions": 0,
+        "topKDisplacedInstances": 0,
+        "heavyWith10kRemaining": 0,
+        "refereeValidBaselineSolve": false
+      },
+      "width5000": {
+        "bucketDecisions": 6,
+        "topKDisplacedInstances": 0
+      }
+    },
+    {
+      "sourceOrdinal": 9,
+      "parentId": "R03047",
+      "width512": {
+        "bucketDecisions": 47,
+        "heavy10PercentDecisions": 39,
+        "topKDisplacedInstances": 6340,
+        "heavyWith10kRemaining": 37,
+        "refereeValidBaselineSolve": false
+      },
+      "width5000": {
+        "bucketDecisions": 6,
+        "topKDisplacedInstances": 876
+      }
+    },
+    {
+      "sourceOrdinal": 10,
+      "parentId": "R03184",
+      "width512": {
+        "bucketDecisions": 48,
+        "heavy10PercentDecisions": 46,
+        "topKDisplacedInstances": 7328,
+        "heavyWith10kRemaining": 46,
+        "refereeValidBaselineSolve": false
+      },
+      "width5000": {
+        "bucketDecisions": 5,
+        "topKDisplacedInstances": 2020
+      }
+    },
+    {
+      "sourceOrdinal": 11,
+      "parentId": "R03321",
+      "width512": {
+        "bucketDecisions": 50,
+        "heavy10PercentDecisions": 0,
+        "topKDisplacedInstances": 0,
+        "heavyWith10kRemaining": 0,
+        "refereeValidBaselineSolve": false
+      },
+      "width5000": {
+        "bucketDecisions": 7,
+        "topKDisplacedInstances": 0
+      }
+    },
+    {
+      "sourceOrdinal": 12,
+      "parentId": "R00573",
+      "width512": {
+        "bucketDecisions": 41,
+        "heavy10PercentDecisions": 34,
+        "topKDisplacedInstances": 4746,
+        "heavyWith10kRemaining": 34,
+        "refereeValidBaselineSolve": false
+      },
+      "width5000": {
+        "bucketDecisions": 6,
+        "topKDisplacedInstances": 3118
+      }
+    }
+  ],
+  "limitations": [
+    "The summary retains exact 12-parent prevalence/condition counts; complete per-phase numeric rank/score-displacement ledger is in immutable GHA artifact.",
+    "Observed quota displacement is a real current-input scored-frontier phenomenon, not proof the excluded alternatives are ultimately solvable. A minority bucket can preserve rare valid histories.",
+    "The reference selected source cohort had an already-successful baseline R02362 at 512/250k; it is not a newly discovered gain from the observer.",
+    "The observed result's 7/12 prevalence warrants a bounded new policy treatment on development data; no production default change is yet earned."
+  ]
+}
