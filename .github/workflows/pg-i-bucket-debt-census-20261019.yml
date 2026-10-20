@@ -1,0 +1,65 @@
+# Disposable source-only PG-I global-topK debt census (no solver policy changes).
+name: PG-I native bucket-quota displacement census
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/pg-i-bucket-debt-census-20261019.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pg-i-native-bucket-debt-census-20261019
+  cancel-in-progress: false
+jobs:
+  observe:
+    name: Twelve independent source parents x two widths x exact baseline and numeric shadow
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+      - name: Pure quota-debt instrumentation fixture
+        run: node scripts/run-bundled.mjs scripts/stress/pg-i-mechanic-bucket-debt-census.mjs -- --self-test
+      - name: Frozen 12-source-parent native 512/5000 250k controls and observers
+        id: experiment
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs/pg-i-bucket-debt
+          timeout -k 20s --preserve-status 30m \
+            node scripts/run-bundled.mjs scripts/stress/pg-i-mechanic-bucket-debt-census.mjs -- \
+            --out=logs/pg-i-bucket-debt/verdict.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pg-i-mechanic-bucket-debt-20261019
+          path: logs/pg-i-bucket-debt/verdict.json
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Enforce independent parent count and parity, no gain requirement
+        if: always()
+        env:
+          RESEARCH_OUTCOME: ${{ steps.experiment.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RESEARCH_OUTCOME" = success
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('logs/pg-i-bucket-debt/verdict.json','utf8'));
+          if(r.sourceSha!==process.env.GITHUB_SHA
+            ||r.summary.independentSourceParents!==12
+            ||r.summary.sourceActualPairs!==24
+            ||r.summary.exactStatusWorkPathParity!==24
+            ||r.summary.sourceCensored)
+            throw Error('PG-I quota-debt source identity or read-only native parity failure');
+          console.log('PG-I BUCKET-QUOTA OPPORTUNITY '+JSON.stringify(r.summary));
+          NODE
