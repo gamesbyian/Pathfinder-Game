@@ -71,6 +71,14 @@ Use [`docs/solver-research-post-naming-resumption.md`](docs/solver-research-post
 
 Detailed method/stop/promotion rules: [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md). Evaluation/holdouts: [`docs/solver-evaluation-evidence.md`](docs/solver-evaluation-evidence.md).
 
+## Autonomous execution and handoff
+
+- Begin from current `main`, the owning authority, active PRs and actual consumers of the change. Discover prior work with the existing indexes and tools before reopening a concluded lane.
+- Prefer completing a bounded, valuable change over producing another speculative plan. When the request is broad, choose the earliest verified dependency or cheapest informative discriminator; parallelize only truly independent work. Reconcile source after others merge.
+- Distinguish **proved behavior**, **measured solver improvement**, **unconfirmed hypothesis** and **historical result** in commits and reports. Tests of a proposed mechanism must retain controls, work budgets, source/population provenance and independent confirmation rules; no silent cold-policy promotion.
+- Finish with a runnable artifact or a conclusive disposition: focused tests, proportionate finish-line checks, updated single owning authority and a short PR/issue handoff stating changed paths, exact evidence, remaining uncertainty and next executable action. A blocked experiment should include the new evidence that would justify resuming it.
+- Do not impose universal green-CI merge protection or extra mandatory bureaucracy in this solo-owner repo. Follow the applicable validation contract, disclose failing/unfinished checks, and use owner-directed merge judgment.
+
 ## Documentation hygiene
 
 Optimize docs for **decision density**: state contracts/state/gates directly; keep chronology/debugging in dated reports/archive; replace stale claims instead of appending; give mutable facts one owner; consolidate overlapping live docs; preserve useful history before destructive consolidation.
