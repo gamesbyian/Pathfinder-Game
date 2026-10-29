@@ -38,6 +38,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 
@@ -60,7 +61,7 @@ installBrowserStubs();
 const { createSolver } = await import('../modules/solver.js');
 const Solver = createSolver();
 
-const root = new URL('..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('..', import.meta.url));
 const CORPORA = {
     published: 'data/levels.json',
     corpus1: 'data/stress/stress-levels.json',
