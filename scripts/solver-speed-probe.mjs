@@ -86,6 +86,7 @@ if (idSpec) {
 
 const rows = [];
 let totalNodes = 0;
+let errorCount = 0;
 const t0 = process.hrtime.bigint();
 for (const n of targets) {
     const raw = rawLevels[n - 1];
@@ -96,12 +97,13 @@ for (const n of targets) {
         const res = await Solver.solveLevel(level, {
             timeBudgetMs: budgetMs,
             nodeBudget,
-            ...(workBudget !== undefined ? { workBudget } : {}),
+            ...(workBudget !== undefined ? { baseWorkBudget: workBudget } : {}),
             ...(noExtras ? { disableExtraBudgetPasses: true } : {}),
         });
         ok = !!res?.ok;
         nodes = res?.nodesExpanded || 0;
     } catch (e) {
+        errorCount += 1;
         console.log(`  L${n}: ERROR ${e?.message}`);
     }
     const ms = Number(process.hrtime.bigint() - lt0) / 1e6;
@@ -110,11 +112,15 @@ for (const n of targets) {
     console.log(`  ${corpus} L${n}${raw.id ? ` (${raw.id})` : ''} ${ok ? '✓' : '✗'} ${ms.toFixed(0)}ms ${nodes.toLocaleString()} nodes`);
 }
 const totalMs = Number(process.hrtime.bigint() - t0) / 1e6;
+if (errorCount > 0) {
+    console.error(`ERROR: ${errorCount} solver invocation(s) failed; results are incomplete.`);
+    process.exitCode = 1;
+}
 console.log(`TOTAL ${corpus}: ${rows.filter(r => r.ok).length}/${rows.length} solved, ${(totalMs / 1000).toFixed(2)}s, ${totalNodes.toLocaleString()} nodes`);
 if (globalThis.__floodDiffCalls) console.log(`floodFill differential: ${globalThis.__floodDiffCalls.toLocaleString()} calls compared, 0 mismatches`);
 
 if (outFile) {
     mkdirSync(path.dirname(outFile), { recursive: true });
-    writeFileSync(outFile, JSON.stringify({ corpus, budgetMs, nodeBudget, count, start, stride, totalMs, totalNodes, rows }, null, 2));
+    writeFileSync(outFile, JSON.stringify({ corpus, budgetMs, nodeBudget, count, start, stride, totalMs, totalNodes, errorCount, rows }, null, 2));
     console.log(`Wrote ${outFile}`);
 }
