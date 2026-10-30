@@ -68,7 +68,8 @@
       "test:ci-runtime-data-cache",
       "test:ci-runtime-hint-projection-cache",
       "test:validation-groups",
-      "test:run-scripts-parallel"
+      "test:run-scripts-parallel",
+      "test:run-bundled-cli"
     ],
     "game": [
       "test:startup-smoke",

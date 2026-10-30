@@ -52,7 +52,7 @@ export function buildBundle(entry) {
 
 // CLI entrypoint only when run directly (`node scripts/run-bundled.mjs <entry> [args...]`) — not
 // when buildBundle is imported, so importing this module never spawns a child process.
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1])) {
     const [entry, ...rest] = process.argv.slice(2);
     if (!entry) { console.error('usage: run-bundled.mjs <entry> [args...]'); process.exit(2); }
 
