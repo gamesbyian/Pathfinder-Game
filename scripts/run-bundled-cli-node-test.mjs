@@ -23,7 +23,7 @@ const invoked = run([
     '--fixture=invoked',
 ]);
 assert.equal(invoked.status, 0, invoked.stderr);
-assert.match(invoked.stdout, /PATHFINDER_BUNDLED_CLI_FIXTURE fixture=invoked/);
+assert.match(invoked.stdout, /PATHFINDER_BUNDLED_CLI_FIXTURE --fixture=invoked/);
 
 const imported = run([
     '--input-type=module',
